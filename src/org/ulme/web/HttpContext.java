@@ -1,6 +1,6 @@
 package org.ulme.web;
 
-public interface Context {
+public interface HttpContext {
 	
 	//HttpRequest getHttpRequest();
 	//HttpResponse getHttpResponse();

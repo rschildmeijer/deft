@@ -17,9 +17,13 @@ public class HttpServer {
 		return ioLoop;
 	}
 
-	public void listen(int port) {
+	/**
+	 * @return this for chaining purposes
+	 */
+	public HttpServer listen(int port) {
 		assert (port > MIN_PORT_NUMBER && port <= MAX_PORT_NUMBER)  : "Port out of range";
-		
+		ioLoop.listen(port);
+		return this;
 	}
 
 }

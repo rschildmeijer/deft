@@ -7,7 +7,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.ulme.web.Application;
-import org.ulme.web.Context;
+import org.ulme.web.HttpContext;
 import org.ulme.web.RequestHandler;
 
 
@@ -17,7 +17,7 @@ public class ApplicationTest {
 	public void simpleApplicationTest() {
 		Map<String, RequestHandler> handlers = new HashMap<String, RequestHandler>();
 		final RequestHandler handler = new RequestHandler() {
-			@Override public void get(Context ctx) { }
+			@Override public void get(HttpContext ctx) { }
 		};
 		
 		handlers.put("/", handler);
