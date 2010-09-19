@@ -6,7 +6,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
-import java.util.Set;
+import java.util.Iterator;
 
 import org.ulme.web.protocol.HttpProtocol;
 import org.ulme.web.protocol.HttpProtocolImpl;
@@ -31,7 +31,7 @@ public class IOLoop {
 	public void start() {
 		//Thread.currentThread().setName("IO-LOOP-THREAD");
 		//Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-	
+
 		registerSelector();
 		HttpProtocol protocol = new HttpProtocolImpl();
 		while (true) {
@@ -39,8 +39,10 @@ public class IOLoop {
 				if (selector.select(TIMEOUT) == 0) {
 					continue;
 				}
-				Set<SelectionKey> keys = selector.selectedKeys();
-				for (SelectionKey key : keys) {
+
+				Iterator<SelectionKey> keys = selector.selectedKeys().iterator();
+				while (keys.hasNext()) {
+					SelectionKey key = keys.next();
 					if (key.isAcceptable()) {
 						protocol.handleAccept(key);
 					}
@@ -50,9 +52,9 @@ public class IOLoop {
 					if (key.isValid() && key.isWritable()) {
 						protocol.handleWrite(key);
 					}
-					keys.remove(key);
+					keys.remove();
 				}
-				
+
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

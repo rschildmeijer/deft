@@ -22,6 +22,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		long bytesRead = clientChannel.read(buffer);
+		clientChannel.close();	// remove this line ()
 		//TODO 100919 Deserialize buffer into a HttpRequest object
 	}
 
