@@ -13,8 +13,6 @@ import org.ulme.web.protocol.HttpProtocolImpl;
 
 public class IOLoop {
 
-	private static final boolean BLOCK = false;
-
 	private static final long TIMEOUT = 3000;	//in ms
 
 	private ServerSocketChannel channel;
@@ -23,7 +21,7 @@ public class IOLoop {
 	protected IOLoop() {
 		try {
 			channel = ServerSocketChannel.open();
-			channel.configureBlocking(BLOCK);
+			channel.configureBlocking(false);
 			selector = Selector.open();
 		} catch (IOException e) {
 			e.printStackTrace();
