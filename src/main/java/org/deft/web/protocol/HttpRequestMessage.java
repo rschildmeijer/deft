@@ -29,6 +29,9 @@ public class HttpRequestMessage {
 		String requestLine = fields[0];
 		Map<String, String> generalHeaders = new HashMap<String, String>();
 		for (int i = 1; i < fields.length; i++) {
+			if (fields[i].trim().equals("")) {
+				continue;
+			}
 			String[] header = fields[i].split(": ");
 			generalHeaders.put(header[0], header[1]);
 		}
