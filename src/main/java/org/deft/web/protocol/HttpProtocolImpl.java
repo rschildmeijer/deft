@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +29,8 @@ public class HttpProtocolImpl implements HttpProtocol {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		long bytesRead = clientChannel.read(buffer);
+		HttpRequestMessage request = HttpRequestMessage.of(buffer);
 		clientChannel.close();	// remove this line ()
-		//TODO 100919 Deserialize buffer into a HttpRequest object
 	}
 
 	@Override

@@ -29,7 +29,7 @@ public class IOLoop {
 	}
 
 	public void start() {
-		//Thread.currentThread().setName("IO-LOOP-THREAD");
+		Thread.currentThread().setName("I/O-LOOP");
 		//Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		registerSelector();
