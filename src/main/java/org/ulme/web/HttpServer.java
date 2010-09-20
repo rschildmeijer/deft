@@ -21,7 +21,7 @@ public class HttpServer {
 	 * @return this for chaining purposes
 	 */
 	public HttpServer listen(int port) {
-		if (port <= MIN_PORT_NUMBER && port > MAX_PORT_NUMBER) {
+		if (port <= MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
 			throw new IllegalArgumentException("Invalid port number. Valid range: [" + 
 					MIN_PORT_NUMBER + ", " + MAX_PORT_NUMBER + ")");
 		}
