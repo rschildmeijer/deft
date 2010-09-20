@@ -7,7 +7,7 @@ import org.deft.web.HttpContext;
 import org.deft.web.HttpServer;
 import org.deft.web.RequestHandler;
 
-public class UlmeServerExample {
+public class DeftServerExample {
 	
 	private static class ExampleRequestHandler implements RequestHandler {
 
