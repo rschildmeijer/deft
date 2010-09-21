@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.deft.web.util.ArrayUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class HttpRequestMessage {
 
-	private final static Logger logger = LoggerFactory.getLogger(HttpRequestMessage.class);
 	private final static Charset CHAR_SET = Charset.forName("US-ASCII");
 
 	private String requestLine;
@@ -24,7 +21,6 @@ public class HttpRequestMessage {
 	}
 	
 	public static HttpRequestMessage of(ByteBuffer buffer) {
-		
 		String raw = new String(buffer.array(), CHAR_SET);
 		String[] fields = raw.split("\\r\\n");
 		fields = ArrayUtil.removeTrailingEmptyStrings(fields);

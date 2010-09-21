@@ -17,7 +17,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 
 	@Override
 	public void handleAccept(SelectionKey key) throws IOException {
-		logger.debug("Received accept event");
+		//logger.debug("Received accept event");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 		clientChannel.configureBlocking(false);
 		clientChannel.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(BUFFER_SIZE));
@@ -25,11 +25,14 @@ public class HttpProtocolImpl implements HttpProtocol {
 
 	@Override
 	public void handleRead(SelectionKey key) throws IOException {
-		logger.debug("Received read event");
+		//logger.debug("Received read event");
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		long bytesRead = clientChannel.read(buffer);
 		HttpRequestMessage request = HttpRequestMessage.of(buffer);
+		ByteBuffer output = ByteBuffer.wrap(new byte[]{'h', 'e', 'l', 'l', 'o', '\r', '\n'});
+		output.flip();
+		long bytesWritten = clientChannel.write(output);
 		clientChannel.close();	// remove this line ()
 	}
 
