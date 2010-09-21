@@ -2,11 +2,11 @@ package org.deft.example;
 
 import java.util.HashMap;
 
-
 import org.deft.web.Application;
-import org.deft.web.HttpContext;
 import org.deft.web.HttpServer;
 import org.deft.web.RequestHandler;
+import org.deft.web.protocol.HttpRequest;
+import org.deft.web.protocol.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +21,8 @@ public class DeftServerExample {
 	private static class ExampleRequestHandler implements RequestHandler {
 
 		@Override
-		public void get(HttpContext ctx) {
-			// ctx.getHttpResponse.write("hello world");
+		public void get(HttpRequest request, HttpResponse response) {
+			response.write("hello world");
 		}
 
 	}

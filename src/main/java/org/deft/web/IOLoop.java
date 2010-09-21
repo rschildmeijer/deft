@@ -15,10 +15,12 @@ public class IOLoop {
 
 	private static final long TIMEOUT = 3000;	//in ms
 
+	private final Application application;
 	private ServerSocketChannel channel;
 	private Selector selector;
 
-	protected IOLoop() {
+	protected IOLoop(Application application) {
+		this.application = application;
 		try {
 			channel = ServerSocketChannel.open();
 			channel.configureBlocking(false);
@@ -33,7 +35,7 @@ public class IOLoop {
 		//Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		registerSelector();
-		HttpProtocol protocol = new HttpProtocolImpl();
+		HttpProtocol protocol = new HttpProtocolImpl(application);
 		while (true) {
 			try {
 				if (selector.select(TIMEOUT) == 0) {

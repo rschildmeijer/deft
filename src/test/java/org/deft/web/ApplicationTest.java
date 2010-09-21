@@ -6,10 +6,9 @@ import static org.junit.Assert.assertNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deft.web.protocol.HttpRequest;
+import org.deft.web.protocol.HttpResponse;
 import org.junit.Test;
-import org.deft.web.Application;
-import org.deft.web.HttpContext;
-import org.deft.web.RequestHandler;
 
 
 public class ApplicationTest {
@@ -18,7 +17,7 @@ public class ApplicationTest {
 	public void simpleApplicationTest() {
 		Map<String, RequestHandler> handlers = new HashMap<String, RequestHandler>();
 		final RequestHandler handler = new RequestHandler() {
-			@Override public void get(HttpContext ctx) { }
+			@Override public void get(HttpRequest request, HttpResponse response) { }
 		};
 		
 		handlers.put("/", handler);

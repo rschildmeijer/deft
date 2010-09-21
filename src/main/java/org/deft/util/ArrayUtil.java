@@ -1,4 +1,4 @@
-package org.deft.web.util;
+package org.deft.util;
 
 
 public class ArrayUtil {

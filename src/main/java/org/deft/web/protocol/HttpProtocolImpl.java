@@ -6,6 +6,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import org.deft.web.Application;
+import org.deft.web.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +17,12 @@ public class HttpProtocolImpl implements HttpProtocol {
 	
 	private static final int BUFFER_SIZE = 512;	//in bytes
 
+	private final Application application;
+	
+	public HttpProtocolImpl(Application app) {
+		application = app;
+	}
+	
 	@Override
 	public void handleAccept(SelectionKey key) throws IOException {
 		//logger.debug("Received accept event");
@@ -29,10 +37,14 @@ public class HttpProtocolImpl implements HttpProtocol {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		long bytesRead = clientChannel.read(buffer);
-		HttpRequestMessage request = HttpRequestMessage.of(buffer);
-		ByteBuffer output = ByteBuffer.wrap(new byte[]{'h', 'e', 'l', 'l', 'o', '\r', '\n'});
-		output.flip();
-		long bytesWritten = clientChannel.write(output);
+		HttpRequest request = HttpRequest.of(buffer);
+		RequestHandler rh = application.getHandler(request.getRequestedPath());
+		if (rh != null) {
+			HttpResponse response = new HttpResponse(clientChannel);
+			rh.get(request, response);
+		} else {
+			// TODO RS 100921 send NOT FOUND (404)
+		}
 		clientChannel.close();	// remove this line ()
 	}
 

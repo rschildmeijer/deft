@@ -6,11 +6,12 @@ public class HttpServer {
 	private static final int MIN_PORT_NUMBER = 1;
 	private static final int MAX_PORT_NUMBER = 65535;
 
-	private final IOLoop ioLoop = new IOLoop();
 	private final Application application;
+	private final IOLoop ioLoop;
 	
 	public HttpServer(Application app) {
 		application = app;
+		ioLoop = new IOLoop(application);
 	}
 
 	public IOLoop getIOLoop() {
