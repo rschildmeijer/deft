@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 public class HttpRequestMessage {
 
 	private final static Logger logger = LoggerFactory.getLogger(HttpRequestMessage.class);
+	private final static Charset CHAR_SET = Charset.forName("US-ASCII");
 
 	private String requestLine;
 	private Map<String, String> headers;
@@ -22,8 +23,8 @@ public class HttpRequestMessage {
 	}
 	
 	public static HttpRequestMessage of(ByteBuffer buffer) {
-		//logger.debug(new String(buffer.array(), Charset.forName("US-ASCII")));
-		String raw = new String(buffer.array(), Charset.forName("US-ASCII"));
+		
+		String raw = new String(buffer.array(), CHAR_SET);
 		String[] fields = raw.split("\\r\\n");
 
 		String requestLine = fields[0];
@@ -36,7 +37,6 @@ public class HttpRequestMessage {
 			generalHeaders.put(header[0], header[1]);
 		}
 		return new HttpRequestMessage(requestLine, generalHeaders);
-		
 	}
 
 	public String getRequestLine() {
