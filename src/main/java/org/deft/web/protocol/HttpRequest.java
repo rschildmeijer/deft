@@ -30,7 +30,7 @@ public class HttpRequest {
 	public static HttpRequest of(ByteBuffer buffer) {
 		String raw = new String(buffer.array(), CHAR_SET);
 		String[] fields = raw.split("\\r\\n");
-		fields = ArrayUtil.removeTrailingEmptyStrings(fields);
+		fields = ArrayUtil.dropFromEndWhile(fields, "");
 		
 		String requestLine = fields[0];
 		Map<String, String> generalHeaders = new HashMap<String, String>();

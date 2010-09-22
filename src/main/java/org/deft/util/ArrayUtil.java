@@ -5,7 +5,7 @@ public class ArrayUtil {
 
 //	private static final List<String> EMPTY_STRING_LIST = Arrays.asList("");
 //	private static final String[] EMPTY_STRING_ARRAY = new String[0];
-	public static String[] removeTrailingEmptyStrings(String[] array) {
+	public static String[] dropFromEndWhile(String[] array, String regex) {
 		for (int i = array.length - 1 ;i >= 0; i--) {
 			if (!array[i].trim().equals("")) {
 				String[] trimmedArray = new String[i+1];
