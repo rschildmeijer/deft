@@ -18,7 +18,7 @@ public class DeftServerExample {
 	private final static Logger logger = LoggerFactory.getLogger(DeftServerExample.class);
 	private final static int PORT = 8080;
 	
-	private static class ExampleRequestHandler implements RequestHandler {
+	private static class ExampleRequestHandler extends RequestHandler {
 
 		@Override
 		public void get(HttpRequest request, HttpResponse response) {
@@ -28,13 +28,6 @@ public class DeftServerExample {
 	}
 
 	public static void main(String[] args) {
-		
-		//Log debug
-		// assume SLF4J is bound to logback in the current environment
-		//LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-	    // print logback's internal status
-	    //StatusPrinter.print(lc);
-		
 		Application application = new Application(
 				new HashMap<String, RequestHandler>() {{ put("/", new ExampleRequestHandler()); }}
 		);
