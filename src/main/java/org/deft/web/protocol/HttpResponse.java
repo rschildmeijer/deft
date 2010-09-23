@@ -33,5 +33,9 @@ public class HttpResponse {
 	}
 	
 	
+	public SocketChannel getChannel() {
+		return clientChannel;
+	}
+	
 	
 }

@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 
 import org.deft.util.HttpUtil;
 import org.deft.web.Application;
+import org.deft.web.HttpVerb;
 import org.deft.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,12 @@ public class HttpProtocolImpl implements HttpProtocol {
 			response.write(_404);
 			response.write("Requested URL: " + request.getRequestedPath() + " was not found");
 		}
-		clientChannel.close();	// remove this line ()
+		
+		//Only close if not async. In that case its up to RH to close it
+		if (!rh.isMethodAsynchronous(HttpVerb.GET)) {
+			clientChannel.close();	// remove this line ()
+		}
+		
 	}
 
 	@Override
