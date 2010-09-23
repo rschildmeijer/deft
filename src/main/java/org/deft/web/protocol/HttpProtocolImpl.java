@@ -6,9 +6,9 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
-import org.deft.util.HttpHelper;
+import org.deft.util.HttpUtil;
 import org.deft.web.Application;
-import org.deft.web.RequestHandler;
+import org.deft.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		if (rh != null) {
 			rh.get(request, response);
 		} else {
-			String _404 = HttpHelper.createHttpHeader(404);
+			String _404 = HttpUtil.createHttpHeader(404);
 			response.write(_404);
 			response.write("Requested URL: " + request.getRequestedPath() + " was not found");
 		}

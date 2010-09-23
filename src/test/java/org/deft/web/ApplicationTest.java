@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deft.web.handler.RequestHandler;
 import org.deft.web.protocol.HttpRequest;
 import org.deft.web.protocol.HttpResponse;
 import org.junit.Test;

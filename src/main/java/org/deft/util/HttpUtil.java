@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class HttpHelper {
+public class HttpUtil {
 	
-	private static final Logger logger = LoggerFactory.getLogger(HttpHelper.class);
+	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
 	public static String createHttpHeader(int returnCode) {
 		String s = "HTTP/1.1 ";

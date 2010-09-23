@@ -3,8 +3,11 @@ package org.deft.web;
 public enum HttpVerb {
 	
 	GET,
+	HEAD,
 	POST,
 	PUT,
-	DELETE
-	
+	DELETE,
+	OPTIONS,
+	TRACE,
+	CONNECT
 }

@@ -3,6 +3,7 @@ package org.deft.web;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.deft.web.handler.RequestHandler;
 import org.deft.web.protocol.HttpRequest;
 import org.deft.web.protocol.HttpResponse;
 import org.junit.Test;

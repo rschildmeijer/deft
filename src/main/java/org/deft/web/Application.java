@@ -2,6 +2,9 @@ package org.deft.web;
 
 import java.util.Map;
 
+import org.deft.web.handler.RequestHandler;
+
+
 import com.google.common.collect.ImmutableMap;
 
 public class Application {

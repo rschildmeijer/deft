@@ -1,8 +1,10 @@
-package org.deft.web;
+package org.deft.web.handler;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deft.web.Asynchronous;
+import org.deft.web.HttpVerb;
 import org.deft.web.protocol.HttpRequest;
 import org.deft.web.protocol.HttpResponse;
 
