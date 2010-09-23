@@ -6,6 +6,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import org.deft.util.HttpHelper;
 import org.deft.web.Application;
 import org.deft.web.RequestHandler;
 import org.slf4j.Logger;
@@ -37,13 +38,16 @@ public class HttpProtocolImpl implements HttpProtocol {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		long bytesRead = clientChannel.read(buffer);
-		HttpRequest request = HttpRequest.of(buffer);
+		HttpRequest request = HttpRequest.of(buffer);		
+		
 		RequestHandler rh = application.getHandler(request.getRequestedPath());
+		HttpResponse response = new HttpResponse(clientChannel);
 		if (rh != null) {
-			HttpResponse response = new HttpResponse(clientChannel);
 			rh.get(request, response);
 		} else {
-			// TODO RS 100921 send NOT FOUND (404)
+			String _404 = HttpHelper.createHttpHeader(404);
+			response.write(_404);
+			response.write("Requested URL: " + request.getRequestedPath() + " was not found");
 		}
 		clientChannel.close();	// remove this line ()
 	}
@@ -54,5 +58,8 @@ public class HttpProtocolImpl implements HttpProtocol {
 		// TODO Auto-generated method stub
 
 	}
+
+	
+
 
 }
