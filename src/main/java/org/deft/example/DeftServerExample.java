@@ -1,6 +1,7 @@
 package org.deft.example;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.deft.web.Application;
 import org.deft.web.HttpServer;
@@ -28,9 +29,12 @@ public class DeftServerExample {
 	}
 
 	public static void main(String[] args) {
-		Application application = new Application(
-				new HashMap<String, RequestHandler>() {{ put("/", new ExampleRequestHandler()); }}
-		);
+		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
+		reqHandlers.put("/", new ExampleRequestHandler());
+		reqHandlers.put("/mySql", new AsyncDbHandler());
+		
+		Application application = new Application(reqHandlers);
+
 		logger.debug("Starting up server on port: " + PORT);
 		HttpServer server = new HttpServer(application);
 		server.listen(PORT).getIOLoop().start();
