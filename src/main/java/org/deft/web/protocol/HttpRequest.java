@@ -7,13 +7,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.deft.util.ArrayUtil;
+import org.deft.web.HttpVerb;
 
 public class HttpRequest {
 
 	private final static Charset CHAR_SET = Charset.forName("US-ASCII");
 
 	private final String requestLine;
-	private final String method;
+	private final HttpVerb method;
 	private final String requestedPath;	// correct name?
 	private final String version; 
 	private Map<String, String> headers;
@@ -21,7 +22,7 @@ public class HttpRequest {
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
 		String[] elements = requestLine.split(" ");
-		method = elements[0];
+		method = HttpVerb.valueOf(elements[0]);
 		requestedPath = elements[1];
 		version = elements[2];
 		this.headers = headers;
@@ -51,6 +52,10 @@ public class HttpRequest {
 
 	public Map<String, String> getHeaders() {
 		return Collections.unmodifiableMap(headers);
+	}
+	
+	public HttpVerb getMethod() {
+		return method;
 	}
 
 }

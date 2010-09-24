@@ -35,16 +35,13 @@ public class HttpProtocolImpl implements HttpProtocol {
 
 	@Override
 	public void handleRead(SelectionKey key) throws IOException {
-		//logger.debug("Received read event");
 		SocketChannel clientChannel = (SocketChannel) key.channel();
-		ByteBuffer buffer = (ByteBuffer) key.attachment();
-		long bytesRead = clientChannel.read(buffer);
-		HttpRequest request = HttpRequest.of(buffer);		
+		HttpRequest request = getHttpRequest(key, clientChannel);
+		HttpResponse response = new HttpResponse(clientChannel);
 		
 		RequestHandler rh = application.getHandler(request.getRequestedPath());
-		HttpResponse response = new HttpResponse(clientChannel);
 		if (rh != null) {
-			rh.get(request, response);
+			HttpRequestDispatcher.dispatch(rh, request, response);
 		} else {
 			String _404 = HttpUtil.createHttpHeader(404);
 			response.write(_404);
@@ -52,10 +49,9 @@ public class HttpProtocolImpl implements HttpProtocol {
 		}
 		
 		//Only close if not async. In that case its up to RH to close it
-		if (!rh.isMethodAsynchronous(HttpVerb.GET)) {
+		if (!rh.isMethodAsynchronous(request.getMethod())) {
 			clientChannel.close();	// remove this line ()
 		}
-		
 	}
 
 	@Override
@@ -65,6 +61,17 @@ public class HttpProtocolImpl implements HttpProtocol {
 
 	}
 
+	
+	
+	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
+		ByteBuffer buffer = (ByteBuffer) key.attachment();
+		try {
+			long bytesRead = clientChannel.read(buffer);
+		} catch (IOException e) {
+			logger.error("Could not read buffer: {}", e);
+		}
+		return HttpRequest.of(buffer);
+	}
 	
 
 
