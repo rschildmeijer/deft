@@ -3,6 +3,7 @@ package org.deft.web.handler;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deft.util.HttpUtil;
 import org.deft.web.Asynchronous;
 import org.deft.web.HttpVerb;
 
@@ -46,14 +47,24 @@ public abstract class RequestHandler {
 		return asynchVerbs.get(verb);
 	}
 
-	public void get(HttpRequest request, HttpResponse response) { /* default nop */ }
+	//Default implementation of HttpMethods return a 501 page
+	public void get(HttpRequest request, HttpResponse response) {
+		response.write(HttpUtil.createHttpHeader(501));
+	}
 
-	public void post(HttpRequest request, HttpResponse response) { /* default nop */ }
+	public void post(HttpRequest request, HttpResponse response) { 
+		response.write(HttpUtil.createHttpHeader(501));	
+	}
 
-	public void put(HttpRequest request, HttpResponse response) { /* default nop */ }
+	public void put(HttpRequest request, HttpResponse response) { 
+		response.write(HttpUtil.createHttpHeader(501));	
+	}
 
-	public void delete(HttpRequest request, HttpResponse response) { /* default nop */ }
+	public void delete(HttpRequest request, HttpResponse response) { 
+		response.write(HttpUtil.createHttpHeader(501));	
+	}
 
-	public void head(HttpRequest request, HttpResponse response) { /* default nop */ }
-
+	public void head(HttpRequest request, HttpResponse response) { 
+		response.write(HttpUtil.createHttpHeader(501));
+	}
 }
