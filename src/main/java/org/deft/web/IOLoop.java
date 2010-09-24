@@ -10,8 +10,12 @@ import java.util.Iterator;
 
 import org.deft.web.protocol.HttpProtocol;
 import org.deft.web.protocol.HttpProtocolImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class IOLoop {
+	
+	private final static Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
 	private static final long TIMEOUT = 3000;	//in ms
 
@@ -26,7 +30,7 @@ public class IOLoop {
 			channel.configureBlocking(false);
 			selector = Selector.open();
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Error creating ServerSocketChannel: {}", e);
 		}
 	}
 
@@ -58,8 +62,7 @@ public class IOLoop {
 				}
 
 			} catch (IOException e) {
-				e.printStackTrace();
-			}
+				logger.error("Exception received in IOLoop: {}", e);			}
 		}
 	}
 
@@ -68,7 +71,7 @@ public class IOLoop {
 		try {
 			channel.socket().bind(endpoint);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error("Could not bind socket: {}", e);
 		}
 	}
 
@@ -76,7 +79,7 @@ public class IOLoop {
 		try {
 			channel.register(selector, SelectionKey.OP_ACCEPT);
 		} catch (ClosedChannelException e) {
-			e.printStackTrace();
+			logger.error("Could not register selector: {}", e);		
 		}		
 	}
 
