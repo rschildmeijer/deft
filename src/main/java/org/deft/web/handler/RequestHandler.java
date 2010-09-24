@@ -54,4 +54,6 @@ public abstract class RequestHandler {
 
 	public void delete(HttpRequest request, HttpResponse response) { /* default nop */ }
 
+	public void head(HttpRequest request, HttpResponse response) { /* default nop */ }
+
 }
