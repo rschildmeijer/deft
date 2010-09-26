@@ -11,12 +11,8 @@ public class HttpUtil {
 	public static String createInitialLineAndHeaders(int returnCode) {
 		String s = createInitialLine(returnCode);
 
-		//s = s + "\r\n";
-		s = s + (char)(10);
-		s = s + (char)(13);
-		s = s + "Content-Type: text/html\r\n";
-		s = s + "Connection: close\r\n"; // we can't handle persistent connections
-		s = s + "\r\n"; // this marks the end of the http header
+		s += s + "Content-Type: text/html\r\n";
+		s += s + "Connection: close\r\n"; // we can't handle persistent connections
 		return s;
 	}
 	
@@ -47,7 +43,7 @@ public class HttpUtil {
 			logger.error("Uknonwn Http status code: " + statusCode);
 			throw new IllegalArgumentException("Unknow Http status code: " + statusCode);
 		}
-		return initialLine;
+		return initialLine + "\r\n";
 	}
 
 }

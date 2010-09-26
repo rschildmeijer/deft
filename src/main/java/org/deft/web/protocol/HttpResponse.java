@@ -42,10 +42,8 @@ public class HttpResponse {
 	}
 
 	public void write(String data) {
-		maybeSendInitalLineAndHeaders();
-		
-		data += (char)(10);	// "\\r"
-		data += (char)(13);	// "\\n"
+		String initial = maybeCreateInitalLineAndHeaders();
+		data = initial + data + "\r\n";
 		ByteBuffer output = ByteBuffer.wrap(data.getBytes(CHAR_SET));
 		try {
 			long bytesWritten = clientChannel.write(output);
@@ -54,14 +52,16 @@ public class HttpResponse {
 		}
 	}
 	
-	private /*<> synchronzied */ void maybeSendInitalLineAndHeaders() {
+	private /*<> synchronzied */ String maybeCreateInitalLineAndHeaders() {
+		String initial = "";
 		if (!initialResponseLineSent) {
 			initialResponseLineSent = true;
-			write(HttpUtil.createInitialLine(statusCode));
+			initial = HttpUtil.createInitialLine(statusCode);
 			for (Map.Entry<String, String> header : headers.entrySet()) {
-				write(header.getKey() + ": " + header.getValue());
+				initial += header.getKey() + ": " + header.getValue() + "\r\n";
 			}
 		}
+		return initial + "\r\n";
 	}
 
 	public void finish() {
