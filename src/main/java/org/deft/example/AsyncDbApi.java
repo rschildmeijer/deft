@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Dummy class representing a call to an sync DB-lib used in development
+ * Dummy class representing a call to an async DB-lib used in development
  *
  */
 public class AsyncDbApi {

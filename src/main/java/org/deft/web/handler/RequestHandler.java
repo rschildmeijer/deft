@@ -49,22 +49,22 @@ public abstract class RequestHandler {
 
 	//Default implementation of HttpMethods return a 501 page
 	public void get(HttpRequest request, HttpResponse response) {
-		response.write(HttpUtil.createHttpHeader(501));
+		response.write(HttpUtil.createInitialLineAndHeaders(501));
 	}
 
 	public void post(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createHttpHeader(501));	
+		response.write(HttpUtil.createInitialLineAndHeaders(501));	
 	}
 
 	public void put(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createHttpHeader(501));	
+		response.write(HttpUtil.createInitialLineAndHeaders(501));	
 	}
 
 	public void delete(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createHttpHeader(501));	
+		response.write(HttpUtil.createInitialLineAndHeaders(501));	
 	}
 
 	public void head(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createHttpHeader(501));
+		response.write(HttpUtil.createInitialLineAndHeaders(501));
 	}
 }

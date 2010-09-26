@@ -43,7 +43,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		if (rh != null) {
 			HttpRequestDispatcher.dispatch(rh, request, response);
 		} else {
-			String _404 = HttpUtil.createHttpHeader(404);
+			String _404 = HttpUtil.createInitialLineAndHeaders(404);
 			response.write(_404);
 			response.write("Requested URL: " + request.getRequestedPath() + " was not found");
 		}

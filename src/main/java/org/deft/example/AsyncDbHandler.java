@@ -1,7 +1,5 @@
 package org.deft.example;
 
-import java.io.IOException;
-
 import org.deft.web.AsyncCallback;
 import org.deft.web.Asynchronous;
 import org.deft.web.handler.RequestHandler;
@@ -34,23 +32,14 @@ public class AsyncDbHandler extends RequestHandler{
 		@Override
 		public void onFailure(Throwable caught) {
 			logger.debug("Exception: " + caught);
-			finish();
+			response.finish();
 		}
 
 		@Override
 		public void onSuccess(String result) {
 			response.write("Name: " + result);
 			logger.debug("MyCallback.onSuccess, retrieved name: " + result);
-			finish();
-		}
-		
-		
-		public void finish() {
-			try {
-				response.getChannel().close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			response.finish();
 		}
 		
 	}
