@@ -3,7 +3,10 @@ package org.deft.web;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -29,15 +32,17 @@ import org.junit.Test;
 
 
 public class DeftSystemTest {
-	
+
 	private static final AtomicBoolean setupExecuted = new AtomicBoolean(false);
 
 	private static final int PORT = 8081;
+	
+	public static final String expectedPayload = "hello test";
 
 	private static class ExampleRequestHandler extends RequestHandler {
 		@Override
 		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
-			response.write("hello test");
+			response.write(expectedPayload);
 		}
 
 	}
@@ -84,6 +89,8 @@ public class DeftSystemTest {
 		for (String header : expectedHeaders) {
 			assertTrue(response.getFirstHeader(header) != null);
 		}
+		
+		assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent()).trim());
 	}
 
 	@Test
@@ -115,6 +122,25 @@ public class DeftSystemTest {
 		}
 		if (latch.getCount() != 0) {
 			assertTrue("Did not finish " + nRequests + " # of requests", false);
+		}
+	}
+
+	public String convertStreamToString(InputStream is) throws IOException {
+		if (is != null) {
+			StringBuilder sb = new StringBuilder();
+			String line;
+
+			try {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+				while ((line = reader.readLine()) != null) {
+					sb.append(line).append("\n");
+				}
+			} finally {
+				is.close();
+			}
+			return sb.toString();
+		} else {       
+			return "";
 		}
 	}
 
