@@ -11,6 +11,7 @@
 			<artifactId>guava</artifactId>
 			<version>r06</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -18,14 +19,22 @@
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>0.9.24</version>
 			<type>jar</type>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.0.3</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
+
 
 
 	<build>
