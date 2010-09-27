@@ -8,8 +8,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.HttpResponse;
@@ -85,9 +87,10 @@ public class DeftSystemTest {
 	}
 
 	@Test
-	public void simpleConcurrentGetRequest() {
+	public void simpleConcurrentGetRequestTest() {
 		int nThreads = 8;
 		int nRequests = 2048;
+		final CountDownLatch latch = new CountDownLatch(nRequests);
 		ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
 		for (int i = 1; i <= nRequests; i++) {
@@ -97,6 +100,7 @@ public class DeftSystemTest {
 				public void run() {
 					try {
 						doSimpleGetRequest();
+						latch.countDown();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -105,9 +109,12 @@ public class DeftSystemTest {
 			});
 		}
 		try {
-			Thread.sleep(3000);
+			latch.await(15 * 1000, TimeUnit.MILLISECONDS);	// max wait time
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+		}
+		if (latch.getCount() != 0) {
+			assertTrue("Did not finish " + nRequests + " # of requests", false);
 		}
 	}
 
