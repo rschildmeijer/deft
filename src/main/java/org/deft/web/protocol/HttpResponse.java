@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.deft.exception.MultipleWritesException;
+import org.deft.util.DateUtil;
 import org.deft.util.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ public class HttpResponse {
 	public HttpResponse(SocketChannel sc) {
 		clientChannel = sc;
 		headers.put("Server", "DeftServer/0.0.1");
+		headers.put("Date", DateUtil.getGurrentAsString());
 	}
 	
 	public void setStatusCode(int sc) {

@@ -3,7 +3,6 @@ package org.deft.web.handler;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.deft.util.HttpUtil;
 import org.deft.web.Asynchronous;
 import org.deft.web.HttpVerb;
 
@@ -49,22 +48,27 @@ public abstract class RequestHandler {
 
 	//Default implementation of HttpMethods return a 501 page
 	public void get(HttpRequest request, HttpResponse response) {
-		response.write(HttpUtil.createInitialLineAndHeaders(501));
+		response.setStatusCode(501);
+		response.write("");
 	}
 
 	public void post(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createInitialLineAndHeaders(501));	
+		response.setStatusCode(501);
+		response.write("");
 	}
 
 	public void put(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createInitialLineAndHeaders(501));	
+		response.setStatusCode(501);
+		response.write("");
 	}
 
 	public void delete(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createInitialLineAndHeaders(501));	
+		response.setStatusCode(501);
+		response.write("");
 	}
 
 	public void head(HttpRequest request, HttpResponse response) { 
-		response.write(HttpUtil.createInitialLineAndHeaders(501));
+		response.setStatusCode(501);
+		response.write("");
 	}
 }
