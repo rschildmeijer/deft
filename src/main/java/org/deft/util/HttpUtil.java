@@ -8,13 +8,13 @@ public class HttpUtil {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
-	public static String createInitialLineAndHeaders(int returnCode) {
-		String s = createInitialLine(returnCode);
-
-		s += s + "Content-Type: text/html\r\n";
-		s += s + "Connection: close\r\n"; // we can't handle persistent connections
-		return s;
-	}
+//	public static String createInitialLineAndHeaders(int returnCode) {
+//		String s = createInitialLine(returnCode);
+//
+//		s += s + "Content-Type: text/html\r\n";
+//		s += s + "Connection: close\r\n"; // we can't handle persistent connections
+//		return s;
+//	}
 	
 	// e.g. HTTP/1.0 200 OK or HTTP/1.0 404 Not Found (HTTP version + response status code + reason phrase)
 	public static String createInitialLine(int statusCode) {
