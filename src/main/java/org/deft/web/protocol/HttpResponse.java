@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deft.exception.MultipleWritesException;
 import org.deft.util.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class HttpResponse {
 	//<> private final ConcurrentMap<String, String> headers = new ConcurrentHashMap<String, String>();
 	
 	private final Map<String, String> headers = new HashMap<String, String>();
-	private /*<> AtomicBoolean */ boolean initialResponseLineSent = false;
+	private boolean writeExecuted = false;
 	
 	public HttpResponse(SocketChannel sc) {
 		clientChannel = sc;
@@ -41,29 +42,38 @@ public class HttpResponse {
 		headers.put(header, value);
 	}
 
+	/**
+	 * This method must only be called once.
+	 *
+	 */
 	public void write(String data) {
-		String initial = maybeCreateInitalLineAndHeaders();
+		
+		//TODO need to make thread-safe if we are to allow concurrent access to this class
+		if (writeExecuted) {
+			throw new MultipleWritesException();
+		}
+		
+		String initial = createInitalLineAndHeaders();
 		data = initial + data + "\r\n";
 		ByteBuffer output = ByteBuffer.wrap(data.getBytes(CHAR_SET));
 		try {
 			long bytesWritten = clientChannel.write(output);
 		} catch (IOException e) {
 			logger.error("Error writing Http response");
+		} finally {
+			writeExecuted = true;
 		}
 	}
 	
-	private /*<> synchronzied */ String maybeCreateInitalLineAndHeaders() {
-		String initial = "";
-		if (!initialResponseLineSent) {
-			initialResponseLineSent = true;
-			initial = HttpUtil.createInitialLine(statusCode);
-			for (Map.Entry<String, String> header : headers.entrySet()) {
-				initial += header.getKey() + ": " + header.getValue() + "\r\n";
-			}
+	private /*<> synchronzied */ String createInitalLineAndHeaders() {
+		String initial = HttpUtil.createInitialLine(statusCode);
+		for (Map.Entry<String, String> header : headers.entrySet()) {
+			initial += header.getKey() + ": " + header.getValue() + "\r\n";
 		}
 		return initial + "\r\n";
 	}
 
+	//TODO Is this method needed, or could we include this code in write-method instead?
 	public void finish() {
 		try {
 			clientChannel.close();
