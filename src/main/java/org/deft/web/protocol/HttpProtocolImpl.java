@@ -8,7 +8,6 @@ import java.nio.channels.SocketChannel;
 
 import org.deft.util.HttpUtil;
 import org.deft.web.Application;
-import org.deft.web.HttpVerb;
 import org.deft.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
