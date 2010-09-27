@@ -22,7 +22,7 @@ public class DateUtil {
 		CALENDAR = new GregorianCalendar(GMT_ZONE, LOCALE);
 	}
 		
-	public static String getGurrentAsString() {
+	public static String getCurrentAsString() {
 		return RFC_1123_FORMAT.format(CALENDAR.getTime());
 	}
 	

@@ -33,7 +33,7 @@ public class HttpResponse {
 	public HttpResponse(SocketChannel sc) {
 		clientChannel = sc;
 		headers.put("Server", "DeftServer/0.0.1");
-		headers.put("Date", DateUtil.getGurrentAsString());
+		headers.put("Date", DateUtil.getCurrentAsString());
 	}
 	
 	public void setStatusCode(int sc) {
