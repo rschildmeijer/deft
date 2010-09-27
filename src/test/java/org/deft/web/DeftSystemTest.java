@@ -15,7 +15,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
@@ -27,13 +26,11 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.deft.example.AsyncDbHandler;
 import org.deft.web.handler.RequestHandler;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
 public class DeftSystemTest {
-
-	private static final AtomicBoolean setupExecuted = new AtomicBoolean(false);
 
 	private static final int PORT = 8081;
 	
@@ -47,9 +44,8 @@ public class DeftSystemTest {
 
 	}
 
-	@Before
-	public void setup() {
-		if (setupExecuted.get()) return;
+	@BeforeClass
+	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
 		reqHandlers.put("/", new ExampleRequestHandler());
 		reqHandlers.put("/mySql", new AsyncDbHandler());
@@ -61,10 +57,6 @@ public class DeftSystemTest {
 		new Thread(new Runnable() {
 			@Override public void run() { new HttpServer(application).listen(PORT).getIOLoop().start(); }
 		}).start();
-		setupExecuted.set(true);
-		//		try { 
-		//			Thread.sleep(10); //give Deft some time to start;
-		//		} catch (InterruptedException e) { e.printStackTrace(); }	
 	}
 
 	@Test
