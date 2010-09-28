@@ -3,6 +3,7 @@ The Deft web server is an open source projected started by Roger Schildmeijer ([
 Jim Petersson ([jimpetersson]).
 
 Deft is a single threaded, asynchronous, event driven high performance web server. 
+
 Source and issue tracker: http://github.com/rschildmeijer/deft
  
 ## Features
@@ -12,14 +13,27 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
  * Asynchronous non-blocking
  * xyz
 
-xyz
-
 ## Requirements
-xyz
+* Java >= 1.6 
 
 ## Getting started
-xyz
+    private static class ExampleRequestHandler extends RequestHandler {
 
+        @Override
+        public void get(HttpRequest request, HttpResponse response) {
+            response.write("hello world!");
+        }
+
+    }
+
+    public static void main(String[] args) {
+        Map<String, RequestHandler> handlers = new HashMap<String, RequestHandler>();
+        reqHandlers.put("/", new ExampleRequestHandler());
+        Application application = new Application(handlers);
+        HttpServer server = new HttpServer(application);
+        server.listen(8080).getIOLoop().start();
+    }
+    
 [@rschildmeijer]: http://twitter.com/rschildmeijer
 [jimpetersson]: http://github.com/jimpetersson
 [C10k]: http://en.wikipedia.org/wiki/C10k_problem
