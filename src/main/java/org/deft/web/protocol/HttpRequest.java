@@ -19,6 +19,7 @@ public class HttpRequest {
 	private final String version; 
 	private Map<String, String> headers;
 
+	
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
 		String[] elements = requestLine.split(" ");
