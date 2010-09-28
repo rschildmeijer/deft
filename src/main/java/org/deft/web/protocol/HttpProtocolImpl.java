@@ -6,7 +6,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
-
 import org.deft.web.Application;
 import org.deft.web.handler.RequestHandler;
 import org.slf4j.Logger;
@@ -51,15 +50,6 @@ public class HttpProtocolImpl implements HttpProtocol {
 			clientChannel.close();	// remove this line ()
 		}
 	}
-
-	@Override
-	public void handleWrite(SelectionKey key) throws IOException {
-		logger.debug("Received write event");
-		// TODO Auto-generated method stub
-
-	}
-
-	
 	
 	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
