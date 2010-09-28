@@ -8,10 +8,9 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
  
 ## Features
  
- * Specialized and optimized for thousands of simultaneous connections. ([C10k])
+ * Specialized and optimized for thousands of simultaneous connections. ([C10k]) ([C500k])
  * Using pure Java NIO ([java.nio] & [java.nio.channels])
  * Asynchronous (*nonblocking I/O*)
- * xyz
 
 ## Requirements
 * Java >= 1.6 
@@ -37,5 +36,6 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
 [@rschildmeijer]: http://twitter.com/rschildmeijer
 [jimpetersson]: http://github.com/jimpetersson
 [C10k]: http://en.wikipedia.org/wiki/C10k_problem
+[C500k]: http://blog.urbanairship.com/blog/2010/08/24/c500k-in-action-at-urban-airship/
 [java.nio]: http://download.oracle.com/javase/6/docs/api/java/nio/package-summary.html
 [java.nio.channels]: http://download.oracle.com/javase/6/docs/api/java/nio/channels/package-summary.html
