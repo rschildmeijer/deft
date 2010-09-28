@@ -1,5 +1,5 @@
 # Deft Server
-The Deft web server is an open source projected start by Roger Schildmeijer ([@rschildmeijer]) and
+The Deft web server is an open source projected started by Roger Schildmeijer ([@rschildmeijer]) and
 Jim Petersson ([jimpetersson]).
 
 Deft is a single threaded, asynchronous, event driven high performance web server. 
