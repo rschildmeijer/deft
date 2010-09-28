@@ -10,7 +10,7 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
  
  * Specialized and optimized for thousands of simultaneous connections. ([C10k])
  * Using pure Java NIO ([java.nio] & [java.nio.channels])
- * Asynchronous (***nonblocking I/O***)
+ * Asynchronous (*nonblocking I/O*)
  * xyz
 
 ## Requirements
