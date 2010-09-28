@@ -1,6 +1,6 @@
 # Deft Server
-The Deft web server is an open source projected started by Roger Schildmeijer ([@rschildmeijer]) and
-Jim Petersson ([jimpetersson]).
+The Deft web server is an open source projected (licensed under [Apache version 2]) 
+started by Roger Schildmeijer ([@rschildmeijer]) and Jim Petersson ([jimpetersson]).
 
 Deft is a single threaded, asynchronous, event driven high performance web server. 
 
@@ -39,3 +39,4 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
 [C500k]: http://blog.urbanairship.com/blog/2010/08/24/c500k-in-action-at-urban-airship/
 [java.nio]: http://download.oracle.com/javase/6/docs/api/java/nio/package-summary.html
 [java.nio.channels]: http://download.oracle.com/javase/6/docs/api/java/nio/channels/package-summary.html
+[Apache version 2]: http://www.apache.org/licenses/LICENSE-2.0.html
