@@ -7,7 +7,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.deft.exception.MultipleWritesException;
 import org.deft.util.DateUtil;
 import org.deft.util.HttpUtil;
 import org.slf4j.Logger;
@@ -28,7 +27,8 @@ public class HttpResponse {
 	//<> private final ConcurrentMap<String, String> headers = new ConcurrentHashMap<String, String>();
 	
 	private final Map<String, String> headers = new HashMap<String, String>();
-	private boolean writeExecuted = false;
+	private boolean headersCreated = false;
+	private String responseData = "";
 	
 	public HttpResponse(SocketChannel sc) {
 		clientChannel = sc;
@@ -44,26 +44,32 @@ public class HttpResponse {
 		headers.put(header, value);
 	}
 
-	/**
-	 * This method must only be called once.
-	 *
-	 */
 	public void write(String data) {
+		responseData +=data;
+	}
 		
-		//TODO need to make thread-safe if we are to allow concurrent access to this class
-		if (writeExecuted) {
-			throw new MultipleWritesException();
+	public void flush() {
+		if (!headersCreated) {
+			String initial = createInitalLineAndHeaders();			
+			responseData = initial + responseData;
+			headersCreated = true;
 		}
-		
-		String initial = createInitalLineAndHeaders();
-		data = initial + data + "\r\n";
-		ByteBuffer output = ByteBuffer.wrap(data.getBytes(CHAR_SET));
+		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(CHAR_SET));
 		try {
 			long bytesWritten = clientChannel.write(output);
 		} catch (IOException e) {
-			logger.error("Error writing Http response");
+			logger.error("Error writing response: {}", e);
 		} finally {
-			writeExecuted = true;
+			responseData = "";
+		}
+	}
+	
+	public void finish() {
+		flush();
+		try {
+			clientChannel.close();
+		} catch (IOException ioe) {
+			logger.error("Could not close client (SocketChannel) connection. {}", ioe);
 		}
 	}
 	
@@ -75,13 +81,5 @@ public class HttpResponse {
 		return initial + "\r\n";
 	}
 
-	//TODO Is this method needed, or could we include this code in write-method instead?
-	public void finish() {
-		try {
-			clientChannel.close();
-		} catch (IOException ioe) {
-			logger.error("Could not close client (SocketChannel) connection. {}", ioe);
-		}
-	}
 	
 }

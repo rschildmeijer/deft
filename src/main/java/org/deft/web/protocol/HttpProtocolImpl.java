@@ -47,7 +47,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		
 		//Only close if not async. In that case its up to RH to close it
 		if (rh == null || !rh.isMethodAsynchronous(request.getMethod())) {
-			clientChannel.close();	// remove this line ()
+			response.finish();
 		}
 	}
 	
