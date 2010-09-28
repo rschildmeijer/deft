@@ -7,9 +7,10 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
  
 ## Features
  
- * a
- * b
- * c
+ * Specialized and optimized for thousands of simultaneous connections. ([C10k])
+ * Using pure Java NIO (java.nio & java.nio.channels)
+ * Asynchronous non-blocking
+ * xyz
 
 xyz
 
@@ -21,3 +22,4 @@ xyz
 
 [@rschildmeijer]: http://twitter.com/rschildmeijer
 [jimpetersson]: http://github.com/jimpetersson
+[C10k]: http://en.wikipedia.org/wiki/C10k_problem
