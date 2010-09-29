@@ -65,7 +65,9 @@ public class HttpResponse {
 	}
 	
 	public void finish() {
-		flush();
+		if (clientChannel.isOpen()) {
+			flush();
+		}	
 		try {
 			clientChannel.close();
 		} catch (IOException ioe) {
