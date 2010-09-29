@@ -76,11 +76,15 @@ public class HttpResponse {
 	}
 	
 	private /*<> synchronzied */ String createInitalLineAndHeaders() {
-		String initial = HttpUtil.createInitialLine(statusCode);
+		StringBuilder sb = new StringBuilder(HttpUtil.createInitialLine(statusCode));
 		for (Map.Entry<String, String> header : headers.entrySet()) {
-			initial += header.getKey() + ": " + header.getValue() + "\r\n";
+			sb.append(header.getKey());
+			sb.append(" :");
+			sb.append(header.getValue());
+			sb.append("\r\n");
 		}
-		return initial + "\r\n";
+		sb.append("\r\n");
+		return sb.toString();
 	}
 
 	
