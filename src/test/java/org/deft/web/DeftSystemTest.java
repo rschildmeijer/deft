@@ -1,6 +1,7 @@
 package org.deft.web;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
@@ -41,14 +42,53 @@ public class DeftSystemTest {
 		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
 			response.write(expectedPayload);
 		}
-
 	}
+	
+	private static class WRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("1");
+		}
+	}
+	
+	private static class WWRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("1");
+			response.write("2");
+		}
+	}
+	
+	private static class WWFWRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("1");
+			response.write("2");
+			response.flush();
+			response.write("3");
+		}
+	}
+	
+	private static class WFWFRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("1");
+			response.flush();
+			response.write("2");
+			response.flush();
+		}
+	}
+	
 
 	@BeforeClass
 	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
 		reqHandlers.put("/", new ExampleRequestHandler());
 		reqHandlers.put("/mySql", new AsyncDbHandler());
+		reqHandlers.put("/w", new WRequestHandler());
+		reqHandlers.put("/ww", new WWRequestHandler());
+		reqHandlers.put("/wwfw", new WWFWRequestHandler());
+		reqHandlers.put("/wfwf", new WFWFRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 
@@ -72,9 +112,9 @@ public class DeftSystemTest {
 		HttpResponse response = httpclient.execute(httpget);
 		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date"});
 
-		assertEquals(response.getStatusLine().getStatusCode(), 200);
-		assertEquals(response.getStatusLine().getProtocolVersion(), new ProtocolVersion("HTTP", 1, 1));
-		assertEquals(response.getStatusLine().getReasonPhrase(), "OK");
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 
 		assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
 
@@ -84,7 +124,79 @@ public class DeftSystemTest {
 		
 		assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent()).trim());
 	}
+	
+	/**
+	 * Test a RH that does a single write
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	@Test
+	public void wTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/w");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("1", payLoad);
 
+	}
+
+	
+	@Test
+	public void wwTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/ww");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("12", payLoad);
+	}
+
+	@Test
+	public void wwfwTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wwfw");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("123", payLoad);
+	}
+	
+	@Test
+	public void wfwfTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wfwf");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("12", payLoad);
+	}
+	
+	
 	@Test
 	public void simpleConcurrentGetRequestTest() {
 		int nThreads = 8;
