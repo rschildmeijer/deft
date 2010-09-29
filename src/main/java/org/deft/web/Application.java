@@ -36,6 +36,7 @@ public class Application {
 			int index = path.lastIndexOf("/");
 			if (index != -1) {
 				String init = path.substring(0, index+1);	// path without its last segment
+				// TODO RS 100929 verify that the last path segment (the group capturing) matches the regex from the client
 				rh = capturingHandlers.get(init);
 			}
 		} 
