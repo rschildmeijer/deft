@@ -1,0 +1,13 @@
+Deft web server
+
+Alternative collection types provided by guava-libraries (superset of the old Google Collections Library)
+http://code.google.com/p/guava-libraries/
+Copyright (C) 2007 Google Inc.
+
+Logging library (successor to the popular log4j project).
+http://logback.qos.ch/
+Copyright (C) 2010 QOS.ch
+
+Http client library used by unit tests.
+http://hc.apache.org/
+Copyright (C) 2005-2010 Apache Software Foundation
