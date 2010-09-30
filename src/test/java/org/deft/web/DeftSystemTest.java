@@ -21,7 +21,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
@@ -79,6 +82,35 @@ public class DeftSystemTest {
 		}
 	}
 	
+	private static class DeleteRequestHandler extends RequestHandler {
+		@Override
+		public void delete(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("del");
+			response.flush();
+			response.write("ete");
+			response.flush();
+		}
+	}
+	
+	private static class PostRequestHandler extends RequestHandler {
+		@Override
+		public void post(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("po");
+			response.flush();
+			response.write("st");
+			response.flush();
+		}
+	}
+	
+	private static class PutRequestHandler extends RequestHandler {
+		@Override
+		public void put(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write("p");
+			response.flush();
+			response.write("ut");
+			response.flush();
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -89,6 +121,9 @@ public class DeftSystemTest {
 		reqHandlers.put("/ww", new WWRequestHandler());
 		reqHandlers.put("/wwfw", new WWFWRequestHandler());
 		reqHandlers.put("/wfwf", new WFWFRequestHandler());
+		reqHandlers.put("/delete", new DeleteRequestHandler());
+		reqHandlers.put("/post", new PostRequestHandler());
+		reqHandlers.put("/put", new PutRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 
@@ -195,7 +230,54 @@ public class DeftSystemTest {
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
 	}
+
+	@Test
+	public void deleteTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpDelete httpdelete = new HttpDelete("http://localhost:" + PORT + "/delete");
+		HttpResponse response = httpclient.execute(httpdelete);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("delete", payLoad);
+	}
 	
+	@Test
+	public void PostTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/post");
+		HttpResponse response = httpclient.execute(httppost);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("post", payLoad);
+	}
+	
+	@Test
+	public void putTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpPut httpput = new HttpPut("http://localhost:" + PORT + "/put");
+		HttpResponse response = httpclient.execute(httpput);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("put", payLoad);
+	}
 	
 	@Test
 	public void simpleConcurrentGetRequestTest() {
