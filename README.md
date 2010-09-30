@@ -60,6 +60,31 @@ By annotating the get method with the *org.deft.web.Asynchronous* annotation you
 not finished when the get method returns. When the asynchronous database client eventually calls the callback (i.e. onSuccess(String result)), 
 the request is still open, and the response is finally flushed to the client with the call to response.finish(). 
 
+### Capturing groups with regular expressions
+
+    class CapturingRequestHandler extends RequestHandler {
+
+        @Override
+        public void get(HttpRequest request, HttpResponse response) { 
+            response.write(request.getRequestedPath());
+        }
+
+    }
+
+    public static void main(String[] args) {
+        Map<String, RequestHandler> handlers = new HashMap<String, RequestHandler>();
+        handlers.put("/persons/([0-9]+)", new CapturingRequestHandler());
+        HttpServer server = new HttpServer(new Application(handlers));
+        server.listen(8080).getIOLoop().start();
+    }
+
+The code above creates a "dynamic mapping" to the group capturing request handler (CapturingRequestHandler). This type 
+of mapping is convenient when creating e.g. RESTful web services where you usually address your resources with the path 
+segment instead of using get parameters. The mapping above will "capture" all requests made against urls that start with 
+"/persons/" and ends with a (positive) number, e.g. "/persons/1911" or "/persons/42". Capturing groups can only be used as the
+last url path segment like the example above. It's (currently) not possible to have more than one capturing within one 
+"dynamic mapping".
+
 [@rschildmeijer]: http://twitter.com/rschildmeijer
 [jimpetersson]: http://github.com/jimpetersson
 [C10k]: http://en.wikipedia.org/wiki/C10k_problem
