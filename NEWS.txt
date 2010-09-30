@@ -3,8 +3,9 @@
 
 Features
 --------
-    - Date headers are always sent in http response. (#29)
-    - Support for Non-blocking, asynchronous requests. (#11)  
+    - Date headers are always sent in http response (#29).
+    - Support for non-blocking, asynchronous requests (#11).  
+    - Regular expressions (with capturing groups) in URL mapping (#10).
 
 Configuration
 ------------
