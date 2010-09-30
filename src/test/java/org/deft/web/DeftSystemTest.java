@@ -111,6 +111,13 @@ public class DeftSystemTest {
 			response.flush();
 		}
 	}
+	
+	private static class CapturingRequestRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deft.web.protocol.HttpRequest request, org.deft.web.protocol.HttpResponse response) {
+			response.write(request.getRequestedPath());
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -124,7 +131,8 @@ public class DeftSystemTest {
 		reqHandlers.put("/delete", new DeleteRequestHandler());
 		reqHandlers.put("/post", new PostRequestHandler());
 		reqHandlers.put("/put", new PutRequestHandler());
-
+		reqHandlers.put("/capturing/([0-9]+)", new CapturingRequestRequestHandler());
+		
 		final Application application = new Application(reqHandlers);
 
 		// start deft instance from a new thread because the start invocation is blocking 
@@ -277,6 +285,38 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("put", payLoad);
+	}
+	
+	@Test
+	public void capturingTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/1911");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("/capturing/1911", payLoad);
+	}
+	
+	@Test
+	public void erroneousCapturingTest() throws ClientProtocolException, IOException {
+		HttpParams params = new BasicHttpParams();
+		params.setParameter(" Connection", "Close");
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/r1911");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(404, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("Not Found", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("Requested URL: /capturing/r1911 was not found", payLoad);
 	}
 	
 	@Test
