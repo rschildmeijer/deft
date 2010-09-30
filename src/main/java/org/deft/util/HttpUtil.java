@@ -8,42 +8,33 @@ public class HttpUtil {
 	
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
-//	public static String createInitialLineAndHeaders(int returnCode) {
-//		String s = createInitialLine(returnCode);
-//
-//		s += s + "Content-Type: text/html\r\n";
-//		s += s + "Connection: close\r\n"; // we can't handle persistent connections
-//		return s;
-//	}
+	private static final String _200_OK 		 			= "HTTP/1.1 200 OK\r\n"; 
+	private static final String _400_BAD_REQUEST			= "HTTP/1.1 400 Bad Request\r\n"; 
+	private static final String _403_FORBIDDEN 			 	= "HTTP/1.1 403 Forbidden\r\n"; 
+	private static final String _404_NOT_FOUND 	 			= "HTTP/1.1 404 Not Found\r\n"; 
+	private static final String _500_INTERNAL_SERVER_RROR	= "HTTP/1.1 500 Internal Server Error\r\n"; 
+	private static final String _501_NOT_IMPLEMENTED		= "HTTP/1.1 501 Not Implemented\r\n"; 
 	
 	// e.g. HTTP/1.0 200 OK or HTTP/1.0 404 Not Found (HTTP version + response status code + reason phrase)
 	public static String createInitialLine(int statusCode) {
-		String initialLine = "HTTP/1.1 ";
 
 		switch (statusCode) {
 		case 200:
-			initialLine += "200 OK";
-			break;
+			return _200_OK;
 		case 400:
-			initialLine += "400 Bad Request";
-			break;
+			return _400_BAD_REQUEST;
 		case 403:
-			initialLine += "403 Forbidden";
-			break;
+			return _403_FORBIDDEN;
 		case 404:
-			initialLine += "404 Not Found";
-			break;
+			return _404_NOT_FOUND;
 		case 500:
-			initialLine += "500 Internal Server Error";
-			break;
+			return _500_INTERNAL_SERVER_RROR;
 		case 501:
-			initialLine += "501 Not Implemented";
-			break;
+			return _501_NOT_IMPLEMENTED;
 		default:
 			logger.error("Uknonwn Http status code: " + statusCode);
 			throw new IllegalArgumentException("Unknow Http status code: " + statusCode);
 		}
-		return initialLine + "\r\n";
 	}
 
 }
