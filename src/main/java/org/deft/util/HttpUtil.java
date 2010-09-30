@@ -12,7 +12,7 @@ public class HttpUtil {
 	private static final String _400_BAD_REQUEST			= "HTTP/1.1 400 Bad Request\r\n"; 
 	private static final String _403_FORBIDDEN 			 	= "HTTP/1.1 403 Forbidden\r\n"; 
 	private static final String _404_NOT_FOUND 	 			= "HTTP/1.1 404 Not Found\r\n"; 
-	private static final String _500_INTERNAL_SERVER_RROR	= "HTTP/1.1 500 Internal Server Error\r\n"; 
+	private static final String _500_INTERNAL_SERVER_ERROR	= "HTTP/1.1 500 Internal Server Error\r\n"; 
 	private static final String _501_NOT_IMPLEMENTED		= "HTTP/1.1 501 Not Implemented\r\n"; 
 	
 	// e.g. HTTP/1.0 200 OK or HTTP/1.0 404 Not Found (HTTP version + response status code + reason phrase)
@@ -28,7 +28,7 @@ public class HttpUtil {
 		case 404:
 			return _404_NOT_FOUND;
 		case 500:
-			return _500_INTERNAL_SERVER_RROR;
+			return _500_INTERNAL_SERVER_ERROR;
 		case 501:
 			return _501_NOT_IMPLEMENTED;
 		default:
