@@ -18,6 +18,7 @@ public class HttpRequest {
 	private final String requestedPath;	// correct name?
 	private final String version; 
 	private Map<String, String> headers;
+	private Map<String, String> parameters;
 
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
@@ -26,6 +27,7 @@ public class HttpRequest {
 		requestedPath = elements[1];
 		version = elements[2];
 		this.headers = headers;
+		parameters = parseParameters(requestedPath);
 	}
 	
 	public static HttpRequest of(ByteBuffer buffer) {
@@ -57,5 +59,56 @@ public class HttpRequest {
 	public HttpVerb getMethod() {
 		return method;
 	}
-
+	
+	public String getParameter(String name) {
+		return parameters.get(name);
+	}
+	
+	public Map<String, String> getParameters() {
+		return parameters;
+	}
+	
+	@Override
+	public String toString() {
+		String result = "METHOD: " + method + "\n";
+		result += "VERSION: " + version + "\n";
+		result += "PATH: " + requestedPath + "\n";
+		
+		result += "--- HEADER --- \n";
+		for (String key : headers.keySet()) {
+			String value = headers.get(key);
+			result += key + ":" + value + "\n";
+		}
+		
+		result += "--- PARAMETERS --- \n";
+		for (String key : parameters.keySet()) {
+			String value = parameters.get(key);
+			result += key + ":" + value + "\n";
+		}
+		return result;
+	}
+	
+	private Map<String, String> parseParameters(String requestLine) {
+		Map<String, String> params = new HashMap<String, String>();
+		String[] str = requestLine.split("\\?");
+		
+		//Parameters exist
+		if (str.length > 1) {
+			String[] paramArray = str[1].split("\\&"); //TODO JP support ; delimiter
+			for (String keyValue : paramArray) {
+				String[] keyValueArray = keyValue.split("=");
+				String name = keyValueArray[0];
+				String value = null;
+				
+				//We need to check if the parameter has a value associated with it.
+				if (keyValueArray.length > 1) {
+					value = keyValueArray[1];
+				}
+				params.put(name, value);
+			}
+		}
+		return params;
+	}
+	
+	//Enumeration getParameterNames();
 }
