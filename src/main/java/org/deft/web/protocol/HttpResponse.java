@@ -44,35 +44,40 @@ public class HttpResponse {
 		headers.put(header, value);
 	}
 
-	public void write(String data) {
+	public HttpResponse write(String data) {
 		responseData +=data;
+		return this;
 	}
 		
-	public void flush() {
+	public long flush() {
 		if (!headersCreated) {
 			String initial = createInitalLineAndHeaders();			
 			responseData = initial + responseData;
 			headersCreated = true;
 		}
 		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(CHAR_SET));
+		long bytesWritten = 0;
 		try {
-			long bytesWritten = clientChannel.write(output);
+			bytesWritten = clientChannel.write(output);
 		} catch (IOException e) {
 			logger.error("Error writing response: {}", e);
 		} finally {
 			responseData = "";
 		}
+		return bytesWritten;
 	}
 	
-	public void finish() {
+	public long finish() {
+		long bytesWritten = 0;
 		if (clientChannel.isOpen()) {
-			flush();
+			bytesWritten = flush();
 		}	
 		try {
 			clientChannel.close();
 		} catch (IOException ioe) {
 			logger.error("Could not close client (SocketChannel) connection. {}", ioe);
 		}
+		return bytesWritten;
 	}
 	
 	private /*<> synchronzied */ String createInitalLineAndHeaders() {
