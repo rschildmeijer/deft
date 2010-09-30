@@ -44,10 +44,7 @@ Source and issue tracker: http://github.com/rschildmeijer/deft
         public void get(HttpRequest request, final HttpResponse response) {
             response.write("hello ");
             db.asyncIdentityGet("world", new AsyncCallback<String>() {
-                public void onSuccess(String result) { 
-                    response.write(result); 
-                    response.finish(); 
-                }
+                public void onSuccess(String result) { response.write(result).finish(); }
             });
         }
 
