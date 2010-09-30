@@ -9,16 +9,28 @@ import com.google.common.collect.ImmutableMap;
 
 public class Application {
 
-	private final ImmutableMap<String, RequestHandler> handlers;
+	/**
+	 * "Normal/Absolute" (non group capturing) RequestHandlers
+	 * e.g. "/", "/persons"
+	 */
+	private final ImmutableMap<String, RequestHandler> absoluteHandlers;
 
+	/**
+	 * Group capturing RequestHandlers
+	 * e.g. "/persons/([0-9]+)", "/persons/(\\d{1,3})"  
+	 */
 	private final ImmutableMap<String, RequestHandler> capturingHandlers;
-	private final ImmutableMap<RequestHandler, Pattern> regexps;
+	
+	/**
+	 * A mapping between group capturing RequestHandlers and their corresponding pattern ( e.g. "([0-9]+)" )
+	 */
+	private final ImmutableMap<RequestHandler, Pattern> patterns;
 
 
 	public Application(Map<String, RequestHandler> handlers) {
 		ImmutableMap.Builder<String, RequestHandler> builder = new ImmutableMap.Builder<String, RequestHandler>();
 		ImmutableMap.Builder<String, RequestHandler> capturingBuilder = new ImmutableMap.Builder<String, RequestHandler>();
-		ImmutableMap.Builder<RequestHandler, Pattern> regexpsBuilder = new ImmutableMap.Builder<RequestHandler, Pattern>();
+		ImmutableMap.Builder<RequestHandler, Pattern> patternsBuilder = new ImmutableMap.Builder<RequestHandler, Pattern>();
 
 		for (String path : handlers.keySet()) {
 			int index = path.lastIndexOf("/");
@@ -26,19 +38,19 @@ public class Application {
 			if (containsCapturingGroup(group)) {
 				// path ends with capturing group, e.g path == "/person/([0-9]+)"
 				capturingBuilder.put(path.substring(0, index+1), handlers.get(path));
-				regexpsBuilder.put(handlers.get(path), Pattern.compile(group));
+				patternsBuilder.put(handlers.get(path), Pattern.compile(group));
 			} else {
 				// "normal" path, e.g. path == "/"
 				builder.put(path, handlers.get(path));
 			}
 		}
-		this.handlers = builder.build();
+		this.absoluteHandlers = builder.build();
 		this.capturingHandlers = capturingBuilder.build();
-		this.regexps = regexpsBuilder.build();
+		this.patterns = patternsBuilder.build();
 	}
 
 	public RequestHandler getHandler(String path) {
-		RequestHandler rh = handlers.get(path);
+		RequestHandler rh = absoluteHandlers.get(path);
 		if (rh == null) {
 			// path could contain capturing groups which we could have a handler associated with.
 			rh = getCapturingHandler(path);
@@ -59,7 +71,7 @@ public class Application {
 			String group = path.substring(index+1, path.length()); 
 			RequestHandler handler = capturingHandlers.get(init);
 			if (handler != null) {
-				Pattern regex = regexps.get(handler);
+				Pattern regex = patterns.get(handler);
 				if (regex.matcher(group).matches()) {
 					return handler;
 				}
