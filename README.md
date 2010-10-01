@@ -1,6 +1,5 @@
 # Deft Server
-The Deft web server is an open source projected (licensed under [Apache version 2]) 
-started by Roger Schildmeijer ([@rschildmeijer]) and Jim Petersson ([jimpetersson]).
+The Deft web server is an open source projected (licensed under [Apache version 2]).
 
 Deft is a single threaded, asynchronous, event driven high performance web server. 
 
@@ -85,6 +84,13 @@ segment instead of using get parameters. The mapping above will "capture" all re
 last url path segment like the example above. It's (currently) not possible to have more than one capturing within one 
 "dynamic mapping".
 
+### Contact
+irc [freenode] #deft
+
+Roger Schildmeijer ([@rschildmeijer]) 
+
+Jim Petersson ([jimpetersson]).
+
 [@rschildmeijer]: http://twitter.com/rschildmeijer
 [jimpetersson]: http://github.com/jimpetersson
 [C10k]: http://en.wikipedia.org/wiki/C10k_problem
@@ -92,3 +98,4 @@ last url path segment like the example above. It's (currently) not possible to h
 [java.nio]: http://download.oracle.com/javase/6/docs/api/java/nio/package-summary.html
 [java.nio.channels]: http://download.oracle.com/javase/6/docs/api/java/nio/channels/package-summary.html
 [Apache version 2]: http://www.apache.org/licenses/LICENSE-2.0.html
+[freenode]: http://freenode.net/irc_servers.shtml
