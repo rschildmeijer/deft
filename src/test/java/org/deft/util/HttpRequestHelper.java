@@ -1,8 +1,12 @@
 package org.deft.util;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * This class can be used to create HttpRequests (and corresponding byte representations)
@@ -30,7 +34,7 @@ From: abcde@qwert.com
 	private String version = "1.1";
 	private String requestedPath = "/";
 	private Map<String, String> headers = new HashMap<String, String>();
-	private Map<String, String> getParameters = new HashMap<String, String>();
+	private Multimap<String, String> getParameters = HashMultimap.create();
 	
 	public HttpRequestHelper() {
 		headers.put("Host", "localhost:8080");
@@ -61,7 +65,7 @@ From: abcde@qwert.com
 		return headers.put(name, value);
 	}
 	
-	public String addGetParameter(String name, String value) {
+	public boolean addGetParameter(String name, String value) {
 		return getParameters.put(name, value);
 	}
 	
@@ -110,9 +114,11 @@ From: abcde@qwert.com
 			requestedPathWithParams += "?";
 			for (String paramName : getParameters.keySet()) {
 				String delimiter = getParameterDelimiter();
-				String value = getParameters.get(paramName);
-				value = value == null? "" : value;
-				requestedPathWithParams += paramName + "=" + value + delimiter;
+				Collection<String> values = getParameters.get(paramName);
+				for (String value : values) { //A single param can have multiple values					
+					String val = value == null? "" : value;
+					requestedPathWithParams += paramName + "=" + val + delimiter;
+				}
 			}
 			//Remove last &
 			requestedPathWithParams = requestedPathWithParams.substring(0, requestedPathWithParams.length()-1);

@@ -2,12 +2,15 @@ package org.deft.web.protocol;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.deft.util.ArrayUtil;
 import org.deft.web.HttpVerb;
+
+import com.google.common.collect.ImmutableMultimap;
 
 public class HttpRequest {
 
@@ -18,7 +21,7 @@ public class HttpRequest {
 	private final String requestedPath;	// correct name?
 	private final String version; 
 	private Map<String, String> headers;
-	private Map<String, String> parameters;
+	private ImmutableMultimap<String, String> parameters;
 
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
@@ -60,12 +63,29 @@ public class HttpRequest {
 		return method;
 	}
 	
+	/**
+	 * Returns the value of a request parameter as a String, or null if the parameter does not exist. 
+	 *
+	 * You should only use this method when you are sure the parameter has only one value. If the parameter 
+	 * might have more than one value, use getParameterValues(java.lang.String).
+     * If you use this method with a multi-valued parameter, the value returned is equal to the first value in
+     * the array returned by getParameterValues. 
+	 */
 	public String getParameter(String name) {
-		return parameters.get(name);
+		Collection<String> values = parameters.get(name);		
+		return values.isEmpty() ? null : values.iterator().next();
 	}
 	
-	public Map<String, String> getParameters() {
+	public ImmutableMultimap<String, String> getParameters() {
 		return parameters;
+	}
+	
+	/**
+	 * Returns a collection of all values associated with the provided parameter.
+	 * If no values are found and empty collection is returned.
+	 */
+	public Collection<String> getParameterValues(String name) {
+		return parameters.get(name);
 	}
 	
 	@Override
@@ -82,14 +102,16 @@ public class HttpRequest {
 		
 		result += "--- PARAMETERS --- \n";
 		for (String key : parameters.keySet()) {
-			String value = parameters.get(key);
-			result += key + ":" + value + "\n";
+			Collection<String> values = parameters.get(key);
+			for (String value : values) {
+				result += key + ":" + value + "\n";
+			}
 		}
 		return result;
 	}
 	
-	private Map<String, String> parseParameters(String requestLine) {
-		Map<String, String> params = new HashMap<String, String>();
+	private ImmutableMultimap<String, String> parseParameters(String requestLine) {
+		ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
 		String[] str = requestLine.split("\\?");
 		
 		//Parameters exist
@@ -97,18 +119,14 @@ public class HttpRequest {
 			String[] paramArray = str[1].split("\\&|;"); //Delimiter is either & or ;
 			for (String keyValue : paramArray) {
 				String[] keyValueArray = keyValue.split("=");
-				String name = keyValueArray[0];
-				String value = null;
 				
 				//We need to check if the parameter has a value associated with it.
 				if (keyValueArray.length > 1) {
-					value = keyValueArray[1];
+					builder.put(keyValueArray[0], keyValueArray[1]); //name, value
 				}
-				params.put(name, value);
 			}
 		}
-		return params;
+		return builder.build();
 	}
 	
-	//Enumeration getParameterNames();
 }
