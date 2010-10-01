@@ -94,7 +94,7 @@ public class HttpRequest {
 		
 		//Parameters exist
 		if (str.length > 1) {
-			String[] paramArray = str[1].split("\\&"); //TODO JP support ; delimiter
+			String[] paramArray = str[1].split("\\&|;"); //Delimiter is either & or ;
 			for (String keyValue : paramArray) {
 				String[] keyValueArray = keyValue.split("=");
 				String name = keyValueArray[0];

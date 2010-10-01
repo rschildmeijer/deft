@@ -16,7 +16,14 @@ Host: localhost:8080
 User-Agent: Mozilla/5.0
 From: abcde@qwert.com
  */
-	 
+	
+	enum ParameterDelimMode {
+		AMPERSAND,
+		SEMICOLON,
+		MIXED
+	}
+	
+	private ParameterDelimMode paramDelimMode = ParameterDelimMode.MIXED;
 	
 	private String protocol = "HTTP";
 	private String method = "GET";
@@ -62,6 +69,33 @@ From: abcde@qwert.com
 		requestedPath = path;
 	}
 	
+	public void setParameterDelimMode(ParameterDelimMode mode) {
+		paramDelimMode = mode;
+	}
+	
+	private String getParameterDelimiter() {
+		String delim;
+		switch (paramDelimMode) {
+		case AMPERSAND :
+			delim = "&";
+			break;
+		case SEMICOLON :
+			delim = ";";
+			break;
+		case MIXED:
+			if (Math.random() > 0.5) {
+				delim ="&"; 
+			}
+			else {
+				delim = ";";
+			}
+			break;
+		default : 
+			delim = ";";
+		}
+		return delim;
+	}
+	
 	
 	/**
 	 * Creates the initial request line, i.e:
@@ -72,12 +106,13 @@ From: abcde@qwert.com
 	private String createRequestLine() {
 		String requestedPathWithParams = requestedPath;
 		
-		if (!getParameters.isEmpty()) {
+		if (!getParameters.isEmpty()) { //Add get parameters
 			requestedPathWithParams += "?";
 			for (String paramName : getParameters.keySet()) {
+				String delimiter = getParameterDelimiter();
 				String value = getParameters.get(paramName);
 				value = value == null? "" : value;
-				requestedPathWithParams += paramName + "=" + value + "&";
+				requestedPathWithParams += paramName + "=" + value + delimiter;
 			}
 			//Remove last &
 			requestedPathWithParams = requestedPathWithParams.substring(0, requestedPathWithParams.length()-1);
