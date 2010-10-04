@@ -87,6 +87,10 @@ last url path segment like the example above. It's (currently) not possible to h
 "dynamic mapping".
 
 ### Contact
+Google group mailing list: deft-web-server@googlegroups.com
+
+Google group home page: [http://groups.google.com/group/deft-web-server]
+
 irc [freenode] #deft
 
 Roger Schildmeijer ([@rschildmeijer]) 
@@ -104,3 +108,4 @@ Jim Petersson ([jimpetersson]).
 [facebook/tornado]: http://github.com/facebook/tornado
 [http://github.com/rschildmeijer/deft]: http://github.com/rschildmeijer/deft
 [http://www.deftserver.org]: http://www.deftserver.org
+[http://groups.google.com/group/deft-web-server]: http://groups.google.com/group/deft-web-server
