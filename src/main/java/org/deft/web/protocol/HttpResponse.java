@@ -84,7 +84,7 @@ public class HttpResponse {
 		StringBuilder sb = new StringBuilder(HttpUtil.createInitialLine(statusCode));
 		for (Map.Entry<String, String> header : headers.entrySet()) {
 			sb.append(header.getKey());
-			sb.append(" :");
+			sb.append(": ");
 			sb.append(header.getValue());
 			sb.append("\r\n");
 		}
