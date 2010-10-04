@@ -15,20 +15,20 @@ public class HttpProtocolImpl implements HttpProtocol {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
 	
-	private static final int BUFFER_SIZE = 512;	//in bytes
+	private final int readBufferSize;
 
 	private final Application application;
 	
 	public HttpProtocolImpl(Application app) {
 		application = app;
+		readBufferSize = app.getReadBufferSize();
 	}
 	
 	@Override
 	public void handleAccept(SelectionKey key) throws IOException {
-		//logger.debug("Received accept event");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 		clientChannel.configureBlocking(false);
-		clientChannel.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(BUFFER_SIZE));
+		clientChannel.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
 	}
 
 	@Override
@@ -54,7 +54,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		try {
-			long bytesRead = clientChannel.read(buffer);
+			clientChannel.read(buffer);
 		} catch (IOException e) {
 			logger.error("Could not read buffer: {}", e);
 		}
