@@ -1,5 +1,5 @@
 # Deft Server
-The Deft web server is an open source projected (licensed under [Apache version 2]).
+The Deft web server is an open source projected (licensed under [Apache version 2]). Deft was intitially inspired by [facebook/tornado]
 
 Deft is a single threaded, asynchronous, event driven high performance web server. 
 
@@ -99,3 +99,4 @@ Jim Petersson ([jimpetersson]).
 [java.nio.channels]: http://download.oracle.com/javase/6/docs/api/java/nio/channels/package-summary.html
 [Apache version 2]: http://www.apache.org/licenses/LICENSE-2.0.html
 [freenode]: http://freenode.net/irc_servers.shtml
+[facebook/tornado]: http://github.com/facebook/tornado
