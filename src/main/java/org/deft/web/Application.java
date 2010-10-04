@@ -3,6 +3,7 @@ package org.deft.web;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.deft.web.handler.NotFoundRequestHandler;
 import org.deft.web.handler.RequestHandler;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +32,6 @@ public class Application {
 	 */
 	private final ImmutableMap<RequestHandler, Pattern> patterns;
 
-
 	public Application(Map<String, RequestHandler> handlers) {
 		ImmutableMap.Builder<String, RequestHandler> builder = new ImmutableMap.Builder<String, RequestHandler>();
 		ImmutableMap.Builder<String, RequestHandler> capturingBuilder = new ImmutableMap.Builder<String, RequestHandler>();
@@ -54,15 +54,21 @@ public class Application {
 		this.patterns = patternsBuilder.build();
 	}
 
+	/**
+	 * 
+	 * @param path Requested path
+	 * @return Returns the {@link RequestHandler} associated with the given path. If no mapping exists a 
+	 * {@link NotFoundRequestHandler} is returned.
+	 */
 	public RequestHandler getHandler(String path) {
 		RequestHandler rh = absoluteHandlers.get(path);
 		if (rh == null) {
 			// path could contain capturing groups which we could have a handler associated with.
 			rh = getCapturingHandler(path);
 		} 
-		return rh;
+		return rh != null ? rh : NotFoundRequestHandler.getInstance();	// TODO RS store in a final field for improved performance?
 	}
-
+	
 	private boolean containsCapturingGroup(String group) {
 		boolean containsGroup =  group.matches("^\\(.*\\)$");
 		Pattern.compile(group);	// throws PatternSyntaxException if group is malformed regular expression

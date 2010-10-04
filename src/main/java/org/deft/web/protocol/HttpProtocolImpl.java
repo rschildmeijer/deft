@@ -38,15 +38,10 @@ public class HttpProtocolImpl implements HttpProtocol {
 		HttpResponse response = new HttpResponse(clientChannel);
 		
 		RequestHandler rh = application.getHandler(request.getRequestedPath());
-		if (rh != null) {
-			HttpRequestDispatcher.dispatch(rh, request, response);
-		} else {
-			response.setStatusCode(404);
-			response.write("Requested URL: " + request.getRequestedPath() + " was not found");
-		}
+		HttpRequestDispatcher.dispatch(rh, request, response);
 		
 		//Only close if not async. In that case its up to RH to close it
-		if (rh == null || !rh.isMethodAsynchronous(request.getMethod())) {
+		if (!rh.isMethodAsynchronous(request.getMethod())) {
 			response.finish();
 		}
 	}
