@@ -5,16 +5,16 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.deft.util.ArrayUtil;
 import org.deft.util.HttpRequestHelper;
 import org.deft.web.protocol.HttpRequest;
 import org.junit.Test;
-
-import com.google.common.collect.Multimap;
 
 
 public class HttpRequestTest {
@@ -89,12 +89,20 @@ public class HttpRequestTest {
 		helper.addGetParameter("city", "stockholm");
 		
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(3, params.size());
+		assertEquals(3, getSize(params));
 		assertEquals("jim", request.getParameter("firstname"));
 		assertEquals("petersson", request.getParameter("lastname"));
 		assertEquals("stockholm", request.getParameter("city"));
+	}
+	
+	private int getSize(Map<String, Collection<String>> mmap) {
+		int size = 0;
+		for (Collection<String> values : mmap.values()) {
+			size += values.size();
+		}
+		return size;
 	}
 	
 	
@@ -104,9 +112,8 @@ public class HttpRequestTest {
 		helper.addGetParameter("firstname", null);
 	
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
-		
-		assertEquals(0, params.size());
+		Map<String, Collection<String>> params = request.getParameters();
+		assertEquals(0, getSize(params));
 		assertEquals(null, request.getParameter("firstname"));
 	}
 	
@@ -117,9 +124,9 @@ public class HttpRequestTest {
 		helper.addGetParameter("lastName", "");
 	
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(0, params.size());
+		assertEquals(0, getSize(params));
 		assertEquals(null, request.getParameter("firstname"));
 		assertEquals(null, request.getParameter("lastName"));
 	}
@@ -134,9 +141,9 @@ public class HttpRequestTest {
 		helper.addGetParameter("age", "30");
 	
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(3, params.size());
+		assertEquals(3, getSize(params));
 		assertEquals(null, request.getParameter("firstname"));
 		assertEquals("petersson", request.getParameter("lastName"));
 		assertEquals(null, request.getParameter("city"));
@@ -152,9 +159,9 @@ public class HttpRequestTest {
 		helper.addGetParameter("letters", "z");
 		
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(3, params.size());
+		assertEquals(3, getSize(params));
 		Collection<String> values = params.get("letters");
 		assertEquals(3, values.size());
 		assertTrue(values.contains("x"));
@@ -173,9 +180,9 @@ public class HttpRequestTest {
 		helper.addGetParameter("country", "swe");
 		
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(6, params.size());
+		assertEquals(6, getSize(params));
 		Collection<String> letters = params.get("letters");
 		Collection<String> numbers = params.get("numbers");
 		Collection<String> country = params.get("country");
@@ -203,9 +210,9 @@ public class HttpRequestTest {
 		helper.addGetParameter("letters", "z");
 		
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		
-		assertEquals(3, params.size());
+		assertEquals(3, getSize(params));
 		Collection<String> values = params.get("letters");
 		assertEquals(3, values.size());
 		assertTrue(values.contains("x"));
@@ -217,9 +224,9 @@ public class HttpRequestTest {
 	public void testEmptyParameters() {
 		HttpRequestHelper helper = new HttpRequestHelper();
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
+		Map<String, Collection<String>> params = request.getParameters();
 		assertNotNull(params);
-		assertEquals(0, params.size());
+		assertEquals(0, getSize(params));
 	}
 	
 	@Test(expected=UnsupportedOperationException.class)
@@ -228,7 +235,7 @@ public class HttpRequestTest {
 		helper.addGetParameter("letter", "x");
 		
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
-		Multimap<String, String> params = request.getParameters();
-		params.put("not", "allowed");	
+		Map<String, Collection<String>> params = request.getParameters();
+		params.put("not", new ArrayList<String>());	
 	}
 }

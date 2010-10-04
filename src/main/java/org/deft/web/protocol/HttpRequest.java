@@ -76,8 +76,8 @@ public class HttpRequest {
 		return values.isEmpty() ? null : values.iterator().next();
 	}
 	
-	public ImmutableMultimap<String, String> getParameters() {
-		return parameters;
+	public Map<String, Collection<String>> getParameters() {
+		return parameters.asMap();
 	}
 	
 	/**
