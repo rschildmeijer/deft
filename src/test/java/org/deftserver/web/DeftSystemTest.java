@@ -166,6 +166,7 @@ public class DeftSystemTest {
 		}
 		
 		assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent()).trim());
+		assertEquals(expectedPayload.length()+"", response.getFirstHeader("Content-Length").getValue());
 	}
 	
 	/**
@@ -188,6 +189,7 @@ public class DeftSystemTest {
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("1", payLoad);
 		assertEquals(4, response.getAllHeaders().length);
+		assertEquals("1", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	
@@ -206,6 +208,7 @@ public class DeftSystemTest {
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
 		assertEquals(4, response.getAllHeaders().length);
+		assertEquals("2", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	@Test
