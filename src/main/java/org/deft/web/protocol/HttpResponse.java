@@ -34,6 +34,10 @@ public class HttpResponse {
 		clientChannel = sc;
 		headers.put("Server", "DeftServer/0.0.1");
 		headers.put("Date", DateUtil.getCurrentAsString());
+		/* We should consider settings these when Response includes a body
+		 * The Content-Type: header gives the MIME-type of the data in the body, such as text/html or image/gif.
+         * The Content-Length: header gives the number of bytes in the body. 
+		 */
 	}
 	
 	public void setStatusCode(int sc) {
