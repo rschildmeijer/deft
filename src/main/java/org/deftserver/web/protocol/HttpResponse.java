@@ -34,9 +34,9 @@ public class HttpResponse {
 		clientChannel = sc;
 		headers.put("Server", "DeftServer/0.0.1");
 		headers.put("Date", DateUtil.getCurrentAsString());
-		/* We should consider settings these when Response includes a body
-		 * The Content-Type: header gives the MIME-type of the data in the body, such as text/html or image/gif.
-         * The Content-Length: header gives the number of bytes in the body. 
+		/* We should consider setting these when response includes a body.
+		 * The 'Content-Type' header gives the MIME-type of the data in the body, such as text/html or image/gif.
+         * The 'Content-Length' header gives the number of bytes in the body. 
 		 */
 	}
 	
@@ -74,6 +74,10 @@ public class HttpResponse {
 	public long finish() {
 		long bytesWritten = 0;
 		if (clientChannel.isOpen()) {
+			if (!headersCreated) {
+				setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
+				setHeader("Content-Length", ""+responseData.length());	// TODO RS faster/better with new Integer(..)?
+			}
 			bytesWritten = flush();
 		}	
 		try {

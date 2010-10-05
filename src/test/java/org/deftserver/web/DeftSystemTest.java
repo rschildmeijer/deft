@@ -153,7 +153,7 @@ public class DeftSystemTest {
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
 		HttpResponse response = httpclient.execute(httpget);
-		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date"});
+		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag"});
 
 		assertEquals(200, response.getStatusLine().getStatusCode());
 		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
@@ -187,7 +187,7 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("1", payLoad);
-
+		assertEquals(4, response.getAllHeaders().length);
 	}
 
 	
@@ -205,6 +205,7 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
+		assertEquals(4, response.getAllHeaders().length);
 	}
 
 	@Test
@@ -221,6 +222,7 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("123", payLoad);
+		assertEquals(2, response.getAllHeaders().length);
 	}
 	
 	@Test
@@ -237,6 +239,7 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
+		assertEquals(2, response.getAllHeaders().length);
 	}
 
 	@Test
