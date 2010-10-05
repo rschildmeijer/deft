@@ -3,8 +3,11 @@ package org.deftserver.web;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.deftserver.util.HttpUtil;
+import org.deftserver.web.handler.BadRequestRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
+import org.deftserver.web.protocol.HttpRequest;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -60,13 +63,21 @@ public class Application {
 	 * @return Returns the {@link RequestHandler} associated with the given path. If no mapping exists a 
 	 * {@link NotFoundRequestHandler} is returned.
 	 */
-	public RequestHandler getHandler(String path) {
+	private RequestHandler getHandler(String path) {
 		RequestHandler rh = absoluteHandlers.get(path);
 		if (rh == null) {
 			// path could contain capturing groups which we could have a handler associated with.
 			rh = getCapturingHandler(path);
 		} 
 		return rh != null ? rh : NotFoundRequestHandler.getInstance();	// TODO RS store in a final field for improved performance?
+	}
+	
+	public RequestHandler getHandler(HttpRequest request) {
+		if (!HttpUtil.verifyRequest(request)) {
+			return BadRequestRequestHandler.getInstance(); 
+		} else {
+			return getHandler(request.getRequestedPath());
+		}
 	}
 	
 	private boolean containsCapturingGroup(String group) {

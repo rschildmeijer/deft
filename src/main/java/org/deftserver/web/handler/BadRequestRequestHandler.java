@@ -1,0 +1,21 @@
+package org.deftserver.web.handler;
+
+import org.deftserver.web.protocol.HttpRequest;
+import org.deftserver.web.protocol.HttpResponse;
+
+public class BadRequestRequestHandler extends RequestHandler {
+
+private final static BadRequestRequestHandler instance = new BadRequestRequestHandler();
+	
+	private BadRequestRequestHandler() { }
+	
+	public static final BadRequestRequestHandler getInstance() {
+		return instance;
+	}
+	
+	@Override
+	public void get(HttpRequest request, HttpResponse response) {
+		response.setStatusCode(400);
+		response.write("HTTP 1.1 requests must include the Host: header");
+	}
+}

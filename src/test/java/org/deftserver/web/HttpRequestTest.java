@@ -1,6 +1,7 @@
 package org.deftserver.web;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.util.HttpRequestHelper;
+import org.deftserver.util.HttpUtil;
 import org.deftserver.web.protocol.HttpRequest;
 import org.junit.Test;
 
@@ -237,5 +239,41 @@ public class HttpRequestTest {
 		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
 		Map<String, Collection<String>> params = request.getParameters();
 		params.put("not", new ArrayList<String>());	
+	}
+	
+	@Test
+	public void testHostVerification_exists_HTTP_1_0() {
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.setVersion("1.0");
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+		boolean requestOk = HttpUtil.verifyRequest(request);
+		assertTrue(requestOk);
+	}
+	
+	@Test
+	public void testHostVerification_nonExisting_HTTP_1_0() {
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.setVersion("1.0");
+		helper.removeHeader("Host");
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+		boolean requestOk = HttpUtil.verifyRequest(request);
+		assertTrue(requestOk);
+	}
+	
+	@Test
+	public void testHostVerification_exists_HTTP_1_1() {
+		HttpRequestHelper helper = new HttpRequestHelper();
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+		boolean requestOk = HttpUtil.verifyRequest(request);
+		assertTrue(requestOk);
+	}
+	
+	@Test
+	public void testHostVerification_nonExisting_HTTP_1_1() {
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.removeHeader("Host");
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+		boolean requestOk = HttpUtil.verifyRequest(request);
+		assertFalse(requestOk);
 	}
 }

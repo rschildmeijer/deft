@@ -55,8 +55,16 @@ public class HttpRequest {
 		return requestedPath;
 	}
 
+	public String getVersion() {
+		return version;
+	}
+	
 	public Map<String, String> getHeaders() {
 		return Collections.unmodifiableMap(headers);
+	}
+	
+	public String getHeader(String name) {
+		return headers.get(name);
 	}
 	
 	public HttpVerb getMethod() {

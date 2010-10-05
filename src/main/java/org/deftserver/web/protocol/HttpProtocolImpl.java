@@ -37,7 +37,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		HttpResponse response = new HttpResponse(clientChannel);
 		
-		RequestHandler rh = application.getHandler(request.getRequestedPath());
+		RequestHandler rh = application.getHandler(request);
 		HttpRequestDispatcher.dispatch(rh, request, response);
 		
 		//Only close if not async. In that case its up to RH to close it

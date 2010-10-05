@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.PatternSyntaxException;
 
+import org.deftserver.web.handler.BadRequestRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.protocol.HttpRequest;
@@ -38,24 +39,70 @@ public class ApplicationTest {
 		handlers.put("/pets/([0-9]{0,3})", handler4);
 		Application app = new Application(handlers);
 		
-		assertNotNull(app.getHandler("/"));
-		assertNotNull(app.getHandler("/persons/1911"));
-		assertNotNull(app.getHandler("/persons/phone_numbers"));
-		assertNotNull(app.getHandler("/pets/123"));
 		
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/missing"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/persons/"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/persons/roger"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/persons/123a"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/persons/a123"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/pets/a123"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/pets/123a"));
-		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler("/pets/1234"));
+		String requestLine = "GET / HTTP/1.1";
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("Host", "localhost");
+		HttpRequest request = new HttpRequest(requestLine, headers);
 		
-		assertEquals(handler1, app.getHandler("/"));
-		assertEquals(handler2, app.getHandler("/persons/1911"));
-		assertEquals(handler3, app.getHandler("/persons/phone_numbers"));
-		assertEquals(handler4, app.getHandler("/pets/123"));
+		
+		assertNotNull(app.getHandler(request));
+		
+		requestLine = "GET /persons/1911 HTTP/1.1";
+		request = new HttpRequest(requestLine, headers);
+		assertNotNull(app.getHandler(request));
+		
+		
+		requestLine = "GET /persons/phone_numbers HTTP/1.1";
+		request = new HttpRequest(requestLine, headers);
+		assertNotNull(app.getHandler(request));
+		
+		requestLine = "GET /pets/123 HTTP/1.1";
+		request = new HttpRequest(requestLine, headers);
+		assertNotNull(app.getHandler(request));
+		
+		
+		request = new HttpRequest("GET /missing HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons/roger HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons/123a HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons/a123 HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /pets/a123 HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /pets/123a HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET /pets/1234 HTTP/1.1", headers);
+		assertEquals(NotFoundRequestHandler.getInstance(), app.getHandler(request));
+		
+		request = new HttpRequest("GET / HTTP/1.1", headers);
+		assertEquals(handler1, app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons/1911 HTTP/1.1", headers);
+		assertEquals(handler2, app.getHandler(request));
+		
+		request = new HttpRequest("GET /persons/phone_numbers HTTP/1.1", headers);
+		assertEquals(handler3, app.getHandler(request));
+		
+		request = new HttpRequest("GET /pets/123 HTTP/1.1", headers);
+		assertEquals(handler4, app.getHandler(request));
+		
+		//Verify that BadRequestRequestHandler is returned if request does not include Host header
+		headers = new HashMap<String, String>();
+		request = new HttpRequest("GET /pets/123 HTTP/1.1", headers);
+		assertEquals(BadRequestRequestHandler.getInstance(), app.getHandler(request));
+		
 	}
 	
 	@Test(expected=PatternSyntaxException.class)

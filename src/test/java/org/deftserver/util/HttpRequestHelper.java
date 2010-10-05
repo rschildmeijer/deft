@@ -65,12 +65,20 @@ From: abcde@qwert.com
 		return headers.put(name, value);
 	}
 	
+	public String removeHeader(String name) {
+		return headers.remove(name);
+	}
+	
 	public boolean addGetParameter(String name, String value) {
 		return getParameters.put(name, value);
 	}
 	
 	public void setRequestedPath(String path) {
 		requestedPath = path;
+	}
+	
+	public void setVersion(String version) {
+		this.version = version;
 	}
 	
 	public void setParameterDelimMode(ParameterDelimMode mode) {

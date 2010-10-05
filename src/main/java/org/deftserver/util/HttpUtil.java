@@ -1,5 +1,6 @@
 package org.deftserver.util;
 
+import org.deftserver.web.protocol.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,17 @@ public class HttpUtil {
 			logger.error("Uknonwn Http status code: " + statusCode);
 			throw new IllegalArgumentException("Unknow Http status code: " + statusCode);
 		}
+	}
+	
+	
+	public static boolean verifyRequest(HttpRequest request) {
+		String version = request.getVersion();
+		boolean requestOk = true;
+		if (version.equals("HTTP/1.1")) { //TODO might be optimized? Could do version.endsWith("1"), or similar
+			requestOk =  (request.getHeader("Host") != null);
+		}
+		
+		return requestOk;
 	}
 
 }
