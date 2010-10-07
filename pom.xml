@@ -58,10 +58,17 @@
 			<artifactId>maven-assembly-plugin</artifactId>
 			<version>2.2-beta-5</version>
 			<configuration>
+				<!--
 				<descriptorRefs>
-				<!--  	<descriptorRef>jar-with-dependencies</descriptorRef> -->
+				  	<descriptorRef>jar-with-dependencies</descriptorRef> 
 					<descriptorRef>bin</descriptorRef>
 				</descriptorRefs>
+				-->
+				<descriptors>
+            		<descriptor>src/main/assembly/deft-binary.xml</descriptor>
+            		<descriptor>src/main/assembly/deft-src.xml</descriptor>
+          		</descriptors>
+				
 			</configuration>
 		</plugin>
 
