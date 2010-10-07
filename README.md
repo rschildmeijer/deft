@@ -94,7 +94,8 @@ specify the location of it with a system property named logback.configurationFil
 property can be a URL, a resource on the class path or a path to a file external to the application.
 
 Example:
-java -Dlogback.configurationFile=/path/to/config.xml com.my.DeftServer
+
+*java -Dlogback.configurationFile=/path/to/config.xml com.my.DeftServer*
 
 ### Contact
 Google group mailing list: deft-web-server@googlegroups.com
