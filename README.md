@@ -86,6 +86,16 @@ segment instead of using get parameters. The mapping above will "capture" all re
 last url path segment like the example above. It's (currently) not possible to have more than one capturing within one 
 "dynamic mapping".
 
+### Logging
+All logging in Deft is performed by Logback (SLF4J). Deft ships with a default Logback config file, in which
+all log-output is written to STDOUT. While this works fine for testing purposes, it is recommended to override this
+behaviour for "real world scenarios". This is done by creating your own logback config file and then 
+specify the location of it with a system property named logback.configurationFile. The value of the this 
+property can be a URL, a resource on the class path or a path to a file external to the application.
+
+Example:
+java -Dlogback.configurationFile=/path/to/config.xml com.my.DeftServer
+
 ### Contact
 Google group mailing list: deft-web-server@googlegroups.com
 
