@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class AsyncDbApi {
 	
 	Logger logger = LoggerFactory.getLogger(AsyncDbApi.class);
-	private final int DELAY = 2000;
+	private final int DELAY = 100;
 	
 	public void getNameFromId(final String id, final AsyncCallback<String> callback) {
 		logger.debug("Getting name from database...");

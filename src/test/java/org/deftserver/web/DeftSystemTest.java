@@ -359,7 +359,13 @@ public class DeftSystemTest {
 	}
 	
 	@Test
-	public void asynchronousRequestTest() throws ClientProtocolException, IOException {
+	public void asynchronousRequestTest() throws ClientProtocolException, IllegalStateException, IOException {
+		for (int i = 1; i < 50; i++) {
+			doAsynchronousRequestTest();
+		}
+	}
+	
+	private void doAsynchronousRequestTest() throws ClientProtocolException, IOException, IllegalStateException {
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpParams params = httpclient.getParams();
 		params.setParameter(" Connection", "Close");
@@ -375,7 +381,6 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("Name: Jim123", payLoad);
-		
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {
