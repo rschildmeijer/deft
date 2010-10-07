@@ -2,11 +2,18 @@
 	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
-	<id>binary</id>
+	<id>binary-with-deps</id>
 	<formats>
 		<format>tar.gz</format>
 		<format>zip</format>
 	</formats>
+	<dependencySets>
+		<dependencySet>
+			<unpack>false</unpack>
+			<scope>runtime</scope>
+			<outputDirectory>lib</outputDirectory>
+		</dependencySet>
+	</dependencySets>
 	<fileSets>
 		<fileSet>
 			<includes>
@@ -15,13 +22,6 @@
 				<include>${project.basedir}/NOTICE.txt</include>
 				<include>${project.basedir}/NEWS.txt</include>
 			</includes>
-		</fileSet>
-		<fileSet>
-			<directory>${project.build.directory}</directory>
-			<includes>
-				<include>*.jar</include>
-			</includes>
-			<outputDirectory>lib</outputDirectory>
 		</fileSet>
 	</fileSets>
 </assembly>

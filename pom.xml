@@ -66,6 +66,7 @@
 				-->
 				<descriptors>
             		<descriptor>src/main/assembly/deft-binary.xml</descriptor>
+            		<descriptor>src/main/assembly/deft-binary-with-deps.xml</descriptor>
             		<descriptor>src/main/assembly/deft-src.xml</descriptor>
           		</descriptors>
 				
