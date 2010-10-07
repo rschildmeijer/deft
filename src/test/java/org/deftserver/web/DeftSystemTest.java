@@ -27,6 +27,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.web.handler.RequestHandler;
@@ -355,6 +356,26 @@ public class DeftSystemTest {
 		if (latch.getCount() != 0) {
 			assertTrue("Did not finish " + nRequests + " # of requests", false);
 		}
+	}
+	
+	@Test
+	public void asynchronousRequestTest() throws ClientProtocolException, IOException {
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpParams params = httpclient.getParams();
+		params.setParameter(" Connection", "Close");
+		HttpConnectionParams.setConnectionTimeout(params, 4 * 1000);
+		HttpConnectionParams.setSoTimeout(params, 10 * 1000);
+
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/mySql");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("Name: Jim123", payLoad);
+		
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {
