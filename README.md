@@ -90,7 +90,7 @@ last url path segment like the example above. It's (currently) not possible to h
 All logging in Deft is performed by Logback (SLF4J). Deft ships with a default Logback config file, in which
 all log-output is written to STDOUT. While this works fine for testing purposes, it is recommended to override this
 behaviour for "real world scenarios". This is done by creating your own logback config file and then 
-specify the location of it with a system property named logback.configurationFile. The value of the this 
+specify the location of it with a system property named logback.configurationFile. The value of this 
 property can be a URL, a resource on the class path or a path to a file external to the application.
 
 Example:
