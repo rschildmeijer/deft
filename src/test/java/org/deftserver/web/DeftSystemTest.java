@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -17,6 +18,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolVersion;
 import org.apache.http.client.ClientProtocolException;
@@ -26,6 +28,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
@@ -149,12 +152,15 @@ public class DeftSystemTest {
 	}
 
 	private void doSimpleGetRequest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
 		HttpResponse response = httpclient.execute(httpget);
-		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag"});
+		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag", "Connection"});
 
 		assertEquals(200, response.getStatusLine().getStatusCode());
 		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
@@ -177,8 +183,11 @@ public class DeftSystemTest {
 	 */
 	@Test
 	public void wTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/w");
 		HttpResponse response = httpclient.execute(httpget);
@@ -189,15 +198,18 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("1", payLoad);
-		assertEquals(4, response.getAllHeaders().length);
+		assertEquals(5, response.getAllHeaders().length);
 		assertEquals("1", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	
 	@Test
 	public void wwTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/ww");
 		HttpResponse response = httpclient.execute(httpget);
@@ -208,14 +220,17 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
-		assertEquals(4, response.getAllHeaders().length);
+		assertEquals(5, response.getAllHeaders().length);
 		assertEquals("2", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	@Test
 	public void wwfwTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wwfw");
 		HttpResponse response = httpclient.execute(httpget);
@@ -226,13 +241,16 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("123", payLoad);
-		assertEquals(2, response.getAllHeaders().length);
+		assertEquals(3, response.getAllHeaders().length);
 	}
 	
 	@Test
 	public void wfwfTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wfwf");
 		HttpResponse response = httpclient.execute(httpget);
@@ -243,13 +261,16 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("12", payLoad);
-		assertEquals(2, response.getAllHeaders().length);
+		assertEquals(3, response.getAllHeaders().length);
 	}
 
 	@Test
 	public void deleteTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpDelete httpdelete = new HttpDelete("http://localhost:" + PORT + "/delete");
 		HttpResponse response = httpclient.execute(httpdelete);
@@ -264,8 +285,11 @@ public class DeftSystemTest {
 	
 	@Test
 	public void PostTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/post");
 		HttpResponse response = httpclient.execute(httppost);
@@ -280,8 +304,11 @@ public class DeftSystemTest {
 	
 	@Test
 	public void putTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpPut httpput = new HttpPut("http://localhost:" + PORT + "/put");
 		HttpResponse response = httpclient.execute(httpput);
@@ -296,8 +323,11 @@ public class DeftSystemTest {
 	
 	@Test
 	public void capturingTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/1911");
 		HttpResponse response = httpclient.execute(httpget);
@@ -312,8 +342,11 @@ public class DeftSystemTest {
 	
 	@Test
 	public void erroneousCapturingTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
 		HttpParams params = new BasicHttpParams();
-		params.setParameter(" Connection", "Close");
+		params.setParameter("http.default-headers", headers);
+		
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/r1911");
 		HttpResponse response = httpclient.execute(httpget);
@@ -360,17 +393,20 @@ public class DeftSystemTest {
 	
 	@Test
 	public void asynchronousRequestTest() throws ClientProtocolException, IllegalStateException, IOException {
-		for (int i = 1; i < 50; i++) {
+		for (int i = 1; i <= 40; i++) {
 			doAsynchronousRequestTest();
 		}
 	}
 	
 	private void doAsynchronousRequestTest() throws ClientProtocolException, IOException, IllegalStateException {
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpParams params = httpclient.getParams();
-		params.setParameter(" Connection", "Close");
-		HttpConnectionParams.setConnectionTimeout(params, 4 * 1000);
-		HttpConnectionParams.setSoTimeout(params, 10 * 1000);
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
+		HttpParams params = new BasicHttpParams();
+		params.setParameter("http.default-headers", headers);
+		
+		DefaultHttpClient httpclient = new DefaultHttpClient(params);
+		HttpConnectionParams.setConnectionTimeout(params, 40 * 1000);
+		HttpConnectionParams.setSoTimeout(params, 100 * 1000);
 
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/mySql");
 		HttpResponse response = httpclient.execute(httpget);
@@ -381,6 +417,34 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("Name: Jim123", payLoad);
+	}
+	
+	@Test
+	public void keepAliveRequestTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Keep-Alive"));
+		HttpParams params = new BasicHttpParams();
+		params.setParameter("http.default-headers", headers);
+		
+		DefaultHttpClient httpclient = new DefaultHttpClient(params);
+
+		for (int i = 1; i <= 25; i++) {
+			doKeepAliveRequestTest(httpclient);
+		}
+	}
+
+	private void doKeepAliveRequestTest(DefaultHttpClient httpclient)
+			throws IOException, ClientProtocolException {
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals(expectedPayload, payLoad);
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

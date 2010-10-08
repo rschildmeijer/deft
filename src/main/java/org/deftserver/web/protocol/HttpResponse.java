@@ -12,6 +12,8 @@ import org.deftserver.util.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Closeables;
+
 public class HttpResponse {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
@@ -29,15 +31,20 @@ public class HttpResponse {
 	private final Map<String, String> headers = new HashMap<String, String>();
 	private boolean headersCreated = false;
 	private String responseData = "";
+	private final boolean keepAlive;
 	
-	public HttpResponse(SocketChannel sc) {
+	public HttpResponse(SocketChannel sc, boolean keepAlive) {
 		clientChannel = sc;
 		headers.put("Server", "DeftServer/0.0.1");
 		headers.put("Date", DateUtil.getCurrentAsString());
-		/* We should consider setting these when response includes a body.
-		 * The 'Content-Type' header gives the MIME-type of the data in the body, such as text/html or image/gif.
-         * The 'Content-Length' header gives the number of bytes in the body. 
-		 */
+
+		if (keepAlive) {
+			this.keepAlive = true;
+			headers.put("Connection", "Keep-Alive");
+		} else {
+			this.keepAlive = false;
+			headers.put("Connection", "Close");	
+		}
 	}
 	
 	public void setStatusCode(int sc) {
@@ -79,12 +86,10 @@ public class HttpResponse {
 				setHeader("Content-Length", ""+responseData.length());	// TODO RS faster/better with new Integer(..)?
 			}
 			bytesWritten = flush();
+			if (!keepAlive) {
+				Closeables.closeQuietly(clientChannel);
+			}
 		}	
-		try {
-			clientChannel.close();
-		} catch (IOException ioe) {
-			logger.error("Could not close client (SocketChannel) connection. {}", ioe);
-		}
 		return bytesWritten;
 	}
 	
@@ -96,6 +101,12 @@ public class HttpResponse {
 			sb.append(header.getValue());
 			sb.append("\r\n");
 		}
+		if (keepAlive) {
+			headers.put("Connection", "Keep-Alive");
+		} else {
+			headers.put("Connection", "Close");	
+		}
+		
 		sb.append("\r\n");
 		return sb.toString();
 	}

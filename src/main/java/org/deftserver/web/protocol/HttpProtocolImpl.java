@@ -5,15 +5,30 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.deftserver.web.Application;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.io.Closeables;
+
 public class HttpProtocolImpl implements HttpProtocol {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
+
+	/** The number of seconds Deft will wait for a subsequent request before closing the connection */
+	private final static long keepAliveTimeout = 30 * 1000;	// 30s 
+	
+	/** All {@link SocketChannel} connections where request header "Connection: Close" is missing. 
+	 * ("In HTTP 1.1 all connections are considered persistent, unless declared otherwise")
+	 * The value associated with each {@link SocketChannel} is the connection expiration time in ms.
+	 */
+	private final Map<SocketChannel, Long> persistentConnections = new HashMap<SocketChannel, Long>();
 	
 	private final int readBufferSize;
 
@@ -35,8 +50,12 @@ public class HttpProtocolImpl implements HttpProtocol {
 	public void handleRead(SelectionKey key) throws IOException {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		HttpRequest request = getHttpRequest(key, clientChannel);
-		HttpResponse response = new HttpResponse(clientChannel);
 		
+		if (request.isKeepAlive()) {
+			persistentConnections.put(clientChannel, System.currentTimeMillis() + keepAliveTimeout);
+		}
+		
+		HttpResponse response = new HttpResponse(clientChannel, request.isKeepAlive());
 		RequestHandler rh = application.getHandler(request);
 		HttpRequestDispatcher.dispatch(rh, request, response);
 		
@@ -51,11 +70,25 @@ public class HttpProtocolImpl implements HttpProtocol {
 		try {
 			clientChannel.read(buffer);
 		} catch (IOException e) {
-			logger.error("Could not read buffer: {}", e);
+			logger.error("Could not read buffer: {}", e.getMessage());
+			Closeables.closeQuietly(clientChannel);
 		}
+		buffer.clear();	// reuse the read buffer, (hint: "Connection: Keep-Alive" header)
 		return HttpRequest.of(buffer);
 	}
 	
-
+	public void handleCallback() {
+		long now = System.currentTimeMillis();
+		Iterator<Entry<SocketChannel, Long>> iter = persistentConnections.entrySet().iterator();
+		while (iter.hasNext()) {
+			Entry<SocketChannel, Long> candidate = iter.next();
+			long expires = candidate.getValue();
+			if (now >= expires) {
+				logger.debug("Closing expired keep-alive connection");
+				Closeables.closeQuietly(candidate.getKey());
+				iter.remove();
+			}
+		}
+	}
 
 }

@@ -17,6 +17,7 @@ public class NotFoundRequestHandler extends RequestHandler {
 	@Override
 	public void get(HttpRequest request, HttpResponse response) {
 		response.setStatusCode(404);
+		response.setHeader("Connection", "close");
 		response.write("Requested URL: " + request.getRequestedPath() + " was not found");
 	}
 	

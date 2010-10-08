@@ -16,6 +16,7 @@ private final static BadRequestRequestHandler instance = new BadRequestRequestHa
 	@Override
 	public void get(HttpRequest request, HttpResponse response) {
 		response.setStatusCode(400);
+		response.setHeader("Connection", "close");
 		response.write("HTTP 1.1 requests must include the Host: header");
 	}
 }

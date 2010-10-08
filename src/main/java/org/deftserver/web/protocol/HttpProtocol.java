@@ -7,5 +7,6 @@ public interface HttpProtocol {
 
 	void handleAccept(SelectionKey key) throws IOException;
 	void handleRead(SelectionKey key) throws IOException;
+	void handleCallback();
 	
 }

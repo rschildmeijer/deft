@@ -17,7 +17,7 @@ public class IOLoop {
 	
 	private final static Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
-	private static final long TIMEOUT = 3000;	//in ms
+	private static final long TIMEOUT = 250;	//in ms
 
 	private final Application application;
 	private ServerSocketChannel channel;
@@ -43,6 +43,7 @@ public class IOLoop {
 		while (true) {
 			try {
 				if (selector.select(TIMEOUT) == 0) {
+					protocol.handleCallback();
 					continue;
 				}
 

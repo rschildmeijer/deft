@@ -23,11 +23,11 @@ public class DeftServerExample {
 
 		@Override
 		public void get(HttpRequest request, HttpResponse response) {
-			response.write("hello ");
-			response.flush();
-			response.write("world");
-			response.flush();
-			response.write("!");
+			response.write("hello world");
+			//response.flush();
+			//response.write("world");
+			//response.flush();
+			//response.write("!");
 		}
 
 	}

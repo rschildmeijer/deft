@@ -22,6 +22,7 @@ public class HttpRequest {
 	private final String version; 
 	private Map<String, String> headers;
 	private ImmutableMultimap<String, String> parameters;
+	private boolean keepAlive;
 
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
@@ -30,6 +31,7 @@ public class HttpRequest {
 		requestedPath = elements[1];
 		version = elements[2];
 		this.headers = headers;
+		initKeepAlive();
 		parameters = parseParameters(requestedPath);
 	}
 	
@@ -96,6 +98,10 @@ public class HttpRequest {
 		return parameters.get(name);
 	}
 	
+	public boolean isKeepAlive() {
+		return keepAlive;
+	}
+	
 	@Override
 	public String toString() {
 		String result = "METHOD: " + method + "\n";
@@ -137,4 +143,13 @@ public class HttpRequest {
 		return builder.build();
 	}
 	
+	
+	private void initKeepAlive() {
+		String connection = getHeader("Connection");
+		if ("close".equalsIgnoreCase(connection)) {
+			keepAlive = false;
+		} else {
+			keepAlive = true;
+		}
+	}
 }
