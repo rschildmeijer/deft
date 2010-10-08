@@ -32,6 +32,7 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.web.handler.RequestHandler;
 import org.junit.BeforeClass;
@@ -435,6 +436,26 @@ public class DeftSystemTest {
 
 	private void doKeepAliveRequestTest(DefaultHttpClient httpclient)
 			throws IOException, ClientProtocolException {
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals(expectedPayload, payLoad);
+	}
+	
+	@Test
+	public void HTTP_1_0_noConnectionHeaderTest() throws ClientProtocolException, IOException {
+//		List<Header> headers = new LinkedList<Header>();
+//		headers.add(new BasicHeader("Connection", "Keep-Alive"));
+		HttpParams params = new BasicHttpParams();
+//		params.setParameter("http.default-headers", headers);
+		HttpProtocolParams.setVersion(params, new ProtocolVersion("HTTP", 1, 0));
+		DefaultHttpClient httpclient = new DefaultHttpClient();
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
 		HttpResponse response = httpclient.execute(httpget);
 		

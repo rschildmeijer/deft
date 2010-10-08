@@ -146,7 +146,9 @@ public class HttpRequest {
 	
 	private void initKeepAlive() {
 		String connection = getHeader("Connection");
-		if ("close".equalsIgnoreCase(connection)) {
+		if ("keep-alive".equalsIgnoreCase(connection)) { 
+			keepAlive = true;
+		} else if ("close".equalsIgnoreCase(connection) || requestLine.contains("1.0")) {
 			keepAlive = false;
 		} else {
 			keepAlive = true;

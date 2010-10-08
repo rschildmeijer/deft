@@ -17,11 +17,14 @@ public class IOLoop {
 	
 	private final static Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
-	private static final long TIMEOUT = 250;	//in ms
+	private static final long TIMEOUT = 250;	// 0.25s in ms
+	private static final long CALLBACK_PERIOD = 2 * 1000;	//2s in ms
 
 	private final Application application;
 	private ServerSocketChannel channel;
 	private Selector selector;
+	private long lastCallback;
+	
 
 	protected IOLoop(Application application) {
 		this.application = application;
@@ -43,7 +46,7 @@ public class IOLoop {
 		while (true) {
 			try {
 				if (selector.select(TIMEOUT) == 0) {
-					protocol.handleCallback();
+					invokeCallback(protocol);
 					continue;
 				}
 
@@ -58,9 +61,18 @@ public class IOLoop {
 					}
 					keys.remove();
 				}
+				invokeCallback(protocol);
 
 			} catch (IOException e) {
 				logger.error("Exception received in IOLoop: {}", e);			}
+		}
+	}
+
+	private void invokeCallback(HttpProtocol protocol) {
+		long now = System.currentTimeMillis();
+		if (now >= lastCallback + CALLBACK_PERIOD) {
+			protocol.handleCallback();
+			lastCallback = now;
 		}
 	}
 

@@ -22,7 +22,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
 
 	/** The number of seconds Deft will wait for a subsequent request before closing the connection */
-	private final static long keepAliveTimeout = 30 * 1000;	// 30s 
+	private final static long KEEP_ALIVE_TIMEOUT = 30 * 1000;	// 30s 
 	
 	/** All {@link SocketChannel} connections where request header "Connection: Close" is missing. 
 	 * ("In HTTP 1.1 all connections are considered persistent, unless declared otherwise")
@@ -52,7 +52,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		
 		if (request.isKeepAlive()) {
-			persistentConnections.put(clientChannel, System.currentTimeMillis() + keepAliveTimeout);
+			persistentConnections.put(clientChannel, System.currentTimeMillis() + KEEP_ALIVE_TIMEOUT);
 		}
 		
 		HttpResponse response = new HttpResponse(clientChannel, request.isKeepAlive());
@@ -70,7 +70,7 @@ public class HttpProtocolImpl implements HttpProtocol {
 		try {
 			clientChannel.read(buffer);
 		} catch (IOException e) {
-			logger.error("Could not read buffer: {}", e.getMessage());
+			logger.warn("Could not read buffer: {}", e.getMessage());
 			Closeables.closeQuietly(clientChannel);
 		}
 		buffer.clear();	// reuse the read buffer, (hint: "Connection: Keep-Alive" header)
