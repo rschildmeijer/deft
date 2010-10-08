@@ -101,11 +101,6 @@ public class HttpResponse {
 			sb.append(header.getValue());
 			sb.append("\r\n");
 		}
-		if (keepAlive) {
-			headers.put("Connection", "Keep-Alive");
-		} else {
-			headers.put("Connection", "Close");	
-		}
 		
 		sb.append("\r\n");
 		return sb.toString();
