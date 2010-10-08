@@ -35,7 +35,7 @@ public class HttpResponse {
 	
 	public HttpResponse(SocketChannel sc, boolean keepAlive) {
 		clientChannel = sc;
-		headers.put("Server", "DeftServer/0.0.1");
+		headers.put("Server", "DeftServer/0.1.0-SNAPSHOT");
 		headers.put("Date", DateUtil.getCurrentAsString());
 
 		if (keepAlive) {
