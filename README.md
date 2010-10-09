@@ -4,7 +4,7 @@ The Deft web server is an open source projected (licensed under [Apache version 
 Deft is a single threaded, asynchronous, event driven high performance web server running on the JVM.
 
 Source and issue tracker: [http://github.com/rschildmeijer/deft]
-
+ 
 Documentation: [http://www.deftserver.org]
 
 
