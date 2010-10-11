@@ -132,6 +132,7 @@ public class DeftSystemTest {
 	}
 	
 	private static class AsyncThrowingHttpExceptionRequestHandler extends RequestHandler {
+		@Asynchronous
 		@Override
 		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
 			throw new HttpException(500, "exception message");
