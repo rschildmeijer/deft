@@ -22,31 +22,46 @@ public class HttpRequest {
 	private final String version; 
 	private Map<String, String> headers;
 	private ImmutableMultimap<String, String> parameters;
+	private String body;
 	private boolean keepAlive;
 
+	
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
 		String[] elements = requestLine.split(" ");
 		method = HttpVerb.valueOf(elements[0]);
 		requestedPath = elements[1];
 		version = elements[2];
-		this.headers = headers;
+		this.headers = headers;	
+		body = null;
 		initKeepAlive();
 		parameters = parseParameters(requestedPath);
 	}
 	
+	public HttpRequest(String requestLine, Map<String, String> headers, String body) {
+		this(requestLine, headers);
+		this.body = body;
+	}
+	
 	public static HttpRequest of(ByteBuffer buffer) {
 		String raw = new String(buffer.array(), CHAR_SET);
-		String[] fields = raw.split("\\r\\n");
-		fields = ArrayUtil.dropFromEndWhile(fields, "");
+		String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
+		String[] headerFields = headersAndBody[0].split("\\r\\n");
+		headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
 		
-		String requestLine = fields[0];
+		String requestLine = headerFields[0];
 		Map<String, String> generalHeaders = new HashMap<String, String>();
-		for (int i = 1; i < fields.length; i++) {
-			String[] header = fields[i].split(": ");
+		for (int i = 1; i < headerFields.length; i++) {
+			String[] header = headerFields[i].split(": ");
 			generalHeaders.put(header[0], header[1]);
 		}
-		return new HttpRequest(requestLine, generalHeaders);
+		
+		String body = "";
+		for (int i=1; i<headersAndBody.length; ++i) { //First entry contains headers
+			body += headersAndBody[i];
+		}
+		
+		return new HttpRequest(requestLine, generalHeaders, body);
 	}
 
 	public String getRequestLine() {
@@ -88,6 +103,10 @@ public class HttpRequest {
 	
 	public Map<String, Collection<String>> getParameters() {
 		return parameters.asMap();
+	}	
+	
+	public String getBody() {
+		return body;
 	}
 	
 	/**

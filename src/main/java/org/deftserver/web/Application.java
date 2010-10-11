@@ -7,6 +7,7 @@ import org.deftserver.util.HttpUtil;
 import org.deftserver.web.handler.BadRequestRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
+import org.deftserver.web.handler.StaticContentHandler;
 import org.deftserver.web.protocol.HttpRequest;
 
 import com.google.common.collect.ImmutableMap;
@@ -34,6 +35,11 @@ public class Application {
 	 * A mapping between group capturing RequestHandlers and their corresponding pattern ( e.g. "([0-9]+)" )
 	 */
 	private final ImmutableMap<RequestHandler, Pattern> patterns;
+	
+	/**
+	 * The directory where static content (files) will be served from.
+	 */
+	private String staticContentDir;
 
 	public Application(Map<String, RequestHandler> handlers) {
 		ImmutableMap.Builder<String, RequestHandler> builder = new ImmutableMap.Builder<String, RequestHandler>();
@@ -68,6 +74,10 @@ public class Application {
 		if (rh == null) {
 			// path could contain capturing groups which we could have a handler associated with.
 			rh = getCapturingHandler(path);
+			if (rh == null) {
+				// path could be prefixed with the 'static content directory'
+				rh = getStaticContentHandler(path);
+			}
 		} 
 		return rh != null ? rh : NotFoundRequestHandler.getInstance();	// TODO RS store in a final field for improved performance?
 	}
@@ -85,7 +95,7 @@ public class Application {
 		Pattern.compile(group);	// throws PatternSyntaxException if group is malformed regular expression
 		return containsGroup;
 	}
-
+	
 	private RequestHandler getCapturingHandler(String path) {
 		int index = path.lastIndexOf("/");
 		if (index != -1) {
@@ -100,6 +110,18 @@ public class Application {
 			}
 		}
 		return null;
+	}
+	
+	private RequestHandler getStaticContentHandler(String path) {
+		if (staticContentDir == null || path.length() <= staticContentDir.length()) {
+			return null;	// quick reject (no static dir or simple contradiction)
+		}
+		
+		if (path.substring(1).startsWith(staticContentDir)) {
+			return StaticContentHandler.getInstance();
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -119,6 +141,10 @@ public class Application {
 	 */
 	public int getReadBufferSize() {
 		return readBufferSize;
+	}
+	
+	public void setStaticContentDir(String scd) {
+		this.staticContentDir = scd;
 	}
 
 }

@@ -3,7 +3,6 @@ package org.deftserver.web.protocol;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,13 +11,12 @@ import org.deftserver.util.HttpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 
 public class HttpResponse {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
-	
-	private final static Charset CHAR_SET = Charset.forName("US-ASCII");
 	
 	private final SocketChannel clientChannel;
 	
@@ -66,7 +64,7 @@ public class HttpResponse {
 			responseData = initial + responseData;
 			headersCreated = true;
 		}
-		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(CHAR_SET));
+		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(Charsets.US_ASCII));
 		long bytesWritten = 0;
 		try {
 			bytesWritten = clientChannel.write(output);
@@ -83,7 +81,7 @@ public class HttpResponse {
 		if (clientChannel.isOpen()) {
 			if (!headersCreated) {
 				setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
-				setHeader("Content-Length", ""+responseData.length());	// TODO RS faster/better with new Integer(..)?
+				setHeader("Content-Length", ""+responseData.getBytes(Charsets.US_ASCII).length);	// TODO RS faster/better with new Integer(..)?
 			}
 			bytesWritten = flush();
 			if (!keepAlive) {

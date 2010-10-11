@@ -33,46 +33,51 @@
 			<version>4.0.3</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>javax.activation</groupId>
+			<artifactId>activation</artifactId>
+			<version>1.1.1</version>
+		</dependency>
 	</dependencies>
 
 
 
 	<build>
-	<plugins>
-		<plugin>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-compiler-plugin</artifactId>
-			<version>2.3.2</version>
-			<configuration>
-				<encoding>UTF-8</encoding>
-				<source>1.6</source>
-				<target>1.6</target>
-			</configuration>
-		</plugin>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
 
-		<plugin>
-			<!--
-				NOTE: We don't need a groupId specification because the group is
-				org.apache.maven.plugins ...which is assumed by default.
-			-->
-			<artifactId>maven-assembly-plugin</artifactId>
-			<version>2.2-beta-5</version>
-			<configuration>
+			<plugin>
 				<!--
-				<descriptorRefs>
-				  	<descriptorRef>jar-with-dependencies</descriptorRef> 
-					<descriptorRef>bin</descriptorRef>
-				</descriptorRefs>
+					NOTE: We don't need a groupId specification because the group is
+					org.apache.maven.plugins ...which is assumed by default.
 				-->
-				<descriptors>
-            		<descriptor>src/main/assembly/deft-binary.xml</descriptor>
-            		<descriptor>src/main/assembly/deft-binary-with-deps.xml</descriptor>
-            		<descriptor>src/main/assembly/deft-src.xml</descriptor>
-          		</descriptors>
-				
-			</configuration>
-		</plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.2-beta-5</version>
+				<configuration>
+					<!--
+						<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+						<descriptorRef>bin</descriptorRef> </descriptorRefs>
+					-->
+					<descriptors>
+						<descriptor>src/main/assembly/deft-binary.xml</descriptor>
+						<descriptor>src/main/assembly/deft-binary-with-deps.xml</descriptor>
+						<descriptor>src/main/assembly/deft-src.xml</descriptor>
+					</descriptors>
 
-	</plugins>
-</build>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
 </project>

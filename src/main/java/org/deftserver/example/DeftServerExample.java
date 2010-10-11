@@ -24,10 +24,6 @@ public class DeftServerExample {
 		@Override
 		public void get(HttpRequest request, HttpResponse response) {
 			response.write("hello world");
-			//response.flush();
-			//response.write("world");
-			//response.flush();
-			//response.write("!");
 		}
 
 	}
@@ -38,6 +34,7 @@ public class DeftServerExample {
 		reqHandlers.put("/mySql", new AsyncDbHandler());
 		
 		Application application = new Application(reqHandlers);
+		application.setStaticContentDir("static");
 
 		logger.debug("Starting up server on port: " + PORT);
 		HttpServer server = new HttpServer(application);
