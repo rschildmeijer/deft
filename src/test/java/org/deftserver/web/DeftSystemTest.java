@@ -137,7 +137,7 @@ public class DeftSystemTest {
 			throw new HttpException(500, "exception message");
 		}
 	}
-
+	
 	@BeforeClass
 	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
@@ -155,7 +155,8 @@ public class DeftSystemTest {
 		reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
 		
 		final Application application = new Application(reqHandlers);
-
+		application.setStaticContentDir("src/test/resources");
+		
 		// start deft instance from a new thread because the start invocation is blocking 
 		// (invoking thread will be I/O loop thread)
 		new Thread(new Runnable() {
@@ -510,6 +511,37 @@ public class DeftSystemTest {
 		assertEquals(5, response.getAllHeaders().length);
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("exception message", payLoad);
+	}
+	
+	@Test
+	public void staticFileRequestTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/src/test/resources/test.txt");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(7, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("test.txt", payLoad);
+	}
+	
+	@Test
+	public void pictureStaticFileRequestTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/src/test/resources/n792205362_2067.jpg");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(7, response.getAllHeaders().length);
+		assertEquals("54963", response.getFirstHeader("Content-Length").getValue());
+		assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
+		assertNotNull(response.getFirstHeader("Last-Modified"));
 	}
 	
 	public String convertStreamToString(InputStream is) throws IOException {
