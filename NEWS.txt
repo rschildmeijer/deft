@@ -7,8 +7,9 @@ Features
     - Support for non-blocking, asynchronous requests (#11). 
     - Regular expressions (with capturing groups) in URL mapping (#10).
     - Support for HTTP GET parameters (#35).
-    - Persistent connections ('Connection: Keep-Alive') (#19)
-    - Static resources (#21 and #28, thanks to github.com/williame for pointing in right direction)
+    - Persistent connections ('Connection: Keep-Alive') (#19).
+    - Static resources (#21 and #28, thanks to github.com/williame for pointing in right direction).
+    - JMX api for monitoring 'keep-alive' connections.
      
 Configuration
 ------------

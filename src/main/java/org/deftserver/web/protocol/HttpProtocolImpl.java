@@ -1,6 +1,7 @@
 package org.deftserver.web.protocol;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
@@ -10,6 +11,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
 import org.deftserver.web.Application;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
@@ -17,7 +21,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.io.Closeables;
 
-public class HttpProtocolImpl implements HttpProtocol {
+public class HttpProtocolImpl implements HttpProtocol, HttpProtocolImplMXBean {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
 
@@ -37,6 +41,19 @@ public class HttpProtocolImpl implements HttpProtocol {
 	public HttpProtocolImpl(Application app) {
 		application = app;
 		readBufferSize = app.getReadBufferSize();
+		registerMXBean();
+	}
+	
+
+	private void registerMXBean() {
+		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        String mbeanName = "org.deftserver.web.protocol:type=HttpProtocolImpl";
+        try {
+            mbs.registerMBean(this, new ObjectName(mbeanName));
+        }
+        catch (Exception e) {
+            logger.error("Unable to register {} MXBean", this.getClass().getCanonicalName());
+        }
 	}
 	
 	@Override
@@ -89,6 +106,11 @@ public class HttpProtocolImpl implements HttpProtocol {
 				iter.remove();
 			}
 		}
+	}
+
+	@Override
+	public int getPersistentConnections() {
+		return persistentConnections.size();
 	}
 
 }
