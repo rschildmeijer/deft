@@ -123,6 +123,20 @@ public class DeftSystemTest {
 			response.write(request.getRequestedPath());
 		}
 	}
+	
+	private static class ThrowingHttpExceptionRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			throw new HttpException(500, "exception message");
+		}
+	}
+	
+	private static class AsyncThrowingHttpExceptionRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			throw new HttpException(500, "exception message");
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -137,6 +151,8 @@ public class DeftSystemTest {
 		reqHandlers.put("/post", new PostRequestHandler());
 		reqHandlers.put("/put", new PutRequestHandler());
 		reqHandlers.put("/capturing/([0-9]+)", new CapturingRequestRequestHandler());
+		reqHandlers.put("/throw", new ThrowingHttpExceptionRequestHandler());
+		reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
 		
 		final Application application = new Application(reqHandlers);
 
@@ -450,10 +466,7 @@ public class DeftSystemTest {
 	
 	@Test
 	public void HTTP_1_0_noConnectionHeaderTest() throws ClientProtocolException, IOException {
-//		List<Header> headers = new LinkedList<Header>();
-//		headers.add(new BasicHeader("Connection", "Keep-Alive"));
 		HttpParams params = new BasicHttpParams();
-//		params.setParameter("http.default-headers", headers);
 		HttpProtocolParams.setVersion(params, new ProtocolVersion("HTTP", 1, 0));
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
@@ -467,7 +480,38 @@ public class DeftSystemTest {
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals(expectedPayload, payLoad);
 	}
+	
 
+	@Test
+	public void httpExceptionTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/throw");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(500, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("Internal Server Error", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("exception message", payLoad);
+	}
+
+	@Test
+	public void asyncHttpExceptionTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/async_throw");
+		HttpResponse response = httpclient.execute(httpget);
+		
+		assertNotNull(response);
+		assertEquals(500, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("Internal Server Error", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("exception message", payLoad);
+	}
+	
 	public String convertStreamToString(InputStream is) throws IOException {
 		if (is != null) {
 			StringBuilder sb = new StringBuilder();

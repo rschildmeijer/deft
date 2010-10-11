@@ -1,25 +1,21 @@
 package org.deftserver.web;
 
+
 public class HttpException extends RuntimeException {
 
 	private final int statusCode;
-	private String body;
 
 	public HttpException(int statusCode) {
-		this.statusCode = statusCode;
+		this(statusCode, "");
 	}
 
-	public HttpException(int statusCode, String body) {
-		this(statusCode);
-		this.body = body;
+	public HttpException(int statusCode, String message) {
+		super(message);
+		this.statusCode = statusCode;
 	}
 	
 	public int getStatusCode() {
 		return statusCode;
 	}
 	
-	public String getBody() {
-		return body;
-	}
-
 }
