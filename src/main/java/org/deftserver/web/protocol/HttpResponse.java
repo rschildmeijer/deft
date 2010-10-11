@@ -64,7 +64,7 @@ public class HttpResponse {
 			responseData = initial + responseData;
 			headersCreated = true;
 		}
-		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(Charsets.US_ASCII));
+		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(Charsets.UTF_8));
 		long bytesWritten = 0;
 		try {
 			bytesWritten = clientChannel.write(output);
@@ -81,7 +81,7 @@ public class HttpResponse {
 		if (clientChannel.isOpen()) {
 			if (!headersCreated) {
 				setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
-				setHeader("Content-Length", ""+responseData.getBytes(Charsets.US_ASCII).length);	// TODO RS faster/better with new Integer(..)?
+				setHeader("Content-Length", ""+responseData.getBytes(Charsets.UTF_8).length);	// TODO RS faster/better with new Integer(..)?
 			}
 			bytesWritten = flush();
 			if (!keepAlive) {

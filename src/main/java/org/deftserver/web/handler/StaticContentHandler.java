@@ -48,8 +48,7 @@ public class StaticContentHandler extends RequestHandler {
 		response.setHeader("Last-Modified", String.valueOf(lastModified));
 		response.setHeader("Cache-Control", "no-cache");
 		String mimeType = mimeTypeMap.getContentType(file);
-		response.setHeader("Content-Type", mimeType);
-		//response.setHeader("charset", "ISO-8859-1");
+		response.setHeader("Content-Type", mimeType + "; charset=utf-8");
 
 		String ifModifiedSince = request.getHeader("If-Modified-Since");
 //		if (ifModifiedSince != null) {
