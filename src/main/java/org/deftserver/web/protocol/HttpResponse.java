@@ -1,6 +1,8 @@
 package org.deftserver.web.protocol;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
@@ -8,6 +10,7 @@ import java.util.Map;
 
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
+import org.deftserver.web.handler.StaticContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +72,7 @@ public class HttpResponse {
 		try {
 			bytesWritten = clientChannel.write(output);
 		} catch (IOException e) {
-			logger.error("Error writing response: {}", e);
+			logger.error("Error writing response: {}", e.getMessage());
 		} finally {
 			responseData = "";
 		}
@@ -102,6 +105,23 @@ public class HttpResponse {
 		
 		sb.append("\r\n");
 		return sb.toString();
+	}
+
+	/**
+	 * Should only be called by {@link StaticContentHandler}.
+	 * @param file Requested static resource 
+	 */
+	public long write(File file) {
+		//setHeader("Etag", HttpUtil.getEtag(file));
+		setHeader("Content-Length", String.valueOf(file.length()));
+		long bytesWritten = 0;
+		flush();	// write initial line + headers
+		try {
+			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
+		} catch (IOException e) {
+			logger.error("Error writing (static file) response: {}", e.getMessage());
+		}
+		return bytesWritten;
 	}
 
 	

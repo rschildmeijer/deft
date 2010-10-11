@@ -1,7 +1,6 @@
 package org.deftserver.web.handler;
 
 import java.io.File;
-import java.io.IOException;
 
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
@@ -11,9 +10,6 @@ import org.deftserver.web.protocol.HttpRequest;
 import org.deftserver.web.protocol.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 
 /**
  *	A RequestHandler that serves static content (files) from a predefined directory. 
@@ -51,41 +47,15 @@ public class StaticContentHandler extends RequestHandler {
 		response.setHeader("Content-Type", mimeType + "; charset=utf-8");
 
 		String ifModifiedSince = request.getHeader("If-Modified-Since");
-//		if (ifModifiedSince != null) {
-//			long ims = Long.parseLong(ifModifiedSince);
-//			if (lastModified <= ims) {
-//				response.setStatusCode(304);	//Not Modified
-//				logger.debug("not modified");
-//				return;
-//			}
-//		}
-		String resource = "";
-		try {
-			//Charset charset = java.nio.charset.Charset.defaultCharset();
-			//resource = new String(Files.map(file));
-			resource = Files.toString(file, Charsets.UTF_8);
-			logger.debug("reading file...");
-			//resource = readFileAsString(file);
-		} catch (IOException e) {
-			logger.error("Unable to read file. {}", e.getMessage());
-			response.setStatusCode(500);	// Internal Server Error
+		if (ifModifiedSince != null) {
+			long ims = Long.parseLong(ifModifiedSince);
+			if (lastModified <= ims) {
+				response.setStatusCode(304);	//Not Modified
+				logger.debug("not modified");
+				return;
+			}
 		}
-		response.write(resource);
+		response.write(file);
 	}
-//
-//	private static String readFileAsString(File file) throws java.io.IOException{
-//		StringBuilder fileData = new StringBuilder(1000);
-//		BufferedReader reader = new BufferedReader(
-//				new FileReader(file));
-//		char[] buf = new char[1024];
-//		int numRead=0;
-//		while((numRead=reader.read(buf)) != -1){
-//			String readData = String.valueOf(buf, 0, numRead);
-//			fileData.append(readData);
-//			buf = new char[1024];
-//		}
-//		reader.close();
-//		return fileData.toString();
-//	}
 
 }

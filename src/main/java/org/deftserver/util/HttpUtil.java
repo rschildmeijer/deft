@@ -1,5 +1,6 @@
 package org.deftserver.util;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -70,6 +71,12 @@ public class HttpUtil {
 		byte[] digest = md.digest(bytes);
 		BigInteger number = new BigInteger(1, digest);
 		return '0' + number.toString(16);	// prepend a '0' to get a proper MD5 hash 
+	}
+
+
+	public static String getEtag(File file) {
+		//	TODO RS 101011 Implement if etag response header should be present while static file serving.
+		return "";
 	}
 
 }
