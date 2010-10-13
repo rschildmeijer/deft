@@ -36,7 +36,7 @@ public class HttpResponse {
 	
 	public HttpResponse(SocketChannel sc, boolean keepAlive) {
 		clientChannel = sc;
-		headers.put("Server", "DeftServer/0.1.0");
+		headers.put("Server", "DeftServer/0.1.1-SNAPSHOT");
 		headers.put("Date", DateUtil.getCurrentAsString());
 
 		if (keepAlive) {
@@ -83,8 +83,7 @@ public class HttpResponse {
 		long bytesWritten = 0;
 		if (clientChannel.isOpen()) {
 			if (!headersCreated) {
-				setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
-				setHeader("Content-Length", ""+responseData.getBytes(Charsets.UTF_8).length);	// TODO RS faster/better with new Integer(..)?
+				setEtagAndContentLength();
 			}
 			bytesWritten = flush();
 			if (!keepAlive) {
@@ -92,6 +91,13 @@ public class HttpResponse {
 			}
 		}	
 		return bytesWritten;
+	}
+	
+	private void setEtagAndContentLength() {
+		if (!responseData.isEmpty()) {
+			setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
+		}
+		setHeader("Content-Length", String.valueOf(responseData.getBytes(Charsets.UTF_8).length));
 	}
 	
 	private /*<> synchronzied */ String createInitalLineAndHeaders() {

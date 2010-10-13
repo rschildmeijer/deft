@@ -35,6 +35,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.web.handler.RequestHandler;
+import org.deftserver.web.protocol.HttpRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -139,6 +140,13 @@ public class DeftSystemTest {
 		}
 	}
 	
+	public static class NoBodyRequestHandler extends RequestHandler {
+		@Override
+		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			response.setStatusCode(200);
+		}
+	}
+	
 	@BeforeClass
 	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
@@ -154,6 +162,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/capturing/([0-9]+)", new CapturingRequestRequestHandler());
 		reqHandlers.put("/throw", new ThrowingHttpExceptionRequestHandler());
 		reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
+		reqHandlers.put("/no_body", new NoBodyRequestHandler());
 		
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -543,6 +552,27 @@ public class DeftSystemTest {
 		assertEquals("54963", response.getFirstHeader("Content-Length").getValue());
 		assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
 		assertNotNull(response.getFirstHeader("Last-Modified"));
+	}
+	
+	@Test
+	public void noBodyRequest() throws ClientProtocolException, IOException {
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/no_body");
+		HttpResponse response = httpclient.execute(httpget);
+		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Connection"});
+
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+
+		assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
+
+		for (String header : expectedHeaders) {
+			assertTrue(response.getFirstHeader(header) != null);
+		}
+		
+		assertEquals("", convertStreamToString(response.getEntity().getContent()).trim());
+		assertEquals("0", response.getFirstHeader("Content-Length").getValue());
 	}
 	
 	public String convertStreamToString(InputStream is) throws IOException {
