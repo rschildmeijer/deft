@@ -147,6 +147,14 @@ public class DeftSystemTest {
 		}
 	}
 	
+	public static class MovedPermanentlyRequestHandler extends RequestHandler {
+		@Override
+		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			response.setStatusCode(301);
+			response.setHeader("Location", "/");
+		}
+	}
+	
 	@BeforeClass
 	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
@@ -163,6 +171,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/throw", new ThrowingHttpExceptionRequestHandler());
 		reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
 		reqHandlers.put("/no_body", new NoBodyRequestHandler());
+		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -573,6 +582,27 @@ public class DeftSystemTest {
 		
 		assertEquals("", convertStreamToString(response.getEntity().getContent()).trim());
 		assertEquals("0", response.getFirstHeader("Content-Length").getValue());
+	}
+	
+	@Test
+	public void movedPermanentlyRequest() throws ClientProtocolException, IOException {
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/moved_perm");
+		HttpResponse response = httpclient.execute(httpget);
+		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Connection", "Etag"});
+
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+
+		assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
+
+		for (String header : expectedHeaders) {
+			assertTrue(response.getFirstHeader(header) != null);
+		}
+		
+		assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent()).trim());
+		assertEquals(expectedPayload.length()+"", response.getFirstHeader("Content-Length").getValue());
 	}
 	
 	public String convertStreamToString(InputStream is) throws IOException {
