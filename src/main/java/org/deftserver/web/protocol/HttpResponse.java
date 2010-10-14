@@ -19,7 +19,7 @@ import com.google.common.io.Closeables;
 
 public class HttpResponse {
 	
-	private final static Logger logger = LoggerFactory.getLogger(HttpProtocolImpl.class);
+	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 	
 	private final SocketChannel clientChannel;
 	
@@ -36,7 +36,7 @@ public class HttpResponse {
 	
 	public HttpResponse(SocketChannel sc, boolean keepAlive) {
 		clientChannel = sc;
-		headers.put("Server", "DeftServer/0.1.1-SNAPSHOT");
+		headers.put("Server", "DeftServer/0.2.0-SNAPSHOT");
 		headers.put("Date", DateUtil.getCurrentAsString());
 
 		if (keepAlive) {
