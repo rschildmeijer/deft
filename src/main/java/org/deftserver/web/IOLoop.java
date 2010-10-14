@@ -8,8 +8,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
 
+import org.deftserver.web.protocol.Protocol;
 import org.deftserver.web.protocol.HttpProtocol;
-import org.deftserver.web.protocol.HttpProtocolImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class IOLoop {
 		//Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		registerSelector();
-		HttpProtocol protocol = new HttpProtocolImpl(application);
+		Protocol protocol = new HttpProtocol(application);
 		while (true) {
 			try {
 				if (selector.select(TIMEOUT) == 0) {
@@ -68,7 +68,7 @@ public class IOLoop {
 		}
 	}
 
-	private void invokeCallback(HttpProtocol protocol) {
+	private void invokeCallback(Protocol protocol) {
 		long now = System.currentTimeMillis();
 		if (now >= lastCallback + CALLBACK_PERIOD) {
 			protocol.handleCallback();
