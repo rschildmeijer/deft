@@ -42,7 +42,7 @@ public class StaticContentHandler extends RequestHandler {
 
 		long lastModified = file.lastModified();
 		response.setHeader("Last-Modified", String.valueOf(lastModified));
-		response.setHeader("Cache-Control", "no-cache");
+		response.setHeader("Cache-Control", "public");
 		String mimeType = mimeTypeMap.getContentType(file);
 		if ("text/plain".equals(mimeType)) {
 			mimeType += "; charset=utf-8";
