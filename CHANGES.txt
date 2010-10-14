@@ -1,0 +1,4 @@
+0.1.1
+ * #56 (add support for all http response status code)
+ * #55 (Dont set Etag response header if payload is empty)
+ 
