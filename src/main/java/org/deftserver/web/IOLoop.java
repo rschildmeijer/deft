@@ -9,7 +9,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.util.Iterator;
 
 import org.deftserver.web.protocol.Protocol;
-import org.deftserver.web.protocol.HttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +19,14 @@ public class IOLoop {
 	private static final long TIMEOUT = 250;	// 0.25s in ms
 	private static final long CALLBACK_PERIOD = 2 * 1000;	//2s in ms
 
-	private final Application application;
+	private final Protocol protocol;
 	private ServerSocketChannel channel;
 	private Selector selector;
 	private long lastCallback;
 	
 
-	protected IOLoop(Application application) {
-		this.application = application;
+	protected IOLoop(Protocol protocol) {
+		this.protocol = protocol;
 		try {
 			channel = ServerSocketChannel.open();
 			channel.configureBlocking(false);
@@ -42,11 +41,10 @@ public class IOLoop {
 		//Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
 
 		registerSelector();
-		Protocol protocol = new HttpProtocol(application);
 		while (true) {
 			try {
 				if (selector.select(TIMEOUT) == 0) {
-					invokeCallback(protocol);
+					invokeCallback();
 					continue;
 				}
 
@@ -61,14 +59,14 @@ public class IOLoop {
 					}
 					keys.remove();
 				}
-				invokeCallback(protocol);
+				invokeCallback();
 
 			} catch (IOException e) {
 				logger.error("Exception received in IOLoop: {}", e);			}
 		}
 	}
 
-	private void invokeCallback(Protocol protocol) {
+	private void invokeCallback() {
 		long now = System.currentTimeMillis();
 		if (now >= lastCallback + CALLBACK_PERIOD) {
 			protocol.handleCallback();

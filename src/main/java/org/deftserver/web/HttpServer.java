@@ -1,17 +1,17 @@
 package org.deftserver.web;
 
+import org.deftserver.web.protocol.HttpProtocol;
+
 
 public class HttpServer {
 	
 	private static final int MIN_PORT_NUMBER = 1;
 	private static final int MAX_PORT_NUMBER = 65535;
 
-	private final Application application;
 	private final IOLoop ioLoop;
 	
-	public HttpServer(Application app) {
-		application = app;
-		ioLoop = new IOLoop(application);
+	public HttpServer(Application application) {
+		ioLoop = new IOLoop(new HttpProtocol(application));
 	}
 
 	public IOLoop getIOLoop() {
