@@ -44,24 +44,28 @@ public class HttpRequest {
 	}
 	
 	public static HttpRequest of(ByteBuffer buffer) {
-		String raw = new String(buffer.array(), CHAR_SET);
-		String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
-		String[] headerFields = headersAndBody[0].split("\\r\\n");
-		headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
-		
-		String requestLine = headerFields[0];
-		Map<String, String> generalHeaders = new HashMap<String, String>();
-		for (int i = 1; i < headerFields.length; i++) {
-			String[] header = headerFields[i].split(": ");
-			generalHeaders.put(header[0], header[1]);
+		try {
+			String raw = new String(buffer.array(), CHAR_SET);
+			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
+			String[] headerFields = headersAndBody[0].split("\\r\\n");
+			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
+
+			String requestLine = headerFields[0];
+			Map<String, String> generalHeaders = new HashMap<String, String>();
+			for (int i = 1; i < headerFields.length; i++) {
+				String[] header = headerFields[i].split(": ");
+				generalHeaders.put(header[0], header[1]);
+			}
+
+			String body = "";
+			for (int i=1; i<headersAndBody.length; ++i) { //First entry contains headers
+				body += headersAndBody[i];
+			}
+
+			return new HttpRequest(requestLine, generalHeaders, body);
+		} catch (Exception t) {
+			return MalFormedHttpRequest.instance;
 		}
-		
-		String body = "";
-		for (int i=1; i<headersAndBody.length; ++i) { //First entry contains headers
-			body += headersAndBody[i];
-		}
-		
-		return new HttpRequest(requestLine, generalHeaders, body);
 	}
 
 	public String getRequestLine() {
