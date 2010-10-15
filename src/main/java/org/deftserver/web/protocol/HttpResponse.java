@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
-import org.deftserver.web.handler.StaticContentHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,8 +113,7 @@ public class HttpResponse {
 	}
 
 	/**
-	 * Should only be called by {@link StaticContentHandler}.
-	 * @param file Requested static resource 
+	 * @param file Static resource/file to send
 	 */
 	public long write(File file) {
 		//setHeader("Etag", HttpUtil.getEtag(file));

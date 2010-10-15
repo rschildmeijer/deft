@@ -47,7 +47,7 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 
 	private void registerMXBean() {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
-        String mbeanName = "org.deftserver.web.protocol:type=HttpProtocolImpl";
+        String mbeanName = "org.deftserver.web.protocol:type=HttpProtocol";
         try {
             mbs.registerMBean(this, new ObjectName(mbeanName));
         }

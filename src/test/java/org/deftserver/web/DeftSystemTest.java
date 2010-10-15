@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -157,6 +158,13 @@ public class DeftSystemTest {
 			response.setHeader("Location", "/");
 		}
 	}
+	
+	public static class UserDefinedStaticContentHandler extends RequestHandler {
+		@Override
+		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			response.write(new File("src/test/resources/test.txt"));
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -175,6 +183,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
 		reqHandlers.put("/no_body", new NoBodyRequestHandler());
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
+		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -618,6 +627,21 @@ public class DeftSystemTest {
 				)
 		);
 		channel.close();
+	}
+	
+	@Test
+	public void userDefinedStaticContentHandlerTest() throws ClientProtocolException, IOException {
+		// /static_file_handler
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/static_file_handler");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(4, response.getAllHeaders().length);
+		assertEquals("8", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {
