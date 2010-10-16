@@ -57,12 +57,16 @@ public class IOLoop {
 					if (key.isReadable()) {
 						protocol.handleRead(key);
 					}
+					if (key.isWritable() && key.isValid()) {
+						protocol.handleWrite(key);
+					}
 					keys.remove();
 				}
 				invokeCallback();
 
 			} catch (IOException e) {
-				logger.error("Exception received in IOLoop: {}", e);			}
+				logger.error("Exception received in IOLoop: {}", e);			
+			}
 		}
 	}
 

@@ -7,6 +7,7 @@ public interface Protocol {
 
 	void handleAccept(SelectionKey key) throws IOException;
 	void handleRead(SelectionKey key) throws IOException;
+	void handleWrite(SelectionKey key);
 	void handleCallback();
 	
 }

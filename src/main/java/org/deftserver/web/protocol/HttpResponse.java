@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,29 +22,29 @@ public class HttpResponse {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 	
-	private final SocketChannel clientChannel;
+	private final static int WRITE_BUFFER_SIZE = 1500;	// in bytes
+
+	private final HttpProtocol protocol;
+	private final SelectionKey key;
 	
-	private /*<> AtomicInteger */ int statusCode = 200;	// default response status code
-	
-	//<> TODO RS 100924 could experiment with cliff clicks high scale lib (e.g. NonBlockingHashMap) instead of
-	//<> the CCHM used below 
-	//<> private final ConcurrentMap<String, String> headers = new ConcurrentHashMap<String, String>();
+	private int statusCode = 200;	// default response status code
 	
 	private final Map<String, String> headers = new HashMap<String, String>();
 	private boolean headersCreated = false;
-	private String responseData = "";
-	private final boolean keepAlive;
+	private ByteBuffer responseData = ByteBuffer.allocate(WRITE_BUFFER_SIZE);
+//	private final boolean keepAlive;
 	
-	public HttpResponse(SocketChannel sc, boolean keepAlive) {
-		clientChannel = sc;
+	public HttpResponse(HttpProtocol protocol, SelectionKey key, boolean keepAlive) {
+		this.protocol = protocol;
+		this.key = key;
 		headers.put("Server", "DeftServer/0.2.0-SNAPSHOT");
 		headers.put("Date", DateUtil.getCurrentAsString());
 
 		if (keepAlive) {
-			this.keepAlive = true;
+//			this.keepAlive = true;
 			headers.put("Connection", "Keep-Alive");
 		} else {
-			this.keepAlive = false;
+//			this.keepAlive = false;
 			headers.put("Connection", "Close");	
 		}
 	}
@@ -56,50 +58,55 @@ public class HttpResponse {
 	}
 
 	public HttpResponse write(String data) {
-		responseData +=data;
+		byte[] bytes = data.getBytes(Charsets.UTF_8);
+		ensureCapacity(bytes.length);
+		responseData.put(bytes);
 		return this;
 	}
-		
+
 	public long flush() {
 		if (!headersCreated) {
 			String initial = createInitalLineAndHeaders();			
-			responseData = initial + responseData;
+			prepend(initial);
 			headersCreated = true;
 		}
-		ByteBuffer output = ByteBuffer.wrap(responseData.getBytes(Charsets.UTF_8));
-		long bytesWritten = 0;
-		try {
-			bytesWritten = clientChannel.write(output);
-		} catch (IOException e) {
-			logger.error("Error writing response: {}", e.getMessage());
-		} finally {
-			responseData = "";
+		if (!key.isWritable()) {
+			logger.debug("registrating key for writes");
+			try {
+				key.channel().register(key.selector(), SelectionKey.OP_READ | SelectionKey.OP_WRITE);
+			} catch (ClosedChannelException e) {
+				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
+				Closeables.closeQuietly(key.channel());
+			}
 		}
-		return bytesWritten;
+		responseData.flip();	// prepare for write
+		protocol.stage(key, responseData);
+		logger.debug("{} bytes staged for writing", responseData.limit());
+		long bytesFlushed = responseData.limit();
+		responseData = ByteBuffer.allocate(WRITE_BUFFER_SIZE);
+		return bytesFlushed;
 	}
 	
 	public long finish() {
 		long bytesWritten = 0;
+		SocketChannel clientChannel = (SocketChannel) key.channel();
 		if (clientChannel.isOpen()) {
 			if (!headersCreated) {
 				setEtagAndContentLength();
 			}
 			bytesWritten = flush();
-			if (!keepAlive) {
-				Closeables.closeQuietly(clientChannel);
-			}
 		}	
 		return bytesWritten;
 	}
 	
 	private void setEtagAndContentLength() {
-		if (!responseData.isEmpty()) {
-			setHeader("Etag", HttpUtil.getEtag(responseData.getBytes()));
+		if (responseData.position() > 0) {
+			setHeader("Etag", HttpUtil.getEtag(responseData.array()));
 		}
-		setHeader("Content-Length", String.valueOf(responseData.getBytes(Charsets.UTF_8).length));
+		setHeader("Content-Length", String.valueOf(responseData.position()));
 	}
 	
-	private /*<> synchronzied */ String createInitalLineAndHeaders() {
+	private String createInitalLineAndHeaders() {
 		StringBuilder sb = new StringBuilder(HttpUtil.createInitialLine(statusCode));
 		for (Map.Entry<String, String> header : headers.entrySet()) {
 			sb.append(header.getKey());
@@ -111,6 +118,38 @@ public class HttpResponse {
 		sb.append("\r\n");
 		return sb.toString();
 	}
+	
+	/**
+	 * Ensures that its safe to append size data to responseData. If we need to allocate a new ButeBuffer, the new
+	 * buffer will be twice as large as the old one.
+	 * @param size The size of the data that is about to be appended.
+	 */
+	private void ensureCapacity(int size) {
+		int remaining = responseData.remaining();
+		if (size > remaining) {
+			// allocate new ByteBuffer
+			logger.debug("allocation new responseData buffer.");
+			int newSize = Math.max(2 * responseData.capacity(), 2 * size);
+			allocate(newSize);
+		}
+	}
+
+	private void allocate(int newCapacity) {
+		byte[] newBuffer = new byte[newCapacity];
+		System.arraycopy(responseData.array(),0 , newBuffer, 0, responseData.position());
+		responseData = ByteBuffer.wrap(newBuffer);
+		logger.debug("allocated new responseData buffer, new size: {}", newBuffer.length);
+	}
+	
+	private void prepend(String data) {
+		byte[] bytes = data.getBytes(Charsets.UTF_8);
+		int newSize = bytes.length + responseData.position();
+		byte[] newBuffer = new byte[newSize];
+		System.arraycopy(bytes, 0, newBuffer, 0, bytes.length);	// initial line and headers
+		System.arraycopy(responseData.array(), 0, newBuffer, bytes.length, responseData.position()); // body
+		responseData = ByteBuffer.wrap(newBuffer);
+		responseData.position(newSize);
+	}
 
 	/**
 	 * @param file Static resource/file to send
@@ -121,6 +160,7 @@ public class HttpResponse {
 		long bytesWritten = 0;
 		flush();	// write initial line + headers
 		try {
+			SocketChannel clientChannel = (SocketChannel) key.channel();
 			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
 		} catch (IOException e) {
 			logger.error("Error writing (static file) response: {}", e.getMessage());

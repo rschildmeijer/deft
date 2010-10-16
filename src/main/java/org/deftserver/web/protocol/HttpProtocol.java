@@ -3,11 +3,14 @@ package org.deftserver.web.protocol;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -19,6 +22,7 @@ import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
 public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
@@ -34,6 +38,7 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 	 */
 	private final Map<SocketChannel, Long> persistentConnections = new HashMap<SocketChannel, Long>();
 	
+	private final Map<SelectionKey, List<ByteBuffer>> stagedData = Maps.newHashMap();
 	private final int readBufferSize;
 
 	private final Application application;
@@ -58,6 +63,7 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 	
 	@Override
 	public void handleAccept(SelectionKey key) throws IOException {
+		logger.debug("handle accept...");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 		clientChannel.configureBlocking(false);
 		clientChannel.register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
@@ -65,14 +71,14 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 
 	@Override
 	public void handleRead(SelectionKey key) throws IOException {
+		logger.debug("handle read...");
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		
 		if (request.isKeepAlive()) {
 			persistentConnections.put(clientChannel, System.currentTimeMillis() + KEEP_ALIVE_TIMEOUT);
 		}
-		
-		HttpResponse response = new HttpResponse(clientChannel, request.isKeepAlive());
+		HttpResponse response = new HttpResponse(this, key, request.isKeepAlive());
 		RequestHandler rh = application.getHandler(request);
 		HttpRequestDispatcher.dispatch(rh, request, response);
 		
@@ -82,6 +88,52 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 		}
 	}
 	
+	@Override
+	public void handleWrite(SelectionKey key) {
+		logger.debug("handle write...");
+		List<ByteBuffer> pending = stagedData.get(key);
+		// shouldn't we always have staged data to write if we got this callback?
+		if (pending != null && !pending.isEmpty()) {
+			// pending data waiting to be written
+			logger.debug("pending data about to be written");
+			ByteBuffer toSend = pending.get(0);
+			try {
+				((SocketChannel)key.channel()).write(toSend);
+				if (!toSend.hasRemaining()) {
+					// sent all in the toSend ByteBuffer
+					logger.debug("sent all data in toSend buffer");
+					pending.remove(0);
+					if (pending.isEmpty()) {
+						// last 'chunk' sent
+						closeOrRegisterForRead(key);
+					}
+				}
+			} catch (IOException e) {
+				logger.error("Failed to send data to client: {}", e.getMessage());
+			}
+		} else {
+			logger.debug("no data pending to be written");
+			closeOrRegisterForRead(key);
+		}
+		
+	}
+	
+	private void closeOrRegisterForRead(SelectionKey key) {
+		if (persistentConnections.containsKey(key)) {
+			try {
+				key.channel().register(key.selector(), SelectionKey.OP_READ);
+				logger.debug("keep-alive connection. registratiting for read.");
+			} catch (ClosedChannelException e) {
+				logger.debug("ClosedChannelException while registrating key for read");
+				Closeables.closeQuietly(key.channel());
+			}		
+		} else {
+			// http request should be finishde and no 'keep-alive' => close connection
+			Closeables.closeQuietly(key.channel());
+		}
+	}
+
+
 	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
 		ByteBuffer buffer = (ByteBuffer) key.attachment();
 		try {
@@ -111,6 +163,21 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 	@Override
 	public int getPersistentConnections() {
 		return persistentConnections.size();
+	}
+
+	/**
+	 * Staging data to be written to wire.
+	 * 
+	 * @param key
+	 * @param responseData
+	 */
+	public void stage(SelectionKey key, ByteBuffer responseData) {
+		List<ByteBuffer> pending = stagedData.get(key);
+		if (pending == null) {
+			pending = new LinkedList<ByteBuffer>();
+			stagedData.put(key, pending);
+		}
+		pending.add(responseData);
 	}
 
 }
