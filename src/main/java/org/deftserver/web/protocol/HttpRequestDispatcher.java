@@ -1,6 +1,5 @@
 package org.deftserver.web.protocol;
 
-import org.deftserver.web.HttpException;
 import org.deftserver.web.HttpVerb;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;

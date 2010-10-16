@@ -39,6 +39,7 @@ import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.web.handler.RequestHandler;
+import org.deftserver.web.protocol.HttpException;
 import org.deftserver.web.protocol.HttpRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;

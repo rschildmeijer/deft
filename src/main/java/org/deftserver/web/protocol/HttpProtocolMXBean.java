@@ -1,6 +1,6 @@
 package org.deftserver.web.protocol;
 
-public interface HttpProtocolImplMXBean {
+public interface HttpProtocolMXBean {
 		
 	int getPersistentConnections();
 	

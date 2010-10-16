@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Maps;
 import com.google.common.io.Closeables;
 
-public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
+public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 
@@ -98,7 +98,8 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 			logger.debug("pending data about to be written");
 			ByteBuffer toSend = pending.get(0);
 			try {
-				((SocketChannel)key.channel()).write(toSend);
+				long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
+				logger.debug("sent {} bytes to wire", bytesWritten);
 				if (!toSend.hasRemaining()) {
 					// sent all in the toSend ByteBuffer
 					logger.debug("sent all data in toSend buffer");
@@ -122,13 +123,13 @@ public class HttpProtocol implements Protocol, HttpProtocolImplMXBean {
 		if (persistentConnections.containsKey(key)) {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_READ);
-				logger.debug("keep-alive connection. registratiting for read.");
+				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
 				logger.debug("ClosedChannelException while registrating key for read");
 				Closeables.closeQuietly(key.channel());
 			}		
 		} else {
-			// http request should be finishde and no 'keep-alive' => close connection
+			// http request should be finished and no 'keep-alive' => close connection
 			Closeables.closeQuietly(key.channel());
 		}
 	}
