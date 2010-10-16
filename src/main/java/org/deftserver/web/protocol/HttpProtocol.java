@@ -120,9 +120,9 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	}
 	
 	private void closeOrRegisterForRead(SelectionKey key) {
-		if (persistentConnections.containsKey(key)) {
+		if (persistentConnections.containsKey(key.channel())) {
 			try {
-				key.channel().register(key.selector(), SelectionKey.OP_READ);
+				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
 				logger.debug("ClosedChannelException while registrating key for read");
@@ -130,6 +130,7 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 			}		
 		} else {
 			// http request should be finished and no 'keep-alive' => close connection
+			logger.debug("Closing finished (non keep-alive) http connection"); 
 			Closeables.closeQuietly(key.channel());
 		}
 	}

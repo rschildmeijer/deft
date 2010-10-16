@@ -57,7 +57,7 @@ public class IOLoop {
 					if (key.isReadable()) {
 						protocol.handleRead(key);
 					}
-					if (key.isWritable() && key.isValid()) {
+					if (key.isValid() && key.isWritable()) {
 						protocol.handleWrite(key);
 					}
 					keys.remove();
