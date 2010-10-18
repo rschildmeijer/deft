@@ -111,6 +111,7 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 				}
 			} catch (IOException e) {
 				logger.error("Failed to send data to client: {}", e.getMessage());
+				Closeables.closeQuietly(key.channel());
 			}
 		} else {
 			logger.debug("no data pending to be written");
