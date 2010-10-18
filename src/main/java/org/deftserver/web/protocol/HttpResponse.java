@@ -1,8 +1,6 @@
 package org.deftserver.web.protocol;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
@@ -154,18 +152,21 @@ public class HttpResponse {
 	/**
 	 * @param file Static resource/file to send
 	 */
-	public long write(File file) {
+	public void write(File file) {
 		//setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));
-		long bytesWritten = 0;
+//		long bytesWritten = 0;
 		flush();	// write initial line + headers
-		try {
-			SocketChannel clientChannel = (SocketChannel) key.channel();
-			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
-		} catch (IOException e) {
-			logger.error("Error writing (static file) response: {}", e.getMessage());
-		}
-		return bytesWritten;
+		protocol.stage(key, file);
+//		try {
+//			SocketChannel clientChannel = (SocketChannel) key.channel();
+//			logger.debug("sending file..");
+//			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
+//			logger.debug("sent bytes: " + bytesWritten);
+//		} catch (IOException e) {
+//			logger.error("Error writing (static file) response: {}", e.getMessage());
+//		}
+//		return bytesWritten;
 	}
 
 	

@@ -1,6 +1,8 @@
 package org.deftserver.web.protocol;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -39,6 +41,7 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	private final Map<SocketChannel, Long> persistentConnections = new HashMap<SocketChannel, Long>();
 	
 	private final Map<SelectionKey, List<ByteBuffer>> stagedData = Maps.newHashMap();
+	private final Map<SelectionKey, File> stagedFiles = Maps.newHashMap();
 	private final int readBufferSize;
 
 	private final Application application;
@@ -92,32 +95,33 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	public void handleWrite(SelectionKey key) {
 		logger.debug("handle write...");
 		List<ByteBuffer> pending = stagedData.get(key);
-		// shouldn't we always have staged data to write if we got this callback?
-		if (pending != null && !pending.isEmpty()) {
-			// pending data waiting to be written
-			logger.debug("pending data about to be written");
-			ByteBuffer toSend = pending.get(0);
-			try {
-				long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
-				logger.debug("sent {} bytes to wire", bytesWritten);
-				if (!toSend.hasRemaining()) {
-					// sent all in the toSend ByteBuffer
-					logger.debug("sent all data in toSend buffer");
-					pending.remove(0);
-					if (pending.isEmpty()) {
-						// last 'chunk' sent
-						closeOrRegisterForRead(key);
-					}
+		logger.debug("pending data about to be written");
+		ByteBuffer toSend = pending.get(0);
+		try {
+			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
+			logger.debug("sent {} bytes to wire", bytesWritten);
+			if (!toSend.hasRemaining()) {
+				logger.debug("sent all data in toSend buffer");
+				pending.remove(0);
+				if (pending.isEmpty()) {
+					// last 'chunk' sent
+					closeOrRegisterForRead(key);
 				}
-			} catch (IOException e) {
-				logger.error("Failed to send data to client: {}", e.getMessage());
-				Closeables.closeQuietly(key.channel());
 			}
-		} else {
-			logger.debug("no data pending to be written");
-			closeOrRegisterForRead(key);
+		} catch (IOException e) {
+			logger.error("Failed to send data to client: {}", e.getMessage());
+			Closeables.closeQuietly(key.channel());
 		}
-		
+		if (stagedFiles.containsKey(key)) {
+			File file = stagedFiles.get(key);
+			try {
+				SocketChannel clientChannel = (SocketChannel) key.channel();
+				new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
+			} catch (IOException e) {
+				logger.error("Error writing (static file) response: {}", e.getMessage());
+			}
+			closeOrRegisterForRead(key);
+		} 
 	}
 	
 	private void closeOrRegisterForRead(SelectionKey key) {
@@ -181,6 +185,11 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 			stagedData.put(key, pending);
 		}
 		pending.add(responseData);
+	}
+
+
+	public void stage(SelectionKey key, File file) {
+		stagedFiles.put(key, file);
 	}
 
 }
