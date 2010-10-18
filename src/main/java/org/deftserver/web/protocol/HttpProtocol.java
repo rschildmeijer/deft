@@ -97,20 +97,22 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 		List<ByteBuffer> pending = stagedData.get(key);
 		logger.debug("pending data about to be written");
 		ByteBuffer toSend = pending.get(0);
-		try {
-			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
-			logger.debug("sent {} bytes to wire", bytesWritten);
-			if (!toSend.hasRemaining()) {
-				logger.debug("sent all data in toSend buffer");
-				pending.remove(0);
-				if (pending.isEmpty()) {
-					// last 'chunk' sent
-					closeOrRegisterForRead(key);
+		if (pending != null && !pending.isEmpty()) {
+			try {
+				long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
+				logger.debug("sent {} bytes to wire", bytesWritten);
+				if (!toSend.hasRemaining()) {
+					logger.debug("sent all data in toSend buffer");
+					pending.remove(0);
+					if (pending.isEmpty()) {
+						// last 'chunk' sent
+						closeOrRegisterForRead(key);
+					}
 				}
+			} catch (IOException e) {
+				logger.error("Failed to send data to client: {}", e.getMessage());
+				Closeables.closeQuietly(key.channel());
 			}
-		} catch (IOException e) {
-			logger.error("Failed to send data to client: {}", e.getMessage());
-			Closeables.closeQuietly(key.channel());
 		}
 		if (stagedFiles.containsKey(key)) {
 			File file = stagedFiles.get(key);
