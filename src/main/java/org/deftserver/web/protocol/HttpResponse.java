@@ -1,7 +1,6 @@
 package org.deftserver.web.protocol;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -10,6 +9,7 @@ import java.util.Map;
 
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
+import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,22 +29,14 @@ public class HttpResponse {
 	
 	private final Map<String, String> headers = new HashMap<String, String>();
 	private boolean headersCreated = false;
-	private ByteBuffer responseData = ByteBuffer.allocate(WRITE_BUFFER_SIZE);
-//	private final boolean keepAlive;
+	private DynamicByteBuffer responseData = DynamicByteBuffer.allocate(WRITE_BUFFER_SIZE);
 	
 	public HttpResponse(HttpProtocol protocol, SelectionKey key, boolean keepAlive) {
 		this.protocol = protocol;
 		this.key = key;
 		headers.put("Server", "DeftServer/0.2.0-SNAPSHOT");
 		headers.put("Date", DateUtil.getCurrentAsString());
-
-		if (keepAlive) {
-//			this.keepAlive = true;
-			headers.put("Connection", "Keep-Alive");
-		} else {
-//			this.keepAlive = false;
-			headers.put("Connection", "Close");	
-		}
+		headers.put("Connection", keepAlive ? "Keep-Alive" : "Close");
 	}
 	
 	public void setStatusCode(int sc) {
@@ -57,7 +49,6 @@ public class HttpResponse {
 
 	public HttpResponse write(String data) {
 		byte[] bytes = data.getBytes(Charsets.UTF_8);
-		ensureCapacity(bytes.length);
 		responseData.put(bytes);
 		return this;
 	}
@@ -65,7 +56,7 @@ public class HttpResponse {
 	public long flush() {
 		if (!headersCreated) {
 			String initial = createInitalLineAndHeaders();			
-			prepend(initial);
+			responseData.prepend(initial);
 			headersCreated = true;
 		}
 		if (!key.isWritable()) {
@@ -77,11 +68,9 @@ public class HttpResponse {
 				Closeables.closeQuietly(key.channel());
 			}
 		}
-		responseData.flip();	// prepare for write
-		protocol.stage(key, responseData);
-		logger.debug("{} bytes staged for writing", responseData.limit());
-		long bytesFlushed = responseData.limit();
-		responseData = ByteBuffer.allocate(WRITE_BUFFER_SIZE);
+		key.attach(responseData);
+		logger.debug("{} bytes staged for writing", responseData.position());
+		long bytesFlushed = responseData.position();
 		return bytesFlushed;
 	}
 	
@@ -117,37 +106,6 @@ public class HttpResponse {
 		return sb.toString();
 	}
 	
-	/**
-	 * Ensures that its safe to append size data to responseData. If we need to allocate a new ButeBuffer, the new
-	 * buffer will be twice as large as the old one.
-	 * @param size The size of the data that is about to be appended.
-	 */
-	private void ensureCapacity(int size) {
-		int remaining = responseData.remaining();
-		if (size > remaining) {
-			// allocate new ByteBuffer
-			logger.debug("allocation new responseData buffer.");
-			int newSize = Math.max(2 * responseData.capacity(), 2 * size);
-			allocate(newSize);
-		}
-	}
-
-	private void allocate(int newCapacity) {
-		byte[] newBuffer = new byte[newCapacity];
-		System.arraycopy(responseData.array(),0 , newBuffer, 0, responseData.position());
-		responseData = ByteBuffer.wrap(newBuffer);
-		logger.debug("allocated new responseData buffer, new size: {}", newBuffer.length);
-	}
-	
-	private void prepend(String data) {
-		byte[] bytes = data.getBytes(Charsets.UTF_8);
-		int newSize = bytes.length + responseData.position();
-		byte[] newBuffer = new byte[newSize];
-		System.arraycopy(bytes, 0, newBuffer, 0, bytes.length);	// initial line and headers
-		System.arraycopy(responseData.array(), 0, newBuffer, bytes.length, responseData.position()); // body
-		responseData = ByteBuffer.wrap(newBuffer);
-		responseData.position(newSize);
-	}
 
 	/**
 	 * @param file Static resource/file to send
@@ -155,19 +113,8 @@ public class HttpResponse {
 	public void write(File file) {
 		//setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));
-//		long bytesWritten = 0;
 		flush();	// write initial line + headers
 		protocol.stage(key, file);
-//		try {
-//			SocketChannel clientChannel = (SocketChannel) key.channel();
-//			logger.debug("sending file..");
-//			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
-//			logger.debug("sent bytes: " + bytesWritten);
-//		} catch (IOException e) {
-//			logger.error("Error writing (static file) response: {}", e.getMessage());
-//		}
-//		return bytesWritten;
 	}
-
 	
 }

@@ -11,8 +11,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -20,6 +18,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 import org.deftserver.web.Application;
+import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	 */
 	private final Map<SocketChannel, Long> persistentConnections = new HashMap<SocketChannel, Long>();
 	
-	private final Map<SelectionKey, List<ByteBuffer>> stagedData = Maps.newHashMap();
 	private final Map<SelectionKey, File> stagedFiles = Maps.newHashMap();
 	private final int readBufferSize;
 
@@ -94,25 +92,22 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	@Override
 	public void handleWrite(SelectionKey key) {
 		logger.debug("handle write...");
-		List<ByteBuffer> pending = stagedData.get(key);
+		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
 		logger.debug("pending data about to be written");
-		ByteBuffer toSend = pending.get(0);
-		if (pending != null && !pending.isEmpty()) {
-			try {
-				long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
-				logger.debug("sent {} bytes to wire", bytesWritten);
-				if (!toSend.hasRemaining()) {
-					logger.debug("sent all data in toSend buffer");
-					pending.remove(0);
-					if (pending.isEmpty()) {
-						// last 'chunk' sent
-						closeOrRegisterForRead(key);
-					}
-				}
-			} catch (IOException e) {
-				logger.error("Failed to send data to client: {}", e.getMessage());
-				Closeables.closeQuietly(key.channel());
+		try {
+			ByteBuffer toSend = dbb.getByteBuffer();
+			toSend.flip();	// prepare for write
+			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
+			logger.debug("sent {} bytes to wire", bytesWritten);
+			if (!toSend.hasRemaining()) {
+				logger.debug("sent all data in toSend buffer");
+				closeOrRegisterForRead(key);	// should probably only be done if the HttpResponse is finished
+			} else {
+				toSend.compact();	// make room for more data be "read" in
 			}
+		} catch (IOException e) {
+			logger.error("Failed to send data to client: {}", e.getMessage());
+			Closeables.closeQuietly(key.channel());
 		}
 		if (stagedFiles.containsKey(key)) {
 			File file = stagedFiles.get(key);
@@ -180,14 +175,14 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 	 * @param key
 	 * @param responseData
 	 */
-	public void stage(SelectionKey key, ByteBuffer responseData) {
-		List<ByteBuffer> pending = stagedData.get(key);
-		if (pending == null) {
-			pending = new LinkedList<ByteBuffer>();
-			stagedData.put(key, pending);
-		}
-		pending.add(responseData);
-	}
+//	public void stage(SelectionKey key, ByteBuffer responseData) {
+//		List<ByteBuffer> pending = stagedData.get(key);
+//		if (pending == null) {
+//			pending = new LinkedList<ByteBuffer>();
+//			stagedData.put(key, pending);
+//		}
+//		pending.add(responseData);
+//	}
 
 
 	public void stage(SelectionKey key, File file) {
