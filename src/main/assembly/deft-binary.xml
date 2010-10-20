@@ -14,6 +14,7 @@
 				<include>${project.basedir}/LICENSE.txt</include>
 				<include>${project.basedir}/NOTICE.txt</include>
 				<include>${project.basedir}/NEWS.txt</include>
+				<include>${project.basedir}/CHANGES.txt</include>
 			</includes>
 		</fileSet>
 		<fileSet>
