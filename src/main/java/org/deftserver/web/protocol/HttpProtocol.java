@@ -94,8 +94,8 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 		logger.debug("handle write...");
 		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
 		logger.debug("pending data about to be written");
+		ByteBuffer toSend = dbb.getByteBuffer();
 		try {
-			ByteBuffer toSend = dbb.getByteBuffer();
 			toSend.flip();	// prepare for write
 			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
 			logger.debug("sent {} bytes to wire", bytesWritten);
@@ -109,7 +109,7 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 			logger.error("Failed to send data to client: {}", e.getMessage());
 			Closeables.closeQuietly(key.channel());
 		}
-		if (stagedFiles.containsKey(key)) {
+		if (!toSend.hasRemaining() && stagedFiles.containsKey(key)) {
 			File file = stagedFiles.get(key);
 			try {
 				SocketChannel clientChannel = (SocketChannel) key.channel();
@@ -146,7 +146,7 @@ public class HttpProtocol implements Protocol, HttpProtocolMXBean {
 			logger.warn("Could not read buffer: {}", e.getMessage());
 			Closeables.closeQuietly(clientChannel);
 		}
-		buffer.clear();	// reuse the read buffer, (hint: "Connection: Keep-Alive" header)
+		buffer.flip();
 		return HttpRequest.of(buffer);
 	}
 	
