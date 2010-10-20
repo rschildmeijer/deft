@@ -59,15 +59,15 @@ public class HttpResponse {
 			responseData.prepend(initial);
 			headersCreated = true;
 		}
-		if (!key.isWritable()) {
-			logger.debug("registrating key for writes");
-			try {
-				key.channel().register(key.selector(), /*SelectionKey.OP_READ | */SelectionKey.OP_WRITE);
-			} catch (ClosedChannelException e) {
-				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
-				Closeables.closeQuietly(key.channel());
-			}
+		
+		logger.debug("registrating key for writes");
+		try {
+			key.channel().register(key.selector(), /*SelectionKey.OP_READ | */SelectionKey.OP_WRITE);
+		} catch (ClosedChannelException e) {
+			logger.error("ClosedChannelException during flush(): {}", e.getMessage());
+			Closeables.closeQuietly(key.channel());
 		}
+		
 		key.attach(responseData);
 		logger.debug("{} bytes staged for writing", responseData.position());
 		long bytesFlushed = responseData.position();
