@@ -47,6 +47,9 @@ import org.deftserver.web.protocol.HttpRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ning.http.client.AsyncCompletionHandler;
+import com.ning.http.client.AsyncHttpClient;
+
 
 public class DeftSystemTest {
 
@@ -162,23 +165,23 @@ public class DeftSystemTest {
 			response.setHeader("Location", "/");
 		}
 	}
-	
+
 	public static class UserDefinedStaticContentHandler extends RequestHandler {
 		@Override
 		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
 			response.write(new File("src/test/resources/test.txt"));
 		}
 	}
-	
+
 	public static class KeyValueStoreExampleRequestHandler extends RequestHandler {
 
 		private final Client client = new Client();
-		
+
 		public KeyValueStoreExampleRequestHandler() {
 			new KeyValueStore().start();
 			client.connect();
 		}
-		
+
 		@Override
 		@Asynchronous
 		public void get(HttpRequest request, final org.deftserver.web.protocol.HttpResponse response) {
@@ -655,7 +658,7 @@ public class DeftSystemTest {
 		);
 		channel.close();
 	}
-	
+
 	@Test
 	public void userDefinedStaticContentHandlerTest() throws ClientProtocolException, IOException {
 		// /static_file_handler
@@ -670,7 +673,7 @@ public class DeftSystemTest {
 		assertEquals(4, response.getAllHeaders().length);
 		assertEquals("8", response.getFirstHeader("Content-Length").getValue());
 	}
-	
+
 	@Test
 	public void timeoutTest() throws InterruptedException {
 		long now = System.currentTimeMillis();
@@ -678,9 +681,9 @@ public class DeftSystemTest {
 		final AsyncCallback cb = new AsyncCallback() {
 
 			@Override public void onCallback() { latch.countDown(); }
-			
+
 		};
-			
+
 		Timeout t1 = new Timeout(now+1000, cb);
 		Timeout t2 = new Timeout(now+1200, cb);
 		Timeout t3 = new Timeout(now+1400, cb);
@@ -691,11 +694,11 @@ public class DeftSystemTest {
 		IOLoop.INSTANCE.addTimeout(t3);
 		IOLoop.INSTANCE.addTimeout(t4);
 		IOLoop.INSTANCE.addTimeout(t5);
-		
+
 		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
 		assertTrue(latch.getCount() == 0);
 	}
-	
+
 	@Test
 	public void keyValueStoreClientTest() throws ClientProtocolException, IOException {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
@@ -709,6 +712,35 @@ public class DeftSystemTest {
 		assertEquals(5, response.getAllHeaders().length);
 		assertEquals("7", response.getFirstHeader("Content-Length").getValue());
 		assertEquals("kickass", convertStreamToString(response.getEntity().getContent()).trim());
+	}
+
+	@Test
+	public void doSimpleRequestTestWith() throws IOException, InterruptedException {
+		int iterations = 100;
+		final CountDownLatch latch = new CountDownLatch(iterations);
+		AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+		for (int i = 1; i <= iterations; i++) {
+
+			asyncHttpClient.prepareGet("http://localhost:" + PORT + "/").
+			execute(new AsyncCompletionHandler<com.ning.http.client.Response>(){
+
+				@Override
+				public com.ning.http.client.Response onCompleted(com.ning.http.client.Response response) throws Exception{
+					String body = response.getResponseBody();
+					assertEquals(expectedPayload, body);
+					latch.countDown();
+					return response;
+				}
+
+				@Override
+				public void onThrowable(Throwable t){
+					assertTrue(false);
+				}
+
+			});
+		}
+		latch.await(15 * 1000, TimeUnit.MILLISECONDS);
+		assertEquals(0, latch.getCount());
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

@@ -35,6 +35,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.ning</groupId>
+			<artifactId>async-http-client</artifactId>
+			<version>1.0.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
 			<version>1.1.1</version>
@@ -80,4 +87,13 @@
 
 		</plugins>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>Sonatype</id>
+			<name>Sonatype Release</name>
+			<url>http://oss.sonatype.org/content/repositories/releases </url>
+		</repository>
+
+	</repositories>
 </project>
