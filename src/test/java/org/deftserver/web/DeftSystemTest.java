@@ -38,6 +38,9 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
+import org.deftserver.example.kv.Client;
+import org.deftserver.example.kv.KeyValueStore;
+import org.deftserver.io.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.protocol.HttpException;
 import org.deftserver.web.protocol.HttpRequest;
@@ -166,6 +169,26 @@ public class DeftSystemTest {
 			response.write(new File("src/test/resources/test.txt"));
 		}
 	}
+	
+	public static class KeyValueStoreExampleRequestHandler extends RequestHandler {
+
+		private final Client client = new Client();
+		
+		public KeyValueStoreExampleRequestHandler() {
+			new KeyValueStore().start();
+			client.connect();
+		}
+		
+		@Override
+		@Asynchronous
+		public void get(HttpRequest request, final org.deftserver.web.protocol.HttpResponse response) {
+			client.get("deft", new AsyncResult<String>() {
+				@Override public void onFailure(Throwable caught) { /* ignore */}
+				@Override public void onSuccess(String result) { response.write(result).finish(); }
+			});
+		}
+
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -185,6 +208,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/no_body", new NoBodyRequestHandler());
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
+		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -192,7 +216,9 @@ public class DeftSystemTest {
 		// start deft instance from a new thread because the start invocation is blocking 
 		// (invoking thread will be I/O loop thread)
 		new Thread(new Runnable() {
-			@Override public void run() { new HttpServer(application).listen(PORT).getIOLoop().start(); }
+			@Override public void run() { 
+				new HttpServer(application).listen(PORT);
+				IOLoop.INSTANCE.start(); }
 		}).start();
 	}
 
@@ -643,6 +669,46 @@ public class DeftSystemTest {
 		assertEquals("OK", response.getStatusLine().getReasonPhrase());
 		assertEquals(4, response.getAllHeaders().length);
 		assertEquals("8", response.getFirstHeader("Content-Length").getValue());
+	}
+	
+	@Test
+	public void timeoutTest() throws InterruptedException {
+		long now = System.currentTimeMillis();
+		final CountDownLatch latch = new CountDownLatch(5);
+		final AsyncCallback cb = new AsyncCallback() {
+
+			@Override public void onCallback() { latch.countDown(); }
+			
+		};
+			
+		Timeout t1 = new Timeout(now+1000, cb);
+		Timeout t2 = new Timeout(now+1200, cb);
+		Timeout t3 = new Timeout(now+1400, cb);
+		Timeout t4 = new Timeout(now+1600, cb);
+		Timeout t5 = new Timeout(now+1800, cb);
+		IOLoop.INSTANCE.addTimeout(t1);
+		IOLoop.INSTANCE.addTimeout(t2);
+		IOLoop.INSTANCE.addTimeout(t3);
+		IOLoop.INSTANCE.addTimeout(t4);
+		IOLoop.INSTANCE.addTimeout(t5);
+		
+		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
+		assertTrue(latch.getCount() == 0);
+	}
+	
+	@Test
+	public void keyValueStoreClientTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/redis");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		assertEquals("7", response.getFirstHeader("Content-Length").getValue());
+		assertEquals("kickass", convertStreamToString(response.getEntity().getContent()).trim());
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

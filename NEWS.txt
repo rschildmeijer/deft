@@ -4,6 +4,8 @@
 Features
 --------
     - Asynchronous writes (#63).
+    - Support for third party libraries to work within Deft's IOLoop (#62)
+      (Thanks to github.com/williame and github.com/sris for inspiration and implementation details).
      
 Configuration
 ------------

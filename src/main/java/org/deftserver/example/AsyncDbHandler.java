@@ -1,6 +1,6 @@
 package org.deftserver.example;
 
-import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.AsyncResult;
 import org.deftserver.web.Asynchronous;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.protocol.HttpRequest;
@@ -20,7 +20,7 @@ public class AsyncDbHandler extends RequestHandler{
 	}
 	
 
-	private class MyCallback implements AsyncCallback<String> {
+	private class MyCallback implements AsyncResult<String> {
 
 		HttpRequest request; 
 		HttpResponse response;

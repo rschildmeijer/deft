@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.deftserver.web.Application;
 import org.deftserver.web.HttpServer;
+import org.deftserver.web.IOLoop;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.protocol.HttpRequest;
 import org.deftserver.web.protocol.HttpResponse;
@@ -38,7 +39,8 @@ public class DeftServerExample {
 
 		logger.debug("Starting up server on port: " + PORT);
 		HttpServer server = new HttpServer(application);
-		server.listen(PORT).getIOLoop().start();
+		server.listen(PORT);
+		IOLoop.INSTANCE.start();
 	
 	}
 }

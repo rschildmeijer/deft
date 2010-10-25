@@ -7,6 +7,7 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deftserver.util.Closeables;
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
 import org.deftserver.web.buffer.DynamicByteBuffer;
@@ -14,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Closeables;
 
 public class HttpResponse {
 	

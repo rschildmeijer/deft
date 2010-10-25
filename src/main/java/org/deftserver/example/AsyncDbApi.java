@@ -1,6 +1,6 @@
 package org.deftserver.example;
 
-import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.AsyncResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +13,7 @@ public class AsyncDbApi {
 	Logger logger = LoggerFactory.getLogger(AsyncDbApi.class);
 	private final int DELAY = 100;
 	
-	public void getNameFromId(final String id, final AsyncCallback<String> callback) {
+	public void getNameFromId(final String id, final AsyncResult<String> callback) {
 		logger.debug("Getting name from database...");
 		
 		Runnable runnable = new Runnable( ) {
