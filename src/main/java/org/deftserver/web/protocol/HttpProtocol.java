@@ -29,7 +29,6 @@ public class HttpProtocol implements IOHandler {
 	/** The number of seconds Deft will wait for a subsequent request before closing the connection */
 	private final static long KEEP_ALIVE_TIMEOUT = 30 * 1000;	// 30s 
 	
-	private final Map<SelectionKey, File> stagedFiles = Maps.newHashMap();
 	private final int readBufferSize;
 
 	private final Application application;
@@ -90,19 +89,9 @@ public class HttpProtocol implements IOHandler {
 			logger.error("Failed to send data to client: {}", e.getMessage());
 			Closeables.closeQuietly(key.channel());
 		}
-		if (!toSend.hasRemaining() && stagedFiles.containsKey(key)) {
-			File file = stagedFiles.get(key);
-			try {
-				SocketChannel clientChannel = (SocketChannel) key.channel();
-				new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), clientChannel);
-			} catch (IOException e) {
-				logger.error("Error writing (static file) response: {}", e.getMessage());
-			}
-			closeOrRegisterForRead(key);
-		} 
 	}
 	
-	private void closeOrRegisterForRead(SelectionKey key) {
+	public void closeOrRegisterForRead(SelectionKey key) {
 		if (IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
@@ -131,8 +120,4 @@ public class HttpProtocol implements IOHandler {
 		return HttpRequest.of(buffer);
 	}
 	
-	public void stage(SelectionKey key, File file) {
-		stagedFiles.put(key, file);
-	}
-
 }

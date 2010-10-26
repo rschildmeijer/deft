@@ -1,5 +1,6 @@
 package org.deftserver.web.buffer;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
@@ -81,5 +82,19 @@ public class DynamicByteBuffer {
 
 	public int capacity() {
 		return backend.capacity();
+	}
+
+	public boolean hasRemaining() {
+		return backend.hasRemaining();
+	}
+
+	public DynamicByteBuffer compact() {
+		backend.compact();
+		return this;
+	}
+
+	public DynamicByteBuffer clear() {
+		backend.clear();
+		return this;
 	}
 }

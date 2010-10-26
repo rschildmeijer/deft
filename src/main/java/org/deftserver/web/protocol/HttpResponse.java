@@ -1,6 +1,9 @@
 package org.deftserver.web.protocol;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
@@ -10,6 +13,7 @@ import java.util.Map;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
+import org.deftserver.web.IOLoop;
 import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +22,7 @@ import com.google.common.base.Charsets;
 
 public class HttpResponse {
 	
-	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
+	private final static Logger logger = LoggerFactory.getLogger(HttpResponse.class);
 	
 	private final static int WRITE_BUFFER_SIZE = 1500;	// in bytes
 
@@ -59,18 +63,29 @@ public class HttpResponse {
 			responseData.prepend(initial);
 			headersCreated = true;
 		}
-		
-		logger.debug("registrating key for writes");
+
+		SocketChannel channel = (SocketChannel) key.channel();
+		responseData.flip();	// prepare for write
 		try {
-			key.channel().register(key.selector(), /*SelectionKey.OP_READ | */SelectionKey.OP_WRITE);
-		} catch (ClosedChannelException e) {
-			logger.error("ClosedChannelException during flush(): {}", e.getMessage());
+			channel.write(responseData.getByteBuffer());
+		} catch (IOException e) {
+			logger.error("ClosedChannelException during channel.write(): {}", e.getMessage());
 			Closeables.closeQuietly(key.channel());
 		}
-		
-		key.attach(responseData);
-		logger.debug("{} bytes staged for writing", responseData.position());
 		long bytesFlushed = responseData.position();
+
+		if (responseData.hasRemaining()) { 
+			responseData.compact();	// make room for more data be "read" in
+			try {
+				key.channel().register(key.selector(), SelectionKey.OP_WRITE);
+			} catch (ClosedChannelException e) {
+				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
+				Closeables.closeQuietly(key.channel());
+			}
+			key.attach(responseData);
+		} else {
+			responseData.clear();
+		}
 		return bytesFlushed;
 	}
 	
@@ -82,7 +97,8 @@ public class HttpResponse {
 				setEtagAndContentLength();
 			}
 			bytesWritten = flush();
-		}	
+		}
+		protocol.closeOrRegisterForRead(key);
 		return bytesWritten;
 	}
 	
@@ -106,15 +122,18 @@ public class HttpResponse {
 		return sb.toString();
 	}
 	
-
-	/**
-	 * @param file Static resource/file to send
-	 */
-	public void write(File file) {
+	public long write(File file) {
 		//setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));
-		flush();	// write initial line + headers
-		protocol.stage(key, file);
+		long bytesWritten = 0;
+		flush(); // write initial line + headers
+		try {
+			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), (SocketChannel) key.channel());
+			logger.debug("sent file, bytes sent: {}", bytesWritten);
+		} catch (IOException e) {
+			logger.error("Error writing (static file) response: {}", e.getMessage());
+		}
+		return bytesWritten;
 	}
 	
 }

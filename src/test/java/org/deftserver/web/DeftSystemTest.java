@@ -604,6 +604,23 @@ public class DeftSystemTest {
 		assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
 		assertNotNull(response.getFirstHeader("Last-Modified"));
 	}
+	
+	@Test
+	public void pictureStaticLargeFileRequestTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/src/test/resources/f4_impact_1_original.jpg");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(7, response.getAllHeaders().length);
+		//assertEquals("2145094", response.getFirstHeader("Content-Length").getValue()); // my mb says 2145066, imac says 2145094
+		assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
+		assertNotNull(response.getFirstHeader("Last-Modified"));
+		// TODO RS 101026 Verify that the actual body/entity is 2145094 bytes big (when we have support for "large" file)
+	}
 
 	@Test
 	public void noBodyRequest() throws ClientProtocolException, IOException {
