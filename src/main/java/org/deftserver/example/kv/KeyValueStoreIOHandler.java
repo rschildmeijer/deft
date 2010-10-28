@@ -41,6 +41,7 @@ public class KeyValueStoreIOHandler implements IOHandler {
 			long bytesRead = channel.read(buffer);
 			logger.debug("[KeyValueStoreHandler] read data: {} bytes", bytesRead);
 		} catch (IOException e) {
+			if (rcbs.containsKey(key)) { rcbs.get(key).onFailure(e); }
 			logger.debug("[KeyValueStoreHandler] could not read data: ", e.getMessage());
 			Closeables.closeQuietly(channel);
 		}
