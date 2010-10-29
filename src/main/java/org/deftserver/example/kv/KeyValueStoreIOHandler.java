@@ -81,4 +81,6 @@ public class KeyValueStoreIOHandler implements IOHandler {
 		rcbs.put(key, cb);
 	}
 
+	@Override public String toString() { return "KeyValueStoreIOHandler"; }
+	
 }

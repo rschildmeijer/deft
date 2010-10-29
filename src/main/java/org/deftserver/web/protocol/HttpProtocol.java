@@ -114,4 +114,7 @@ public class HttpProtocol implements IOHandler {
 		return HttpRequest.of(buffer);
 	}
 	
+	@Override
+	public String toString() { return "HttpProtocol"; }
+	
 }
