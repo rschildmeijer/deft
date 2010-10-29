@@ -9,6 +9,7 @@ Features
     - Improved write performance (Using the fact that a java.nio socket write buffer is always writable as long
       its space left in the write buffer, #74)
     - Closed HTTP request premature in HttpResponse.finish() (#72)
+    - JMX monitoring (read only) for IOLoop (#68)
      
 Configuration
 ------------
