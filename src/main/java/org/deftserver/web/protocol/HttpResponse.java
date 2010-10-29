@@ -96,7 +96,18 @@ public class HttpResponse {
 			}
 			bytesWritten = flush();
 		}
-		protocol.closeOrRegisterForRead(key);
+		
+		// close (or register for read) iff 
+		// (a) DBB is attached but all data is sent to wire (hasRemaining == false)
+		// (b) no DBB is attached (never had to register for write)
+		if (key.attachment() instanceof DynamicByteBuffer) {
+			DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
+			if (!(dbb).hasRemaining()) {
+				protocol.closeOrRegisterForRead(key);
+			} 
+		} else {
+			protocol.closeOrRegisterForRead(key);
+		}
 		return bytesWritten;
 	}
 	

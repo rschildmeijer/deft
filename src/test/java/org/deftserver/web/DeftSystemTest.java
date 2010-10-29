@@ -98,6 +98,20 @@ public class DeftSystemTest {
 			response.flush();
 		}
 	}
+	
+	private static class WFFFWFFFRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			response.write("1");
+			response.flush();
+			response.flush();
+			response.flush();
+			response.write("2");
+			response.flush();
+			response.flush();
+			response.flush();
+		}
+	}
 
 	private static class DeleteRequestHandler extends RequestHandler {
 		@Override
@@ -192,6 +206,22 @@ public class DeftSystemTest {
 		}
 
 	}
+	
+	public static class _450KBResponseEntityRequestHandlr extends RequestHandler {
+		public static String entity;
+
+		static {
+			int iterations = 450*1024;
+			StringBuilder sb = new StringBuilder();
+			for (int i = 1; i <= iterations; i++) { sb.append("a"); }
+			entity = sb.toString();
+		}
+		
+		@Override
+		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+			response.write(entity);
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -202,6 +232,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/ww", new WWRequestHandler());
 		reqHandlers.put("/wwfw", new WWFWRequestHandler());
 		reqHandlers.put("/wfwf", new WFWFRequestHandler());
+		reqHandlers.put("/wfffwfff", new WFFFWFFFRequestHandler());
 		reqHandlers.put("/delete", new DeleteRequestHandler());
 		reqHandlers.put("/post", new PostRequestHandler());
 		reqHandlers.put("/put", new PutRequestHandler());
@@ -212,6 +243,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
 		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
+		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandlr());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -332,6 +364,26 @@ public class DeftSystemTest {
 
 		HttpClient httpclient = new DefaultHttpClient(params);
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wfwf");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("12", payLoad);
+		assertEquals(3, response.getAllHeaders().length);
+	}
+	
+	@Test
+	public void wfffwfffTest() throws ClientProtocolException, IOException {
+		List<Header> headers = new LinkedList<Header>();
+		headers.add(new BasicHeader("Connection", "Close"));
+		HttpParams params = new BasicHttpParams();
+		params.setParameter("http.default-headers", headers);
+
+		HttpClient httpclient = new DefaultHttpClient(params);
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/wfffwfff");
 		HttpResponse response = httpclient.execute(httpget);
 
 		assertNotNull(response);
@@ -731,8 +783,9 @@ public class DeftSystemTest {
 		assertEquals("kickass", convertStreamToString(response.getEntity().getContent()).trim());
 	}
 
+	//ning === http://github.com/ning/async-http-client
 	@Test
-	public void doSimpleRequestTestWith() throws IOException, InterruptedException {
+	public void doSimpleAsyncRequestTestWithNing() throws IOException, InterruptedException {
 		int iterations = 100;
 		final CountDownLatch latch = new CountDownLatch(iterations);
 		AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
@@ -745,6 +798,15 @@ public class DeftSystemTest {
 				public com.ning.http.client.Response onCompleted(com.ning.http.client.Response response) throws Exception{
 					String body = response.getResponseBody();
 					assertEquals(expectedPayload, body);
+					{
+						List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag", "Connection"});
+						assertEquals(200, response.getStatusCode());
+						assertEquals(expectedHeaders.size(), response.getHeaders().getHeaderNames().size());
+						for (String header : expectedHeaders) {
+							assertTrue(response.getHeader(header) != null);
+						}
+						assertEquals(expectedPayload.length()+"", response.getHeader("Content-Length"));
+					}
 					latch.countDown();
 					return response;
 				}
@@ -758,6 +820,23 @@ public class DeftSystemTest {
 		}
 		latch.await(15 * 1000, TimeUnit.MILLISECONDS);
 		assertEquals(0, latch.getCount());
+	}
+	
+	@Test
+	public void _450KBEntityTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/450kb_body");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		//assertEquals(450*1024, Integer.parseInt(response.getFirstHeader("Content-Length").getValue())/8);
+		//assertEquals(450*1024, _450KBResponseEntityRequestHandlr.entity.getBytes(Charsets.UTF_8).length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals(_450KBResponseEntityRequestHandlr.entity, payLoad);
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

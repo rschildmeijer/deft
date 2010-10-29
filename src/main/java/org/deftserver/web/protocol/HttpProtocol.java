@@ -1,14 +1,11 @@
 package org.deftserver.web.protocol;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.util.Map;
 
 import org.deftserver.util.Closeables;
 import org.deftserver.util.TimeoutFactory;
@@ -19,8 +16,6 @@ import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
 
 public class HttpProtocol implements IOHandler {
 	
@@ -53,7 +48,6 @@ public class HttpProtocol implements IOHandler {
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		
 		if (request.isKeepAlive()) {
-			//persistentConnections.add(clientChannel);
 			IOLoop.INSTANCE.addKeepAliveTimeout(
 					clientChannel, 
 					TimeoutFactory.keepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
