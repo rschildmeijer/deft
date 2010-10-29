@@ -3,11 +3,12 @@
  
 Features
 --------
-    - Asynchronous writes (#63).
+    - Asynchronous writes done right (#63).
     - Support for third party libraries to work within Deft's IOLoop (#62)
       (Thanks to github.com/williame and github.com/sris for inspiration and implementation details).
     - Improved write performance (Using the fact that a java.nio socket write buffer is always writable as long
-      its space left in the write buffer)
+      its space left in the write buffer, #74)
+    - Closed HTTP request premature in HttpResponse.finish() (#72)
      
 Configuration
 ------------
