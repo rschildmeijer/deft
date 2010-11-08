@@ -822,6 +822,44 @@ public class DeftSystemTest {
 		assertEquals(0, latch.getCount());
 	}
 	
+	// TODO 101108 RS enable when /mySql (AsyncDbHandler is properly implemented)
+	//ning === http://github.com/ning/async-http-client
+//	@Test
+//	public void doAsynchronousRequestTestWithNing() throws IOException, InterruptedException {
+//		int iterations = 200;
+//		final CountDownLatch latch = new CountDownLatch(iterations);
+//		AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+//		for (int i = 1; i <= iterations; i++) {
+//
+//			asyncHttpClient.prepareGet("http://localhost:" + PORT + "/mySql").
+//			execute(new AsyncCompletionHandler<com.ning.http.client.Response>(){
+//
+//				@Override
+//				public com.ning.http.client.Response onCompleted(com.ning.http.client.Response response) throws Exception{
+//					String body = response.getResponseBody();
+//					assertEquals("Name: Jim123", body);
+//					List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag", "Connection"});
+//					assertEquals(200, response.getStatusCode());
+//					assertEquals(expectedHeaders.size(), response.getHeaders().getHeaderNames().size());
+//					for (String header : expectedHeaders) {
+//						assertTrue(response.getHeader(header) != null);
+//					}
+//					assertEquals(""+ "Name: Jim123".length(), response.getHeader("Content-Length"));
+//					latch.countDown();
+//					return response;
+//				}
+//
+//				@Override
+//				public void onThrowable(Throwable t){
+//					assertTrue(false);
+//				}
+//
+//			});
+//		}
+//		latch.await(15 * 1000, TimeUnit.MILLISECONDS);
+//		assertEquals(0, latch.getCount());
+//	}
+	
 	@Test
 	public void _450KBEntityTest() throws ClientProtocolException, IOException {
 		DefaultHttpClient httpclient = new DefaultHttpClient();

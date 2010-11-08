@@ -13,8 +13,17 @@ public class AsyncDbHandler extends RequestHandler{
 	Logger logger = LoggerFactory.getLogger(AsyncDbHandler.class);
 	
 	@Asynchronous
-	public void get(HttpRequest request, HttpResponse response) {
+	public void get(HttpRequest request, final HttpResponse response) {
 		logger.debug("Entering AsyncDbHandler.get");
+//		IOLoop.INSTANCE.addTimeout(new Timeout(500, new AsyncCallback() {
+//			
+//			@Override
+//			public void onCallback() {
+//				response.write("Name: " + "Jim123");
+//				logger.debug("MyCallback.onSuccess, retrieved name: " + "Jim123");
+//				response.finish();				
+//			}
+//		}));
 		new AsyncDbApi().getNameFromId("123", new MyCallback(request, response));
 		logger.debug("Leaving AsyncDbHandler.get");
 	}
