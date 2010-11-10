@@ -1,4 +1,4 @@
-package org.deftserver.web;
+package org.deftserver.io;
 
 import static com.google.common.collect.Collections2.transform;
 
@@ -17,7 +17,7 @@ import java.util.Map;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
-import org.deftserver.io.Timeout;
+import org.deftserver.web.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

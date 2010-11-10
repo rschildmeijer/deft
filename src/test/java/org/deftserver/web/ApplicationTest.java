@@ -10,8 +10,8 @@ import java.util.regex.PatternSyntaxException;
 import org.deftserver.web.handler.BadRequestRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
-import org.deftserver.web.protocol.HttpRequest;
-import org.deftserver.web.protocol.HttpResponse;
+import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.HttpResponse;
 import org.junit.Test;
 
 

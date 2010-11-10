@@ -1,4 +1,4 @@
-package org.deftserver.web.protocol;
+package org.deftserver.web.http;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;

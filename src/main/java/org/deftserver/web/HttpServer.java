@@ -5,7 +5,9 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 
-import org.deftserver.web.protocol.HttpProtocol;
+import org.deftserver.io.IOHandler;
+import org.deftserver.io.IOLoop;
+import org.deftserver.web.http.HttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package org.deftserver.web;
+package org.deftserver.io;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;

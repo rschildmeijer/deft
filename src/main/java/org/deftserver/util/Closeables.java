@@ -3,7 +3,7 @@ package org.deftserver.util;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 
-import org.deftserver.web.IOLoop;
+import org.deftserver.io.IOLoop;
 
 public class Closeables {
 

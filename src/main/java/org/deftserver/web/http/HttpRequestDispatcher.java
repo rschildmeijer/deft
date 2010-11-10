@@ -1,4 +1,4 @@
-package org.deftserver.web.protocol;
+package org.deftserver.web.http;
 
 import org.deftserver.web.HttpVerb;
 import org.deftserver.web.handler.RequestHandler;

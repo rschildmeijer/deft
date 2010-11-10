@@ -1,7 +1,7 @@
 package org.deftserver.web.handler;
 
-import org.deftserver.web.protocol.HttpRequest;
-import org.deftserver.web.protocol.HttpResponse;
+import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.HttpResponse;
 
 
 public class NotFoundRequestHandler extends RequestHandler {

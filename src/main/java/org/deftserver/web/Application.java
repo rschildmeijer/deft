@@ -8,7 +8,7 @@ import org.deftserver.web.handler.BadRequestRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.handler.StaticContentHandler;
-import org.deftserver.web.protocol.HttpRequest;
+import org.deftserver.web.http.HttpRequest;
 
 import com.google.common.collect.ImmutableMap;
 

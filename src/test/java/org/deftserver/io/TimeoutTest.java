@@ -3,6 +3,7 @@ package org.deftserver.io;
 import static org.junit.Assert.assertEquals;
 
 import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.Timeout;
 import org.junit.Test;
 
 public class TimeoutTest {

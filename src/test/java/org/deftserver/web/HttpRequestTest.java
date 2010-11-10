@@ -15,7 +15,7 @@ import java.util.Map;
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.util.HttpRequestHelper;
 import org.deftserver.util.HttpUtil;
-import org.deftserver.web.protocol.HttpRequest;
+import org.deftserver.web.http.HttpRequest;
 import org.junit.Test;
 
 

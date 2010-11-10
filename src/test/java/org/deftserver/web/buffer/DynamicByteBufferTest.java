@@ -2,6 +2,7 @@ package org.deftserver.web.buffer;
 
 import static org.junit.Assert.assertEquals;
 
+import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
 

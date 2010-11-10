@@ -1,4 +1,4 @@
-package org.deftserver.web.protocol;
+package org.deftserver.web.http;
 
 
 public class HttpException extends RuntimeException {

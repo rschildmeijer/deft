@@ -5,10 +5,10 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-import org.deftserver.io.Timeout;
+import org.deftserver.io.IOLoop;
+import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.web.AsyncResult;
-import org.deftserver.web.IOLoop;
-import org.deftserver.web.buffer.DynamicByteBuffer;
+import org.deftserver.web.Timeout;
 
 import com.google.common.base.Charsets;
 

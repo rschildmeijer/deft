@@ -40,10 +40,10 @@ import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.example.kv.Client;
 import org.deftserver.example.kv.KeyValueStore;
-import org.deftserver.io.Timeout;
+import org.deftserver.io.IOLoop;
 import org.deftserver.web.handler.RequestHandler;
-import org.deftserver.web.protocol.HttpException;
-import org.deftserver.web.protocol.HttpRequest;
+import org.deftserver.web.http.HttpException;
+import org.deftserver.web.http.HttpRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -59,21 +59,21 @@ public class DeftSystemTest {
 
 	private static class ExampleRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(expectedPayload);
 		}
 	}
 
 	private static class WRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("1");
 		}
 	}
 
 	private static class WWRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("1");
 			response.write("2");
 		}
@@ -81,7 +81,7 @@ public class DeftSystemTest {
 
 	private static class WWFWRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("1");
 			response.write("2");
 			response.flush();
@@ -91,7 +91,7 @@ public class DeftSystemTest {
 
 	private static class WFWFRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("1");
 			response.flush();
 			response.write("2");
@@ -101,7 +101,7 @@ public class DeftSystemTest {
 	
 	private static class WFFFWFFFRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("1");
 			response.flush();
 			response.flush();
@@ -115,7 +115,7 @@ public class DeftSystemTest {
 
 	private static class DeleteRequestHandler extends RequestHandler {
 		@Override
-		public void delete(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void delete(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("del");
 			response.flush();
 			response.write("ete");
@@ -125,7 +125,7 @@ public class DeftSystemTest {
 
 	private static class PostRequestHandler extends RequestHandler {
 		@Override
-		public void post(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void post(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("po");
 			response.flush();
 			response.write("st");
@@ -135,7 +135,7 @@ public class DeftSystemTest {
 
 	private static class PutRequestHandler extends RequestHandler {
 		@Override
-		public void put(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void put(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write("p");
 			response.flush();
 			response.write("ut");
@@ -145,14 +145,14 @@ public class DeftSystemTest {
 
 	private static class CapturingRequestRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(request.getRequestedPath());
 		}
 	}
 
 	private static class ThrowingHttpExceptionRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			throw new HttpException(500, "exception message");
 		}
 	}
@@ -160,21 +160,21 @@ public class DeftSystemTest {
 	private static class AsyncThrowingHttpExceptionRequestHandler extends RequestHandler {
 		@Asynchronous
 		@Override
-		public void get(org.deftserver.web.protocol.HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			throw new HttpException(500, "exception message");
 		}
 	}
 
 	public static class NoBodyRequestHandler extends RequestHandler {
 		@Override
-		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.setStatusCode(200);
 		}
 	}
 
 	public static class MovedPermanentlyRequestHandler extends RequestHandler {
 		@Override
-		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.setStatusCode(301);
 			response.setHeader("Location", "/");
 		}
@@ -182,7 +182,7 @@ public class DeftSystemTest {
 
 	public static class UserDefinedStaticContentHandler extends RequestHandler {
 		@Override
-		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(new File("src/test/resources/test.txt"));
 		}
 	}
@@ -198,7 +198,7 @@ public class DeftSystemTest {
 
 		@Override
 		@Asynchronous
-		public void get(HttpRequest request, final org.deftserver.web.protocol.HttpResponse response) {
+		public void get(HttpRequest request, final org.deftserver.web.http.HttpResponse response) {
 			client.get("deft", new AsyncResult<String>() {
 				@Override public void onFailure(Throwable caught) { /* ignore */}
 				@Override public void onSuccess(String result) { response.write(result).finish(); }
@@ -218,7 +218,7 @@ public class DeftSystemTest {
 		}
 		
 		@Override
-		public void get(HttpRequest request, org.deftserver.web.protocol.HttpResponse response) {
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(entity);
 		}
 	}

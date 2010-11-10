@@ -6,11 +6,11 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Map;
 
+import org.deftserver.io.IOHandler;
+import org.deftserver.io.IOLoop;
+import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.web.AsyncResult;
-import org.deftserver.web.IOHandler;
-import org.deftserver.web.IOLoop;
-import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

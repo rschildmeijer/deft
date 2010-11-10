@@ -1,4 +1,4 @@
-package org.deftserver.web.protocol;
+package org.deftserver.web.http;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -7,12 +7,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import org.deftserver.io.IOHandler;
+import org.deftserver.io.IOLoop;
+import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.TimeoutFactory;
 import org.deftserver.web.Application;
-import org.deftserver.web.IOHandler;
-import org.deftserver.web.IOLoop;
-import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

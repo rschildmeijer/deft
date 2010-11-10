@@ -4,8 +4,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.deftserver.web.handler.RequestHandler;
-import org.deftserver.web.protocol.HttpRequest;
-import org.deftserver.web.protocol.HttpResponse;
+import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.HttpResponse;
 import org.junit.Test;
 
 

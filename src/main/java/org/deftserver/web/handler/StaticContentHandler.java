@@ -5,9 +5,9 @@ import java.io.File;
 import javax.activation.FileTypeMap;
 import javax.activation.MimetypesFileTypeMap;
 
-import org.deftserver.web.protocol.HttpException;
-import org.deftserver.web.protocol.HttpRequest;
-import org.deftserver.web.protocol.HttpResponse;
+import org.deftserver.web.http.HttpException;
+import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -3,12 +3,12 @@ package org.deftserver.example;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deftserver.io.IOLoop;
 import org.deftserver.web.Application;
 import org.deftserver.web.HttpServer;
-import org.deftserver.web.IOLoop;
 import org.deftserver.web.handler.RequestHandler;
-import org.deftserver.web.protocol.HttpRequest;
-import org.deftserver.web.protocol.HttpResponse;
+import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

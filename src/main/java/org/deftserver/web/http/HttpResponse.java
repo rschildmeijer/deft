@@ -1,4 +1,4 @@
-package org.deftserver.web.protocol;
+package org.deftserver.web.http;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +9,10 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.DateUtil;
 import org.deftserver.util.HttpUtil;
-import org.deftserver.web.buffer.DynamicByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

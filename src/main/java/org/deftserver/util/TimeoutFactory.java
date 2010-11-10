@@ -2,8 +2,8 @@ package org.deftserver.util;
 
 import java.nio.channels.SocketChannel;
 
-import org.deftserver.io.Timeout;
 import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.Timeout;
 
 public class TimeoutFactory {
 

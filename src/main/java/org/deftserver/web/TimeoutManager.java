@@ -1,6 +1,7 @@
-package org.deftserver.io;
+package org.deftserver.web;
 
 import java.nio.channels.SelectableChannel;
+
 
 public interface TimeoutManager {
 
