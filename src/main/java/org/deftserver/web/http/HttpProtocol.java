@@ -1,5 +1,8 @@
 package org.deftserver.web.http;
 
+import static org.deftserver.web.http.HttpServerDescriptor.KEEP_ALIVE_TIMEOUT;
+import static org.deftserver.web.http.HttpServerDescriptor.READ_BUFFER_SIZE;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
@@ -21,16 +24,10 @@ public class HttpProtocol implements IOHandler {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 
-	/** The number of seconds Deft will wait for a subsequent request before closing the connection */
-	private final static long KEEP_ALIVE_TIMEOUT = 30 * 1000;	// 30s 
-	
-	private final int readBufferSize;
-
 	private final Application application;
 	
 	public HttpProtocol(Application app) {
 		application = app;
-		readBufferSize = app.getReadBufferSize();
 	}
 	
 	@Override
@@ -38,7 +35,7 @@ public class HttpProtocol implements IOHandler {
 		logger.debug("handle accept...");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 		clientChannel.configureBlocking(false);
-		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
+		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
 	}
 
 	@Override
@@ -88,7 +85,7 @@ public class HttpProtocol implements IOHandler {
 	public void closeOrRegisterForRead(SelectionKey key) {
 		if (IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
 			try {
-				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(readBufferSize));
+				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
 				logger.debug("ClosedChannelException while registrating key for read");

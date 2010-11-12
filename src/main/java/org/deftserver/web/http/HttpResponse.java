@@ -1,5 +1,7 @@
 package org.deftserver.web.http;
 
+import static org.deftserver.web.http.HttpServerDescriptor.WRITE_BUFFER_SIZE;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -22,8 +24,6 @@ public class HttpResponse {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpResponse.class);
 	
-	private final static int WRITE_BUFFER_SIZE = 1500;	// in bytes
-
 	private final HttpProtocol protocol;
 	private final SelectionKey key;
 	

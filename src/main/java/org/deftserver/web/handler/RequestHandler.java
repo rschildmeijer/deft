@@ -25,7 +25,7 @@ public abstract class RequestHandler {
 
 	private boolean hasAsynchronousMethod(HttpVerb verb) {
 		try {
-			Class<?>[] parameterTypes = new Class<?>[] {HttpRequest.class, HttpResponse.class};
+			Class<?>[] parameterTypes = {HttpRequest.class, HttpResponse.class};
 			switch (verb) {
 			case GET:
 				return getClass().getMethod("get", parameterTypes).getAnnotation(Asynchronous.class) != null;

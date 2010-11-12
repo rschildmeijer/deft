@@ -15,11 +15,6 @@ import com.google.common.collect.ImmutableMap;
 public class Application {
 	
 	/**
-	 * Default size of the read buffer that the I/O loop allocates per each read
-	 */
-	private int readBufferSize = 1500;	// in bytes
-
-	/**
 	 * "Normal/Absolute" (non group capturing) RequestHandlers
 	 * e.g. "/", "/persons"
 	 */
@@ -122,25 +117,6 @@ public class Application {
 		} else {
 			return null;
 		}
-	}
-	
-	/**
-	 * Sets the size of the read buffer that the I/O loop allocates per each read.
-	 * 
-	 * "Ideally, an HTTP request should not go beyond 1 packet. 
-	 * The most widely used networks limit packets to approximately 1500 bytes, so if you can constrain each request 
-	 * to fewer than 1500 bytes, you can reduce the overhead of the request stream." (from: http://bit.ly/bkksUu)
-	 */
-	public void setReadBufferSize(int readBufferSize) {
-		this.readBufferSize = readBufferSize;
-	}
-	
-	/**
-	 * 
-	 * @return Size of the read buffer that the I/O loop allocates per each read.
-	 */
-	public int getReadBufferSize() {
-		return readBufferSize;
 	}
 	
 	public void setStaticContentDir(String scd) {
