@@ -85,6 +85,7 @@ public class HttpProtocol implements IOHandler {
 	public void closeOrRegisterForRead(SelectionKey key) {
 		if (IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
 			try {
+				//key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
 				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
@@ -96,6 +97,24 @@ public class HttpProtocol implements IOHandler {
 			logger.debug("Closing finished (non keep-alive) http connection"); 
 			Closeables.closeQuietly(key.channel());
 		}
+	}
+	/**
+	 * Clears the buffer (prepares for reuse) attached to the given SelectionKey.
+	 * @return A cleared (position=0, limit=capacity) ByteBuffer which is ready for new reads
+	 */
+	private ByteBuffer reuseAttachment(SelectionKey key) {
+		Object o = key.attachment();
+		ByteBuffer attachment = null;
+		if (o instanceof DynamicByteBuffer) {
+			attachment = ((DynamicByteBuffer)o).getByteBuffer();
+		} else {
+			attachment = (ByteBuffer) o;
+		}
+		if (attachment.capacity() < READ_BUFFER_SIZE) {
+			attachment = ByteBuffer.allocate(READ_BUFFER_SIZE);
+		}
+		attachment.clear();	// prepare for reuse
+		return attachment;
 	}
 
 

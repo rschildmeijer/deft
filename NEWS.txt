@@ -11,7 +11,8 @@ Features
     - Closed HTTP request premature in HttpResponse.finish() (#72)
     - JMX monitoring (read only) for IOLoop (#68)
     - Configurable knobs, e.g. keep-alive timeout, read/write buffer sizes. (#57, #67)
-     
+    - java.nio.ByteBuffer reuse (byte[] allocation is expensive) (#77)
+         
 Configuration
 ------------
      - See org.deftserver.example.DeftServerExample (or www.deftserver.org) for
