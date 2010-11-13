@@ -1,7 +1,7 @@
 package org.deftserver.example.kv;
 
+import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncResult;
-import org.deftserver.web.Timeout;
 
 public class Client {
 	

@@ -1,4 +1,6 @@
-package org.deftserver.web;
+package org.deftserver.io.timeout;
+
+import org.deftserver.web.AsyncCallback;
 
 
 public class Timeout {

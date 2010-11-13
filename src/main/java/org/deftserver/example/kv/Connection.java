@@ -7,8 +7,8 @@ import java.nio.channels.SocketChannel;
 
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.buffer.DynamicByteBuffer;
+import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncResult;
-import org.deftserver.web.Timeout;
 
 import com.google.common.base.Charsets;
 

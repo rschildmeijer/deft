@@ -10,12 +10,6 @@ public interface IOLoopMXBean {
 	
 	List<String> getRegisteredIOHandlers();
 	
-	int getNumberOfTimeouts();
-	
-	int getNumberOfKeepAliveTimeouts();
-	
 	long getSelectorTimeout();
 	
-	long getTimeoutCallbackPeriod();
-
 }

@@ -1,4 +1,4 @@
-package org.deftserver.web;
+package org.deftserver.io.timeout;
 
 import java.nio.channels.SelectableChannel;
 
@@ -12,5 +12,7 @@ public interface TimeoutManager {
 	boolean hasKeepAliveTimeout(SelectableChannel channel);
 	
 	void touch(SelectableChannel channel); 
+	
+	void execute();
 	
 }

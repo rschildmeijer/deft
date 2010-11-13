@@ -41,6 +41,7 @@ import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.example.kv.Client;
 import org.deftserver.example.kv.KeyValueStore;
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpException;
 import org.deftserver.web.http.HttpRequest;
