@@ -1,4 +1,4 @@
-package org.deftserver.io;
+package org.deftserver.io.timeout;
 
 import static org.junit.Assert.assertEquals;
 
