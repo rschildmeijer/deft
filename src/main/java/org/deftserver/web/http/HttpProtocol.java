@@ -83,13 +83,13 @@ public class HttpProtocol implements IOHandler {
 	}
 	
 	public void closeOrRegisterForRead(SelectionKey key) {
-		if (IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
+		if (key.isValid() && IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
 			try {
-				//key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
-				key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
+				key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
+				//key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
-				logger.debug("ClosedChannelException while registrating key for read");
+				logger.debug("ClosedChannelException while registrating key for read: {}", e.getMessage());
 				Closeables.closeQuietly(key.channel());
 			}		
 		} else {
