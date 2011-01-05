@@ -1,7 +1,6 @@
 package org.deftserver.web.http;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,12 +9,11 @@ import java.util.Map;
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.web.HttpVerb;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMultimap;
 
 public class HttpRequest {
-
-	private final static Charset CHAR_SET = Charset.forName("US-ASCII");
-
+	
 	private final String requestLine;
 	private final HttpVerb method;
 	private final String requestedPath;	// correct name?
@@ -45,7 +43,7 @@ public class HttpRequest {
 	
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
-			String raw = new String(buffer.array(), CHAR_SET);
+			String raw = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
 			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
 			String[] headerFields = headersAndBody[0].split("\\r\\n");
 			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
@@ -58,16 +56,34 @@ public class HttpRequest {
 			}
 
 			String body = "";
-			for (int i=1; i<headersAndBody.length; ++i) { //First entry contains headers
+			for (int i = 1; i < headersAndBody.length; ++i) { //First entry contains headers
 				body += headersAndBody[i];
 			}
-
+			
+			if (requestLine.contains("POST")) {
+				int contentLength = Integer.parseInt(generalHeaders.get("Content-Length"));
+				if (contentLength > body.length()) {
+					return new PartialHttpRequest(requestLine, generalHeaders, body);
+				}
+			}
 			return new HttpRequest(requestLine, generalHeaders, body);
 		} catch (Exception t) {
 			return MalFormedHttpRequest.instance;
 		}
 	}
-
+	
+	public static HttpRequest continueParsing(ByteBuffer buffer, PartialHttpRequest unfinished) {
+		String nextChunk = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
+		unfinished.appendBody(nextChunk);
+		
+		int contentLength = Integer.parseInt(unfinished.getHeader("Content-Length"));
+		if (contentLength > unfinished.getBody().length()) {
+			return unfinished;
+		} else {
+			return new HttpRequest(unfinished.getRequestLine(), unfinished.getHeaders(), unfinished.getBody());
+		}
+	}
+	
 	public String getRequestLine() {
 		return requestLine;
 	}
@@ -177,4 +193,5 @@ public class HttpRequest {
 			keepAlive = true;
 		}
 	}
+
 }

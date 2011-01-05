@@ -1,5 +1,5 @@
 0.1.1
- * #56 (add support for all http response status code)
- * #55 (Dont set Etag response header if payload is empty)
+ * #56 (Support for all response status codes)
+ * #55 (Don't set Etag response header if payload is empty)
  * #54 (Make parsing of HttpRequest more robust) 
  * #61 (Wrong 'Cache-Control' header in SCH) 

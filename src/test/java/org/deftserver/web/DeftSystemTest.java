@@ -50,6 +50,7 @@ import org.junit.Test;
 
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
+import com.ning.http.client.Response;
 
 
 public class DeftSystemTest {
@@ -208,7 +209,7 @@ public class DeftSystemTest {
 
 	}
 	
-	public static class _450KBResponseEntityRequestHandlr extends RequestHandler {
+	public static class _450KBResponseEntityRequestHandler extends RequestHandler {
 		public static String entity;
 
 		static {
@@ -221,6 +222,13 @@ public class DeftSystemTest {
 		@Override
 		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(entity);
+		}
+	}
+	
+	public static class EchoingPostBodyRequestHandler extends RequestHandler {
+		@Override
+		public void post(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
+			response.write(request.getBody());
 		}
 	}
 
@@ -244,7 +252,8 @@ public class DeftSystemTest {
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
 		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
-		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandlr());
+		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
+		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -875,7 +884,85 @@ public class DeftSystemTest {
 		//assertEquals(450*1024, Integer.parseInt(response.getFirstHeader("Content-Length").getValue())/8);
 		//assertEquals(450*1024, _450KBResponseEntityRequestHandlr.entity.getBytes(Charsets.UTF_8).length);
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
-		assertEquals(_450KBResponseEntityRequestHandlr.entity, payLoad);
+		assertEquals(_450KBResponseEntityRequestHandler.entity, payLoad);
+	}
+	
+//	@Test
+//	public void smallHttpPostBodyTest() throws ClientProtocolException, IOException {
+//		final String body = "Roger Schildmeijer";
+//		
+//		DefaultHttpClient httpclient = new DefaultHttpClient();
+//		HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
+//		httppost.setEntity(new StringEntity(body));
+//		HttpResponse response = httpclient.execute(httppost);	
+//		
+//		assertNotNull(response);
+//		assertEquals(200, response.getStatusLine().getStatusCode());
+//		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+//		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+//		assertEquals(5, response.getAllHeaders().length);
+//		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+//		assertEquals(body, payLoad);
+//	}
+	
+	@Test
+	public void smallHttpPostBodyTest() throws ClientProtocolException, IOException, InterruptedException {
+		final String body = "Roger Schildmeijer";
+		final CountDownLatch latch = new CountDownLatch(1);
+		AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+		asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo").setBody(body).
+		execute(new AsyncCompletionHandler<Response>(){
+
+			@Override
+			public Response onCompleted(Response response) throws Exception{
+				assertNotNull(response);
+				assertEquals(200, response.getStatusCode());
+				assertEquals("OK", response.getStatusText());
+				assertEquals(5, response.getHeaders().getHeaderNames().size());
+				String payLoad = response.getResponseBody();
+				assertEquals(body, payLoad);
+				latch.countDown();
+				return response;
+			}
+
+			@Override
+			public void onThrowable(Throwable t) { }
+		});
+
+		latch.await();
+		assertTrue(latch.getCount() == 0);
+	}
+	
+	@Test
+	public void largeHttpPostBodyTest() throws ClientProtocolException, IOException, InterruptedException {
+		String body = "Roger Schildmeijer: 0\n";
+		for (int i = 1; i <= 1000; i++) {
+			body += "Roger Schildmeijer: " + i + "\n";
+		}
+		final String expectedBody = body;
+		final CountDownLatch latch = new CountDownLatch(1);
+		AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
+		asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo").setBody(body).
+		execute(new AsyncCompletionHandler<Response>(){
+
+			@Override
+			public Response onCompleted(Response response) throws Exception{
+				assertNotNull(response);
+				assertEquals(200, response.getStatusCode());
+				assertEquals("OK", response.getStatusText());
+				assertEquals(5, response.getHeaders().getHeaderNames().size());
+				String payLoad = response.getResponseBody();
+				assertEquals(expectedBody, payLoad);
+				latch.countDown();
+				return response;
+			}
+
+			@Override
+			public void onThrowable(Throwable t) { }
+		});
+
+		latch.await();
+		assertTrue(latch.getCount() == 0);
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

@@ -27,6 +27,11 @@ public class DeftServerExample {
 		public void get(HttpRequest request, HttpResponse response) {
 			response.write("hello world");
 		}
+		
+		@Override
+		public void post(HttpRequest request, HttpResponse response) {
+			response.write("hello post world\nbody: " + request.getBody());
+		}
 
 	}
 

@@ -6,9 +6,11 @@ import static org.deftserver.web.http.HttpServerDescriptor.READ_BUFFER_SIZE;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.Map;
 
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
@@ -20,12 +22,17 @@ import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
+
 public class HttpProtocol implements IOHandler {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 
 	private final Application application;
-	
+
+	// a queue of half-baked (pending/unfinished) HTTP post request
+	private final Map<SelectableChannel, PartialHttpRequest> partials = Maps.newHashMap();
+ 	
 	public HttpProtocol(Application app) {
 		application = app;
 	}
@@ -54,8 +61,8 @@ public class HttpProtocol implements IOHandler {
 		RequestHandler rh = application.getHandler(request);
 		HttpRequestDispatcher.dispatch(rh, request, response);
 		
-		//Only close if not async. In that case its up to RH to close it
-		if (!rh.isMethodAsynchronous(request.getMethod())) {
+		//Only close if not async. In that case its up to RH to close it (+ don't close if it's a partial request).
+		if (!rh.isMethodAsynchronous(request.getMethod()) && ! (request instanceof PartialHttpRequest)) {
 			response.finish();
 		}
 	}
@@ -127,7 +134,25 @@ public class HttpProtocol implements IOHandler {
 			Closeables.closeQuietly(clientChannel);
 		}
 		buffer.flip();
-		return HttpRequest.of(buffer);
+		
+		return doGetHttpRequest(key, clientChannel, buffer);
+	}
+	
+	private HttpRequest doGetHttpRequest(SelectionKey key, SocketChannel clientChannel, ByteBuffer buffer) {
+		//do we have any unfinished http post requests for this channel?
+		HttpRequest request = null;
+		if (partials.containsKey(clientChannel)) {
+			request = HttpRequest.continueParsing(buffer, partials.get(clientChannel));
+			if (! (request instanceof PartialHttpRequest)) {	// received the entire payload/body
+				partials.remove(clientChannel);
+			}
+		} else {
+			request = HttpRequest.of(buffer);
+			if (request instanceof PartialHttpRequest) {
+				partials.put(key.channel(), (PartialHttpRequest) request);
+			}
+		}
+		return request;
 	}
 	
 	@Override
