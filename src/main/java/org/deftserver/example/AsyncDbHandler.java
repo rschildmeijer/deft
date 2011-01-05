@@ -1,5 +1,8 @@
 package org.deftserver.example;
 
+import org.deftserver.io.IOLoop;
+import org.deftserver.io.timeout.Timeout;
+import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.AsyncResult;
 import org.deftserver.web.Asynchronous;
 import org.deftserver.web.handler.RequestHandler;
@@ -15,16 +18,16 @@ public class AsyncDbHandler extends RequestHandler{
 	@Asynchronous
 	public void get(HttpRequest request, final HttpResponse response) {
 		logger.debug("Entering AsyncDbHandler.get");
-//		IOLoop.INSTANCE.addTimeout(new Timeout(500, new AsyncCallback() {
-//			
-//			@Override
-//			public void onCallback() {
-//				response.write("Name: " + "Jim123");
-//				logger.debug("MyCallback.onSuccess, retrieved name: " + "Jim123");
-//				response.finish();				
-//			}
-//		}));
-		new AsyncDbApi().getNameFromId("123", new MyCallback(request, response));
+		IOLoop.INSTANCE.addTimeout(new Timeout(500, new AsyncCallback() {
+			
+			@Override
+			public void onCallback() {
+				response.write("Name: " + "Jim123");
+				logger.debug("MyCallback.onSuccess, retrieved name: " + "Jim123");
+				response.finish();				
+			}
+		}));
+		//new AsyncDbApi().getNameFromId("123", new MyCallback(request, response));
 		logger.debug("Leaving AsyncDbHandler.get");
 	}
 	

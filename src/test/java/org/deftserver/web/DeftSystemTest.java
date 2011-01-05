@@ -534,7 +534,7 @@ public class DeftSystemTest {
 
 	@Test
 	public void asynchronousRequestTest() throws ClientProtocolException, IllegalStateException, IOException {
-		for (int i = 1; i <= 40; i++) {
+		for (int i = 1; i <= 4; i++) {
 			doAsynchronousRequestTest();
 		}
 	}
