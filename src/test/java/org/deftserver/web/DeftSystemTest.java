@@ -811,7 +811,7 @@ public class DeftSystemTest {
 					{
 						List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag", "Connection"});
 						assertEquals(200, response.getStatusCode());
-						assertEquals(expectedHeaders.size(), response.getHeaders().getHeaderNames().size());
+						assertEquals(expectedHeaders.size(), response.getHeaders().size());
 						for (String header : expectedHeaders) {
 							assertTrue(response.getHeader(header) != null);
 						}
@@ -918,7 +918,7 @@ public class DeftSystemTest {
 				assertNotNull(response);
 				assertEquals(200, response.getStatusCode());
 				assertEquals("OK", response.getStatusText());
-				assertEquals(5, response.getHeaders().getHeaderNames().size());
+				assertEquals(5, response.getHeaders().size());
 				String payLoad = response.getResponseBody();
 				assertEquals(body, payLoad);
 				latch.countDown();
@@ -950,7 +950,7 @@ public class DeftSystemTest {
 				assertNotNull(response);
 				assertEquals(200, response.getStatusCode());
 				assertEquals("OK", response.getStatusText());
-				assertEquals(5, response.getHeaders().getHeaderNames().size());
+				assertEquals(5, response.getHeaders().size());
 				String payLoad = response.getResponseBody();
 				assertEquals(expectedBody, payLoad);
 				latch.countDown();

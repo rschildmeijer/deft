@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.deft</groupId>
 	<artifactId>deft</artifactId>
-	<version>0.2.0-SNAPSHOT</version>
+	<version>0.2.0</version>
 
 	<dependencies>
 		<dependency>
@@ -15,7 +15,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.8.1</version>
+			<version>4.8.2</version>
 			<type>jar</type>
 			<scope>test</scope>
 		</dependency>
@@ -23,7 +23,7 @@
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>0.9.24</version>
+			<version>0.9.27</version>
 			<type>jar</type>
 		</dependency>
 
@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>com.ning</groupId>
 			<artifactId>async-http-client</artifactId>
-			<version>1.0.0</version>
+			<version>1.4.1</version>
 			<scope>test</scope>
 		</dependency>
 

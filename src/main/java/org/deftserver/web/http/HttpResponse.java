@@ -36,7 +36,7 @@ public class HttpResponse {
 	public HttpResponse(HttpProtocol protocol, SelectionKey key, boolean keepAlive) {
 		this.protocol = protocol;
 		this.key = key;
-		headers.put("Server", "DeftServer/0.2.0-SNAPSHOT");
+		headers.put("Server", "Deft/0.2.0");
 		headers.put("Date", DateUtil.getCurrentAsString());
 		headers.put("Connection", keepAlive ? "Keep-Alive" : "Close");
 	}
