@@ -12,8 +12,8 @@ Features
     - JMX monitoring (read only) for IOLoop (#68)
     - Configurable knobs, e.g. keep-alive timeout, read/write buffer sizes. (#57, #67)
     - java.nio.ByteBuffer reuse (byte[] allocation is expensive) (#77)
-    - Configurable (and efficient) timeouts handling (#80, #85)
-    - Http Post support (#50, #71)
+    - Timeouts (JMX debuggable) (#80, #85)
+    - HTTP Post support (#50, #71)
          
 Configuration
 ------------

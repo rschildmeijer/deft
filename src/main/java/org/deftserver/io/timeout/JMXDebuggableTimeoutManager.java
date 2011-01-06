@@ -13,19 +13,12 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultiset;
 
 
-public class JMXConfigurableTimeoutManager implements TimeoutManager, TimeoutMXBean {
+public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutMXBean {
 
-	private final Logger logger = LoggerFactory.getLogger(JMXConfigurableTimeoutManager.class);
-
-	private static final long TIMEOUT_CALLBACK_PERIOD = 2 * 1000;	//2s in ms
-
-	private long maxTime = 100;	//ms
-	private int maxOperations = Integer.MAX_VALUE;
+	private final Logger logger = LoggerFactory.getLogger(JMXDebuggableTimeoutManager.class);
 
 	private final TreeMultiset<DecoratedTimeout> timeouts = TreeMultiset.create();
 	private final Map<SelectableChannel, DecoratedTimeout> index = Maps.newHashMap();
-
-	private long lastIteration;
 
 	{ 	// instance initialization block
 		MXBeanUtil.registerMXBean(this, "org.deftserver.io.timeout:type=JMXConfigurableTimeoutManager"); 
@@ -68,45 +61,18 @@ public class JMXConfigurableTimeoutManager implements TimeoutManager, TimeoutMXB
 
 	@Override
 	public void execute() {
-		long now = System.currentTimeMillis();
-		if (now >= lastIteration + TIMEOUT_CALLBACK_PERIOD) {
-			long deadline = now + maxTime;
-			int operations = 0;
-			Iterator<DecoratedTimeout> iter = timeouts.iterator();
-			while (iter.hasNext()) {
-				DecoratedTimeout candidate = iter.next();
-				if (now > deadline || operations > maxOperations || candidate.timeout.getTimeout() > now) { break; }
-				candidate.timeout.getCallback().onCallback();
-				index.remove(candidate.channel);
-				iter.remove();
-				operations++;
-				logger.debug("Timeout triggered: {}", candidate.timeout);
-			}
-			lastIteration = now;
+		Iterator<DecoratedTimeout> iter = timeouts.iterator();
+		while (iter.hasNext()) {
+			DecoratedTimeout candidate = iter.next();
+			if (candidate.timeout.getTimeout() > System.currentTimeMillis()) { break; }
+			candidate.timeout.getCallback().onCallback();
+			index.remove(candidate.channel);
+			iter.remove();
+			logger.debug("Timeout triggered: {}", candidate.timeout);
 		}
 	}
 
 	// implements TimoutMXBean
-	@Override
-	public long getMaxTimePerIterationInMs() {
-		return maxTime;
-	}
-
-	@Override
-	public void setMaxTimePerIterationInMs(long newMaxTime) {
-		maxTime = newMaxTime;
-	}
-
-	@Override
-	public int getMaxNumberOfTimeoutOperationsPerIteration() {
-		return maxOperations;
-	}
-
-	@Override
-	public void setMaxNumberOfTimeoutOperationsPerIteration(int newMaxOperations) {
-		maxOperations = newMaxOperations;
-	}
-
 	@Override
 	public int getNumberOfKeepAliveTimeouts() {
 		return index.size();
@@ -115,11 +81,6 @@ public class JMXConfigurableTimeoutManager implements TimeoutManager, TimeoutMXB
 	@Override
 	public int getNumberOfTimeouts() {
 		return timeouts.size();
-	}
-
-	@Override
-	public long getTimeoutCallbackPeriod() {
-		return TIMEOUT_CALLBACK_PERIOD;
 	}
 
 	private class DecoratedTimeout implements Comparable<DecoratedTimeout> {

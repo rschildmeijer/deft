@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.deftserver.io.timeout.JMXConfigurableTimeoutManager;
+import org.deftserver.io.timeout.JMXDebuggableTimeoutManager;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.io.timeout.TimeoutManager;
 import org.deftserver.util.MXBeanUtil;
@@ -37,7 +37,7 @@ public enum IOLoop implements IOLoopMXBean {
 	
 	private final Map<SelectableChannel, IOHandler> handlers = Maps.newHashMap();
 	
-	private final TimeoutManager tm = new JMXConfigurableTimeoutManager();
+	private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
 	
 	private IOLoop() {
 		try {

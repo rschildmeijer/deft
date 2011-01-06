@@ -14,7 +14,7 @@ import org.junit.Test;
 
 public class JMXConfigurableTimeoutManagerTest {
 
-	private final JMXConfigurableTimeoutManager tm = new JMXConfigurableTimeoutManager();
+	private final JMXDebuggableTimeoutManager tm = new JMXDebuggableTimeoutManager();
 	
 	@Test
 	public void timeoutManagerTest() throws InterruptedException {
