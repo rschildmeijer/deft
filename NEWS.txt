@@ -1,3 +1,17 @@
+0.3.0
+=====
+ 
+Features
+--------
+    -
+
+Configuration
+------------
+     - See org.deftserver.example.DeftServerExample (or www.deftserver.org) for
+       configuration and usage hints.
+
+
+
 0.2.0
 =====
  
