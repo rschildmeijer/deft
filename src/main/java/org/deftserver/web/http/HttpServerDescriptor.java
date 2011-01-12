@@ -15,11 +15,11 @@ public class HttpServerDescriptor {
 	 * The most widely used networks limit packets to approximately 1500 bytes, so if you can constrain each request 
 	 * to fewer than 1500 bytes, you can reduce the overhead of the request stream." (from: http://bit.ly/bkksUu)
 	 */
-	public static int READ_BUFFER_SIZE = 1500;	// 1500 bytes
+	public static int READ_BUFFER_SIZE = 1024;	// 1024 bytes
 	
 	/**
 	 * Size of the write (send) buffer.
 	 */
-	public static int WRITE_BUFFER_SIZE = 1500;	// 1500 bytes
+	public static int WRITE_BUFFER_SIZE = 1024;	// 1024 bytes
 
 }
