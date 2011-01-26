@@ -3,7 +3,7 @@
  
 Features
 --------
-    -
+    - Authentication support (#83)
 
 Configuration
 ------------

@@ -231,6 +231,19 @@ public class DeftSystemTest {
 			response.write(request.getBody());
 		}
 	}
+	
+	public static class AuthenticatedRequestHandler extends RequestHandler {
+		@Override
+		@Authenticated
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
+			response.write(request.getHeader("user"));
+		}
+		
+		@Override
+		public String getCurrentUser(HttpRequest request) {
+			return request.getHeader("user");
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -254,6 +267,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
 		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
 		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
+		reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -963,6 +977,38 @@ public class DeftSystemTest {
 
 		latch.await();
 		assertTrue(latch.getCount() == 0);
+	}
+	
+	@Test
+	public void authenticatedRequestHandlerTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/authenticated");
+		httpget.setHeader("user", "Roger Schildmeijer");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("Roger Schildmeijer", payLoad);
+	}
+	
+	@Test
+	public void notAuthenticatedRequestHandlerTest() throws ClientProtocolException, IOException {
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/authenticated");
+		httpget.setHeader("wrong_header", "Roger Schildmeijer");
+		HttpResponse response = httpclient.execute(httpget);
+
+		assertNotNull(response);
+		assertEquals(403, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("Forbidden", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals("Authentication failed", payLoad);
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

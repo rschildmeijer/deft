@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 
 import org.deftserver.util.HttpUtil;
 import org.deftserver.web.handler.BadRequestRequestHandler;
+import org.deftserver.web.handler.ForbiddenRequestHandler;
 import org.deftserver.web.handler.NotFoundRequestHandler;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.handler.StaticContentHandler;
@@ -35,7 +36,7 @@ public class Application {
 	 * The directory where static content (files) will be served from.
 	 */
 	private String staticContentDir;
-
+	
 	public Application(Map<String, RequestHandler> handlers) {
 		ImmutableMap.Builder<String, RequestHandler> builder = new ImmutableMap.Builder<String, RequestHandler>();
 		ImmutableMap.Builder<String, RequestHandler> capturingBuilder = new ImmutableMap.Builder<String, RequestHandler>();
@@ -80,9 +81,14 @@ public class Application {
 	public RequestHandler getHandler(HttpRequest request) {
 		if (!HttpUtil.verifyRequest(request)) {
 			return BadRequestRequestHandler.getInstance(); 
-		} else {
-			return getHandler(request.getRequestedPath());
 		}
+		// if @Authenticated annotation is present, make sure that the request/user is authenticated 
+		// (i.e RequestHandler.getCurrentUser() != null).
+		RequestHandler rh = getHandler(request.getRequestedPath());;
+		if (rh.isMethodAuthenticated(request.getMethod()) && rh.getCurrentUser(request) == null) {
+			return ForbiddenRequestHandler.getInstance();
+		}
+		return rh;
 	}
 	
 	private boolean containsCapturingGroup(String group) {
