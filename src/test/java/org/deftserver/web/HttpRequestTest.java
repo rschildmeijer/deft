@@ -52,13 +52,13 @@ public class HttpRequestTest {
 
 		List<String> expectedHeaderNamesInRequest1 = Arrays.asList(new String[]{"User-Agent", "Host", "Accept", "From"});
 		for (String expectedHeaderName : expectedHeaderNamesInRequest1) {
-			assertTrue(request1.getHeaders().containsKey(expectedHeaderName));
+			assertTrue(request1.getHeaders().containsKey(expectedHeaderName.toLowerCase()));
 		}
 
 		List<String> expectedHeaderNamesInRequest2 = Arrays.asList(new String[]{"Host", "User-Agent", "Accept", "From",
 				"Accept-Language", "Accept-Encoding", "Accept-Charset", "Keep-Alive", "Connection"});
 		for (String expectedHeaderName : expectedHeaderNamesInRequest2) {
-			assertTrue(request2.getHeaders().containsKey(expectedHeaderName));
+			assertTrue(request2.getHeaders().containsKey(expectedHeaderName.toLowerCase()));
 		}
 
 		// TODO RS 100920 verify that the headers exist
@@ -283,4 +283,53 @@ public class HttpRequestTest {
 				new byte[] {1, 1, 1, 1}	// garbage
 		));
 	}
+	
+	/**
+	 * Ensure that header keys are converted to lower case, to facilitate
+	 * case-insensitive retrieval through {@link HttpRequest#getHeader(String)}.
+	 */
+	@Test
+	public void testOfConvertsHeaderKeysToLowerCase() {
+
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.addHeader("TESTKEY", "unimportant");
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+
+		assertFalse(request.getHeaders().containsKey("TESTKEY"));
+		assertTrue(request.getHeaders().containsKey("testkey"));
+	}
+
+	/**
+	 * Ensure that the case of any header values is correctly maintained.
+	 */
+	@Test
+	public void testOfMaintainsHeaderValueCase() {
+
+		String expected = "vAlUe";
+
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.addHeader("TESTKEY", expected);
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+
+		String actual = request.getHeader("TESTKEY");
+		assertEquals(expected, actual);
+	}
+
+	/**
+	 * Ensure that case for any key passed to the method is unimportant
+	 * for its retrieval.
+	 */
+	@Test
+	public void testGetHeader() {
+
+		String expected = "value";
+
+		HttpRequestHelper helper = new HttpRequestHelper();
+		helper.addHeader("TESTKEY", expected);
+		HttpRequest request = HttpRequest.of(helper.getRequestAsByteBuffer());
+
+		assertEquals(expected, request.getHeader("TESTKEY"));
+		assertEquals(expected, request.getHeader("testkey"));
+	}
+
 }

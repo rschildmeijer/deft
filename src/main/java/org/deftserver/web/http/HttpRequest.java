@@ -52,7 +52,7 @@ public class HttpRequest {
 			Map<String, String> generalHeaders = new HashMap<String, String>();
 			for (int i = 1; i < headerFields.length; i++) {
 				String[] header = headerFields[i].split(": ");
-				generalHeaders.put(header[0], header[1]);
+				generalHeaders.put(header[0].toLowerCase(), header[1]);
 			}
 
 			String body = "";
@@ -61,7 +61,7 @@ public class HttpRequest {
 			}
 			
 			if (requestLine.contains("POST")) {
-				int contentLength = Integer.parseInt(generalHeaders.get("Content-Length"));
+				int contentLength = Integer.parseInt(generalHeaders.get("content-length"));
 				if (contentLength > body.length()) {
 					return new PartialHttpRequest(requestLine, generalHeaders, body);
 				}
@@ -101,7 +101,7 @@ public class HttpRequest {
 	}
 	
 	public String getHeader(String name) {
-		return headers.get(name);
+		return headers.get(name.toLowerCase());
 	}
 	
 	public HttpVerb getMethod() {

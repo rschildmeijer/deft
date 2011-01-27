@@ -4,6 +4,7 @@
 Features
 --------
     - Authentication support (#83)
+    - Header names are now case-insensitive (#48)
 
 Configuration
 ------------

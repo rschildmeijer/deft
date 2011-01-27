@@ -150,7 +150,7 @@ public class HttpUtil {
 		String version = request.getVersion();
 		boolean requestOk = true;
 		if (version.equals("HTTP/1.1")) { //TODO might be optimized? Could do version.endsWith("1"), or similar
-			requestOk =  (request.getHeader("Host") != null);
+			requestOk =  (request.getHeader("host") != null);
 		}
 
 		return requestOk;

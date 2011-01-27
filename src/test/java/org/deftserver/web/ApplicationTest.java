@@ -42,7 +42,7 @@ public class ApplicationTest {
 		
 		String requestLine = "GET / HTTP/1.1";
 		Map<String, String> headers = new HashMap<String, String>();
-		headers.put("Host", "localhost");
+		headers.put("host", "localhost");
 		HttpRequest request = new HttpRequest(requestLine, headers);
 		
 		
