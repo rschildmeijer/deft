@@ -1,4 +1,4 @@
-package org.deftserver.web.buffer;
+package org.deftserver.io.buffer;
 
 import static org.junit.Assert.assertEquals;
 

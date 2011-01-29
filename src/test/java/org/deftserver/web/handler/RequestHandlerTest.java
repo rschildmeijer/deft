@@ -1,8 +1,11 @@
-package org.deftserver.web;
+package org.deftserver.web.handler;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.deftserver.web.Asynchronous;
+import org.deftserver.web.Authenticated;
+import org.deftserver.web.HttpVerb;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpRequest;
 import org.deftserver.web.http.HttpResponse;

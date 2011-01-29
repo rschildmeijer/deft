@@ -12,7 +12,7 @@ import java.nio.channels.spi.SelectorProvider;
 import org.deftserver.web.AsyncCallback;
 import org.junit.Test;
 
-public class JMXConfigurableTimeoutManagerTest {
+public class JMXDebuggableTimeoutManagerTest {
 
 	private final JMXDebuggableTimeoutManager tm = new JMXDebuggableTimeoutManager();
 	

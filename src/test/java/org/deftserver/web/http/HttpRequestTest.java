@@ -1,4 +1,4 @@
-package org.deftserver.web;
+package org.deftserver.web.http;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
