@@ -7,8 +7,10 @@ Source and issue tracker: [http://github.com/rschildmeijer/deft]
  
 Documentation: [http://www.deftserver.org]
 
+Continuous Integration: [http://deft.phasevariance.com:8080]
 
 [Apache version 2]: http://www.apache.org/licenses/LICENSE-2.0.html
 [facebook/tornado]: http://github.com/facebook/tornado
 [http://github.com/rschildmeijer/deft]: http://github.com/rschildmeijer/deft
 [http://www.deftserver.org]: http://www.deftserver.org
+[http://deft.phasevariance.com:8080]: http://deft.phasevariance.com:8080/
