@@ -13,7 +13,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.TreeMultiset;
 
 
-public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutMXBean {
+public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManagerMXBean {
 
 	private final Logger logger = LoggerFactory.getLogger(JMXDebuggableTimeoutManager.class);
 
@@ -21,7 +21,7 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutMXBea
 	private final Map<SelectableChannel, DecoratedTimeout> index = Maps.newHashMap();
 
 	{ 	// instance initialization block
-		MXBeanUtil.registerMXBean(this, "org.deftserver.io.timeout:type=JMXConfigurableTimeoutManager"); 
+		MXBeanUtil.registerMXBean(this, "org.deftserver.io.timeout:type=JMXDebuggableTimeoutManager"); 
 	}
 
 	@Override

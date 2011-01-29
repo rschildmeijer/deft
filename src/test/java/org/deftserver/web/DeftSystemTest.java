@@ -791,6 +791,24 @@ public class DeftSystemTest {
 		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
 		assertTrue(latch.getCount() == 0);
 	}
+	
+	@Test
+	public void callbackTest() throws InterruptedException {
+		final CountDownLatch latch = new CountDownLatch(5);
+		final AsyncCallback cb = new AsyncCallback() {
+
+			@Override public void onCallback() { latch.countDown(); }
+		
+		};
+		IOLoop.INSTANCE.addCallback(cb);
+		IOLoop.INSTANCE.addCallback(cb);
+		IOLoop.INSTANCE.addCallback(cb);
+		IOLoop.INSTANCE.addCallback(cb);
+		IOLoop.INSTANCE.addCallback(cb);
+		
+		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
+		assertTrue(latch.getCount() == 0);
+	}
 
 	@Test
 	public void keyValueStoreClientTest() throws ClientProtocolException, IOException {

@@ -1,6 +1,6 @@
 package org.deftserver.io.timeout;
 
-public interface TimeoutMXBean {
+public interface TimeoutManagerMXBean {
 
 	int getNumberOfTimeouts();
 	

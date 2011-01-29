@@ -14,10 +14,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.deftserver.io.callback.CallbackManager;
+import org.deftserver.io.callback.JMXDebuggableCallbackManager;
 import org.deftserver.io.timeout.JMXDebuggableTimeoutManager;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.io.timeout.TimeoutManager;
 import org.deftserver.util.MXBeanUtil;
+import org.deftserver.web.AsyncCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +34,12 @@ public enum IOLoop implements IOLoopMXBean {
 	
 	private final Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
-	private static final long TIMEOUT = 250;	// 0.25s in ms
-
 	private Selector selector;
 	
 	private final Map<SelectableChannel, IOHandler> handlers = Maps.newHashMap();
 	
 	private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
+	private final CallbackManager cm = new JMXDebuggableCallbackManager();
 	
 	private IOLoop() {
 		try {
@@ -52,9 +54,13 @@ public enum IOLoop implements IOLoopMXBean {
 		Thread.currentThread().setName("I/O-LOOP");
 
 		while (true) {
+			long selectorTimeout = 250; // 250 ms
 			try {
-				if (selector.select(TIMEOUT) == 0) {
+				if (selector.select(selectorTimeout) == 0) {
 					tm.execute();
+					if (cm.execute()) {
+						selectorTimeout = 0;
+					}
 					continue;
 				}
 
@@ -74,6 +80,9 @@ public enum IOLoop implements IOLoopMXBean {
 					keys.remove();
 				}
 				tm.execute();
+				if (cm.execute()) { 
+					selectorTimeout = 0; 
+				}
 
 			} catch (IOException e) {
 				logger.error("Exception received in IOLoop: {}", e);			
@@ -90,10 +99,6 @@ public enum IOLoop implements IOLoopMXBean {
 		handlers.remove(channel);
 	}
 	
-//	public <T> void addCallback(AsyncResult<T> cb) {
-//		// TODO RS 101022 store this timeout 
-//	}
-
 	private SelectionKey registerChannel(SelectableChannel channel, int interestOps, Object attachment) {
 		try {
 			return channel.register(selector, interestOps, attachment);
@@ -116,6 +121,10 @@ public enum IOLoop implements IOLoopMXBean {
 		tm.addTimeout(timeout);
 	}
 	
+	public void addCallback(AsyncCallback callback) {
+		cm.addCallback(callback);
+	}
+	
 // implements IOLoopMXBean
 	@Override
 	public int getNumberOfRegisteredIOHandlers() {
@@ -129,11 +138,6 @@ public enum IOLoop implements IOLoopMXBean {
 			@Override public String apply(IOHandler handler) { return handler.toString(); }
 		});
 		return Lists.newLinkedList(readables);
-	}
-
-	@Override
-	public long getSelectorTimeout() {
-		return TIMEOUT;
 	}
 
 }
