@@ -60,16 +60,22 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 	}
 
 	@Override
-	public void execute() {
-		Iterator<DecoratedTimeout> iter = timeouts.iterator();
+	public long execute() {
+		// makes a defensive copy to avoid (1) CME (new timeouts are added this iteration) and (2) IO starvation.
+		TreeMultiset<DecoratedTimeout> defensive = TreeMultiset.create(timeouts);
+		Iterator<DecoratedTimeout> iter = defensive.iterator();
+		DecoratedTimeout candidate = null;
+		final long now = System.currentTimeMillis();
 		while (iter.hasNext()) {
-			DecoratedTimeout candidate = iter.next();
-			if (candidate.timeout.getTimeout() > System.currentTimeMillis()) { break; }
+			candidate = iter.next();
+			if (candidate.timeout.getTimeout() > now) { break; }
 			candidate.timeout.getCallback().onCallback();
 			index.remove(candidate.channel);
 			iter.remove();
+			timeouts.remove(candidate);
 			logger.debug("Timeout triggered: {}", candidate.timeout);
 		}
+		return timeouts.isEmpty() ? Long.MAX_VALUE : Math.max(0, candidate.timeout.getTimeout() - now);
 	}
 
 	// implements TimoutMXBean
@@ -107,7 +113,9 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 			} 
 			if (channel != null && that.channel != null) {
 				return channel.hashCode() - that.channel.hashCode(); 
-			} else if (channel == null || that.channel == null ){
+			} else if (channel == null && that.channel != null){
+				return -1;
+			} else if (channel != null && that.channel == null){
 				return -1;
 			} else {
 				return 0;

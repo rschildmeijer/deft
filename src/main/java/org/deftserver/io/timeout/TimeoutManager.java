@@ -13,6 +13,10 @@ public interface TimeoutManager {
 	
 	void touch(SelectableChannel channel); 
 	
-	void execute();
+	/**
+	 * 
+	 * @return the positive number of milliseconds until next scheduled timeout.
+	 */
+	long execute();
 	
 }

@@ -57,7 +57,8 @@ public enum IOLoop implements IOLoopMXBean {
 			long selectorTimeout = 250; // 250 ms
 			try {
 				if (selector.select(selectorTimeout) == 0) {
-					tm.execute();
+					long ms = tm.execute();
+					selectorTimeout = Math.min(ms, selectorTimeout);
 					if (cm.execute()) {
 						selectorTimeout = 0;
 					}
@@ -79,7 +80,8 @@ public enum IOLoop implements IOLoopMXBean {
 					}
 					keys.remove();
 				}
-				tm.execute();
+				long ms = tm.execute();
+				selectorTimeout = Math.min(ms, selectorTimeout);
 				if (cm.execute()) { 
 					selectorTimeout = 0; 
 				}

@@ -1,6 +1,7 @@
 package org.deftserver.io.timeout;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
@@ -64,6 +65,41 @@ public class JMXDebuggableTimeoutManagerTest {
 		}));
 	}
 	
+	@Test
+	public void addTimeoutDuringTimeoutExecution() throws InterruptedException {
+		final long now = System.currentTimeMillis();
+		addRecursiveTimeout(now);
+		addRecursiveTimeout(now+10);
+		addRecursiveTimeout(now+20);
+		
+		assertEquals(3, tm.getNumberOfTimeouts());
+		assertEquals(0, tm.getNumberOfKeepAliveTimeouts());
+
+		Thread.sleep(50);
+		long ms = tm.execute();
+		assertTrue(ms != Long.MAX_VALUE);
+		
+		assertEquals(3, tm.getNumberOfTimeouts());
+		assertEquals(0, tm.getNumberOfKeepAliveTimeouts());
+		
+		Thread.sleep(50);
+		tm.execute();
+		Thread.sleep(50);
+		tm.execute();
+		Thread.sleep(50);
+		tm.execute();
+		
+		assertEquals(0, tm.getNumberOfTimeouts());
+		assertEquals(0, tm.getNumberOfKeepAliveTimeouts());
+	}
+	
+	private void addRecursiveTimeout(final long timeout) {
+		final Timeout t = new Timeout(timeout, new AsyncCallback() {
+			@Override public void onCallback() { addNopTimeout(System.currentTimeMillis()); }
+		});
+		tm.addTimeout(t);	
+	}
+	
 	private class MockChannel extends SelectableChannel {
 
 		@Override
@@ -121,7 +157,7 @@ public class JMXDebuggableTimeoutManagerTest {
 			// TODO Auto-generated method stub
 
 		}
-
+		
 	}
 
 }

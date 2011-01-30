@@ -6,6 +6,7 @@ Features
     - Authentication support (#83)
     - Header names are now case-insensitive (#48)
     - Generic callbacks in IOLoop (#93)
+    - Bug fix. ConcurrentModificationException if a new timeout was added in a timeout callback (#89)
 
 Configuration
 ------------
