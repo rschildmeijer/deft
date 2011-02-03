@@ -30,17 +30,34 @@ public class StaticContentHandler extends RequestHandler {
 		return instance;
 	}
 
+	/** {inheritDoc} */
 	@Override
-	public void get(HttpRequest request, HttpResponse response) { 
-		String path = request.getRequestedPath();
-		File file = new File(path.substring(1));	// remove the leading '/'
+	public void get(HttpRequest request, HttpResponse response) {
+		this.perform(request, response, true);
+	}
+	
+	/** {inheritDoc} */
+	@Override
+	public void head(final HttpRequest request, final HttpResponse response) {
+		this.perform(request, response, false);
+	}
+
+	/**
+	 * @param request the <code>HttpRequest</code>
+	 * @param response the <code>HttpResponse</code> 
+	 * @param hasBody <code>true</code> to write the message body; <code>false</code> otherwise.
+	 */
+	private void perform(final HttpRequest request, final HttpResponse response, boolean hasBody) {
+		
+		final String path = request.getRequestedPath();
+		final File file = new File(path.substring(1));	// remove the leading '/'
 		if (!file.exists()) {
 			throw new HttpException(404);
 		} else if (!file.isFile()) {
 			throw new HttpException(403, path + "is not a file");
 		}
 
-		long lastModified = file.lastModified();
+		final long lastModified = file.lastModified();
 		response.setHeader("Last-Modified", String.valueOf(lastModified));
 		response.setHeader("Cache-Control", "public");
 		String mimeType = mimeTypeMap.getContentType(file);
@@ -48,7 +65,7 @@ public class StaticContentHandler extends RequestHandler {
 			mimeType += "; charset=utf-8";
 		}
 		response.setHeader("Content-Type", mimeType);
-		String ifModifiedSince = request.getHeader("If-Modified-Since");
+		final String ifModifiedSince = request.getHeader("If-Modified-Since");
 		if (ifModifiedSince != null) {
 			long ims = Long.parseLong(ifModifiedSince);
 			if (lastModified <= ims) {
@@ -57,7 +74,9 @@ public class StaticContentHandler extends RequestHandler {
 				return;
 			}
 		}
-		response.write(file);
+		
+		if(hasBody) {
+			response.write(file);
+		}
 	}
-
 }
