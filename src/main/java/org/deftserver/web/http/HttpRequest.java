@@ -1,6 +1,13 @@
 package org.deftserver.web.http;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,6 +15,9 @@ import java.util.Map;
 
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.web.HttpVerb;
+
+import ch.qos.logback.core.joran.spi.Pattern;
+import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMultimap;
@@ -22,7 +32,9 @@ public class HttpRequest {
 	private ImmutableMultimap<String, String> parameters;
 	private String body;
 	private boolean keepAlive;
-
+	private static Charset  charset = Charsets.UTF_8;
+	private static CharsetDecoder decoder = charset.newDecoder();
+    
 	
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
@@ -43,18 +55,20 @@ public class HttpRequest {
 	
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
-			String raw = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
+			
+			String raw =  decoder.decode(buffer).toString();
+			
 			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
 			String[] headerFields = headersAndBody[0].split("\\r\\n");
 			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
-
+            
 			String requestLine = headerFields[0];
 			Map<String, String> generalHeaders = new HashMap<String, String>();
 			for (int i = 1; i < headerFields.length; i++) {
 				String[] header = headerFields[i].split(": ");
 				generalHeaders.put(header[0].toLowerCase(), header[1]);
 			}
-
+            
 			String body = "";
 			for (int i = 1; i < headersAndBody.length; ++i) { //First entry contains headers
 				body += headersAndBody[i];
@@ -73,7 +87,13 @@ public class HttpRequest {
 	}
 	
 	public static HttpRequest continueParsing(ByteBuffer buffer, PartialHttpRequest unfinished) {
-		String nextChunk = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
+		String nextChunk = null;
+		try {
+			nextChunk = decoder.decode(buffer).toString();
+		} catch (CharacterCodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		unfinished.appendBody(nextChunk);
 		
 		int contentLength = Integer.parseInt(unfinished.getHeader("Content-Length"));
@@ -91,7 +111,7 @@ public class HttpRequest {
 	public String getRequestedPath() {
 		return requestedPath;
 	}
-
+    
 	public String getVersion() {
 		return version;
 	}
@@ -193,5 +213,5 @@ public class HttpRequest {
 			keepAlive = true;
 		}
 	}
-
+    
 }
