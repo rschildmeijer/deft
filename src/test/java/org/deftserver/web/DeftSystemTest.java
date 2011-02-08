@@ -244,6 +244,13 @@ public class DeftSystemTest {
 			return request.getHeader("user");
 		}
 	}
+	
+	private static class QueryParamsRequestHandler extends RequestHandler {
+		@Override
+		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
+			response.write(request.getParameter("key1") + " " + request.getParameter("key2"));
+		}
+	}
 
 	@BeforeClass
 	public static void setup() {
@@ -268,6 +275,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
 		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
 		reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
+		reqHandlers.put("/query_params", new QueryParamsRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -1027,6 +1035,28 @@ public class DeftSystemTest {
 		assertEquals(5, response.getAllHeaders().length);
 		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
 		assertEquals("Authentication failed", payLoad);
+	}
+	
+	@Test
+	public void queryParamsTest() throws ClientProtocolException, IOException {
+		HttpClient httpclient = new DefaultHttpClient();
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/query_params?key1=value1&key2=value2");
+		HttpResponse response = httpclient.execute(httpget);
+		List<String> expectedHeaders = Arrays.asList(new String[] {"Server", "Date", "Content-Length", "Etag", "Connection"});
+
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		
+		assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
+
+		for (String header : expectedHeaders) {
+			assertTrue(response.getFirstHeader(header) != null);
+		}
+
+		final String expected = "value1 value2";
+		assertEquals(expected, convertStreamToString(response.getEntity().getContent()).trim());
+		assertEquals(expected.length()+"", response.getFirstHeader("Content-Length").getValue());
 	}
 
 	public String convertStreamToString(InputStream is) throws IOException {

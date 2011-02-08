@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.web.HttpVerb;
@@ -23,19 +24,47 @@ public class HttpRequest {
 	private String body;
 	private boolean keepAlive;
 
+	/** Regex to parse HttpRequest Request Line */
+	public static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(" ") ;
+	/** Regex to parse out QueryString from HttpRequest */
+	public static final Pattern QUERY_STRING_PATTERN = Pattern.compile("\\?") ;
+	/** Regex to parse out parameters from query string */
+	public static final Pattern PARAM_STRING_PATTERN = Pattern.compile("\\&|;");  //Delimiter is either & or ;
+	/** Regex to parse out key/value pairs */
+	public static final Pattern KEY_VALUE_PATTERN = Pattern.compile("=");
+	/** Regex to parse raw headers and body */
+	public static final Pattern RAW_VALUE_PATTERN = Pattern.compile("\\r\\n\\r\\n"); //TODO fix a better regexp for this
+	/** Regex to parse raw headers from body */
+	public static final Pattern HEADERS_BODY_PATTERN = Pattern.compile("\\r\\n");
+	/** Regex to parse header name and value */
+	public static final Pattern HEADER_VALUE_PATTERN = Pattern.compile(": ");
 	
+	
+	
+	/**
+	 * Creates a new HttpRequest 
+	 * @param requestLine The Http request text line
+	 * @param headers The Http request headers
+	 */
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
-		String[] elements = requestLine.split(" ");
+		String[] elements = REQUEST_LINE_PATTERN.split(requestLine);
 		method = HttpVerb.valueOf(elements[0]);
-		requestedPath = elements[1];
+		String[] pathFrags = QUERY_STRING_PATTERN.split(elements[1]);
+		requestedPath = pathFrags[0];
 		version = elements[2];
 		this.headers = headers;	
 		body = null;
 		initKeepAlive();
-		parameters = parseParameters(requestedPath);
+		parameters = parseParameters(elements[1]);
 	}
 	
+	/**
+	 * Creates a new HttpRequest
+	 * @param requestLine The Http request text line
+	 * @param headers The Http request headers
+	 * @param body The Http request posted body
+	 */
 	public HttpRequest(String requestLine, Map<String, String> headers, String body) {
 		this(requestLine, headers);
 		this.body = body;
@@ -44,14 +73,14 @@ public class HttpRequest {
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
 			String raw = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
-			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
-			String[] headerFields = headersAndBody[0].split("\\r\\n");
+			String[] headersAndBody = RAW_VALUE_PATTERN.split(raw); 
+			String[] headerFields = HEADERS_BODY_PATTERN.split(headersAndBody[0]);
 			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
 
 			String requestLine = headerFields[0];
 			Map<String, String> generalHeaders = new HashMap<String, String>();
 			for (int i = 1; i < headerFields.length; i++) {
-				String[] header = headerFields[i].split(": ");
+				String[] header = HEADER_VALUE_PATTERN.split(headerFields[i]);
 				generalHeaders.put(header[0].toLowerCase(), header[1]);
 			}
 
@@ -162,17 +191,18 @@ public class HttpRequest {
 		}
 		return result;
 	}
+
+
 	
 	private ImmutableMultimap<String, String> parseParameters(String requestLine) {
 		ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
-		String[] str = requestLine.split("\\?");
+		String[] str = QUERY_STRING_PATTERN.split(requestLine);
 		
 		//Parameters exist
 		if (str.length > 1) {
-			String[] paramArray = str[1].split("\\&|;"); //Delimiter is either & or ;
+			String[] paramArray = PARAM_STRING_PATTERN.split(str[1]); 
 			for (String keyValue : paramArray) {
-				String[] keyValueArray = keyValue.split("=");
-				
+				String[] keyValueArray = KEY_VALUE_PATTERN.split(keyValue);				
 				//We need to check if the parameter has a value associated with it.
 				if (keyValueArray.length > 1) {
 					builder.put(keyValueArray[0], keyValueArray[1]); //name, value

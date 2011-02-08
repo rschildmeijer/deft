@@ -1,4 +1,4 @@
-# Deft Server
+# Deft
 Deft is a single threaded, asynchronous, event driven high performance web server running on the JVM.
 
 The Deft web server is an open source projected (licensed under [Apache version 2]). Deft was intitially inspired by [facebook/tornado]

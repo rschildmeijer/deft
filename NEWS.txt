@@ -8,6 +8,7 @@ Features
     - Generic callbacks in IOLoop (#93)
     - Bug fix. ConcurrentModificationException if a new timeout was added in a timeout callback (#89)
     - Http HEAD support (#58)
+    - Bug fix. RequestHandler not found if query parameters is present. (#104)
 
 Configuration
 ------------
