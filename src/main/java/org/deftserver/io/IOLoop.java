@@ -20,6 +20,7 @@ import org.deftserver.io.callback.JMXDebuggableCallbackManager;
 import org.deftserver.io.timeout.JMXDebuggableTimeoutManager;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.io.timeout.TimeoutManager;
+import org.deftserver.util.Closeables;
 import org.deftserver.util.MXBeanUtil;
 import org.deftserver.web.AsyncCallback;
 import org.slf4j.Logger;
@@ -27,138 +28,133 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 public enum IOLoop implements IOLoopMXBean {
 
-INSTANCE;
+	INSTANCE;
 
-private static final Logger logger = LoggerFactory.getLogger(IOLoop.class);
+	private static final Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
-private Selector selector;
+	private Selector selector;
 
-private final Map<SelectableChannel, IOHandler> handlers = Maps
-.newHashMap();
+	private IOHandler handler;
 
-private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
-private final CallbackManager cm = new JMXDebuggableCallbackManager();
+	private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
+	private final CallbackManager cm = new JMXDebuggableCallbackManager();
 
-private IOLoop() {
+	private IOLoop() {
 
-try {
-selector = Selector.open();
-} catch (IOException e) {
-throw new RuntimeException(e);
-}
-MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
-}
+		try {
+			selector = Selector.open();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+		MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
+	}
 
-public void start() {
-Thread.currentThread().setName("I/O-LOOP");
+	public void start() {
+		Thread.currentThread().setName("I/O-LOOP");
 
-while (true) {
-long selectorTimeout = 250; // 250 ms
-try {
-if (selector.select(selectorTimeout) == 0) {
-long ms = tm.execute();
-selectorTimeout = Math.min(ms, selectorTimeout);
-if (cm.execute()) {
-selectorTimeout = 0;
-}
-continue;
-}
+		while (true) {
+			long selectorTimeout = 250; // 250 ms
+			try {
+				if (selector.select(selectorTimeout) == 0) {
+					long ms = tm.execute();
+					selectorTimeout = Math.min(ms, selectorTimeout);
+					if (cm.execute()) {
+						selectorTimeout = 0;
+					}
+					continue;
+				}
 
-Iterator<SelectionKey> keys = selector.selectedKeys()
-.iterator();
-while (keys.hasNext()) {
-SelectionKey key = keys.next();
-IOHandler handler = handlers.get(key.channel());
-if (handler != null) {
-try {
-if (key.isAcceptable()) {
-handler.handleAccept(key);
-}
-if (key.isReadable()) {
-handler.handleRead(key);
-}
+				Iterator<SelectionKey> keys = selector.selectedKeys()
+						.iterator();
+				while (keys.hasNext()) {
+					SelectionKey key = keys.next();
+					if (key.isValid()) {
 
-if (key.isValid() && key.isWritable()) {
-handler.handleWrite(key);
-}
-} catch (CancelledKeyException e) {
-logger.warn("Tried to operate on cancelled Key", e);
-}
-}
-keys.remove();
-}
-long ms = tm.execute();
-selectorTimeout = Math.min(ms, selectorTimeout);
-if (cm.execute()) {
-selectorTimeout = 0;
-}
+						if (key.isAcceptable()) {
+							handler.handleAccept(key);
+						}
+						if (key.isValid() && key.isReadable()) {
+							handler.handleRead(key);
+						}
 
-} catch (IOException e) {
-logger.error("Exception received in IOLoop: {}", e);
-}
-}
-}
+						if (key.isValid() && key.isWritable()) {
+							handler.handleWrite(key);
+						}
 
-public SelectionKey addHandler(SelectableChannel channel,
-IOHandler handler, int interestOps, Object attachment) {
-handlers.put(channel, handler);
-return registerChannel(channel, interestOps, attachment);
-}
+					}
+					keys.remove();
+				}
+				long ms = tm.execute();
+				selectorTimeout = Math.min(ms, selectorTimeout);
+				if (cm.execute()) {
+					selectorTimeout = 0;
+				}
 
-public void removeHandler(SelectableChannel channel) {
-handlers.remove(channel);
-}
+			} catch (IOException e) {
+				logger.error("Exception received in IOLoop: {}", e);
+			}
+		}
+	}
 
-private SelectionKey registerChannel(SelectableChannel channel,
-int interestOps, Object attachment) {
-try {
-return channel.register(selector, interestOps, attachment);
-} catch (ClosedChannelException e) {
-removeHandler(channel);
-logger.error("Could not register channel: {}", e.getMessage());
-}
-return null;
-}
+	public SelectionKey addHandler(SelectableChannel channel,
+			IOHandler handler, int interestOps, Object attachment) {
+		this.handler = handler;
+		return registerChannel(channel, interestOps, attachment);
+	}
 
-public void addKeepAliveTimeout(SocketChannel channel,
-Timeout keepAliveTimeout) {
-tm.addKeepAliveTimeout(channel, keepAliveTimeout);
-}
+	public void removeHandler(SelectableChannel channel) {
+		// handlers.remove(channel);
 
-public boolean hasKeepAliveTimeout(SelectableChannel channel) {
-return tm.hasKeepAliveTimeout(channel);
-}
+	}
 
-public void addTimeout(Timeout timeout) {
-tm.addTimeout(timeout);
-}
+	private SelectionKey registerChannel(SelectableChannel channel,
+			int interestOps, Object attachment) {
+		try {
+			return channel.register(selector, interestOps, attachment);
+		} catch (ClosedChannelException e) {
+			removeHandler(channel);
+			logger.error("Could not register channel: {}", e.getMessage());
+		}
+		return null;
+	}
 
-public void addCallback(AsyncCallback callback) {
-cm.addCallback(callback);
-}
+	public void addKeepAliveTimeout(SocketChannel channel,
+			Timeout keepAliveTimeout) {
+		tm.addKeepAliveTimeout(channel, keepAliveTimeout);
+	}
 
-// implements IOLoopMXBean
-@Override
-public int getNumberOfRegisteredIOHandlers() {
-return handlers.size();
-}
+	public boolean hasKeepAliveTimeout(SelectableChannel channel) {
+		return tm.hasKeepAliveTimeout(channel);
+	}
 
-@Override
-public List<String> getRegisteredIOHandlers() {
-Map<SelectableChannel, IOHandler> defensive = new HashMap<SelectableChannel, IOHandler>(
-handlers);
-Collection<String> readables = transform(defensive.values(),
-new Function<IOHandler, String>() {
-@Override
-public String apply(IOHandler handler) {
-return handler.toString();
-}
-});
-return Lists.newLinkedList(readables);
-}
+	public void addTimeout(Timeout timeout) {
+		tm.addTimeout(timeout);
+	}
+
+	public void addCallback(AsyncCallback callback) {
+		cm.addCallback(callback);
+	}
+
+	// implements IOLoopMXBean
+	@Override
+	public int getNumberOfRegisteredIOHandlers() {
+		return 1;
+	}
+
+	@Override
+	public List<String> getRegisteredIOHandlers() {
+		Map<SelectableChannel, IOHandler> defensive = new HashMap<SelectableChannel, IOHandler>();
+		Collection<String> readables = transform(defensive.values(),
+				new Function<IOHandler, String>() {
+					@Override
+					public String apply(IOHandler handler) {
+						return handler.toString();
+					}
+				});
+		return Lists.newLinkedList(readables);
+	}
 
 }

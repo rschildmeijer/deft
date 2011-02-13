@@ -31,7 +31,7 @@ public class HttpProtocol implements IOHandler {
 	private final Application application;
 
 	// a queue of half-baked (pending/unfinished) HTTP post request
-	private final Map<SelectableChannel, PartialHttpRequest> partials = Maps.newHashMap();
+	//private final Map<SelectableChannel, PartialHttpRequest> partials = Maps.newHashMap();
  	
 	public HttpProtocol(Application app) {
 		application = app;
@@ -42,7 +42,7 @@ public class HttpProtocol implements IOHandler {
 		logger.debug("handle accept...");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 		clientChannel.configureBlocking(false);
-		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
+		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, new HttpChannelContext(ByteBuffer.allocate(READ_BUFFER_SIZE)));
 	}
 
 	@Override
@@ -51,28 +51,38 @@ public class HttpProtocol implements IOHandler {
 		SocketChannel clientChannel = (SocketChannel) key.channel();
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		
-		if (request.isKeepAlive()) {
-			IOLoop.INSTANCE.addKeepAliveTimeout(
-					clientChannel, 
-					TimeoutFactory.keepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
-			);
-		}
-		HttpResponse response = new HttpResponse(this, key, request.isKeepAlive());
-		RequestHandler rh = application.getHandler(request);
-		HttpRequestDispatcher.dispatch(rh, request, response);
-		
-		//Only close if not async. In that case its up to RH to close it (+ don't close if it's a partial request).
-		if (!rh.isMethodAsynchronous(request.getMethod()) && ! (request instanceof PartialHttpRequest)) {
-			response.finish();
+
+		if (!(request instanceof PartialHttpRequest)) {
+			HttpResponse response = new HttpResponse(this, key, request.isKeepAlive());
+			RequestHandler rh = application.getHandler(request);
+			HttpRequestDispatcher.dispatch(rh, request, response);
+			
+			//Only close if not async. In that case its up to RH to close it (+ don't close if it's a partial request).
+			if (!rh.isMethodAsynchronous(request.getMethod())) {
+				response.finish();
+				
+				
+			}else {
+				if (request.isKeepAlive()) {
+					setKeepAlive(key, true);
+//					IOLoop.INSTANCE.addKeepAliveTimeout(
+//							clientChannel, 
+//							TimeoutFactory.keepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
+//					);
+				}else {
+					setKeepAlive(key, false);
+				}
+			}
+
 		}
 	}
 	
 	@Override
 	public void handleWrite(SelectionKey key) {
 		logger.debug("handle write...");
-		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
+		HttpChannelContext ctx = (HttpChannelContext) key.attachment();
 		logger.debug("pending data about to be written");
-		ByteBuffer toSend = dbb.getByteBuffer();
+		ByteBuffer toSend = ctx.getBufferOut();
 		try {
 			toSend.flip();	// prepare for write
 			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
@@ -90,7 +100,7 @@ public class HttpProtocol implements IOHandler {
 	}
 	
 	public void closeOrRegisterForRead(SelectionKey key) {
-		if (key.isValid() && IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
+		if (key.isValid() && isKeepAlive(key)) {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
 				//key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
@@ -103,54 +113,55 @@ public class HttpProtocol implements IOHandler {
 			// http request should be finished and no 'keep-alive' => close connection
 			logger.debug("Closing finished (non keep-alive) http connection"); 
 			Closeables.closeQuietly(key.channel());
+			
 		}
 	}
 	/**
 	 * Clears the buffer (prepares for reuse) attached to the given SelectionKey.
 	 * @return A cleared (position=0, limit=capacity) ByteBuffer which is ready for new reads
 	 */
-	private ByteBuffer reuseAttachment(SelectionKey key) {
-		Object o = key.attachment();
-		ByteBuffer attachment = null;
-		if (o instanceof DynamicByteBuffer) {
-			attachment = ((DynamicByteBuffer)o).getByteBuffer();
-		} else {
-			attachment = (ByteBuffer) o;
-		}
-		if (attachment.capacity() < READ_BUFFER_SIZE) {
-			attachment = ByteBuffer.allocate(READ_BUFFER_SIZE);
-		}
-		attachment.clear();	// prepare for reuse
-		return attachment;
+	private HttpChannelContext reuseAttachment(SelectionKey key) {
+		HttpChannelContext ctx = (HttpChannelContext) key.attachment();
+		ctx.clear();	// prepare for reuse
+		return ctx;
+	}
+	
+	private boolean isKeepAlive(SelectionKey key){
+		return ((HttpChannelContext) key.attachment()).isKeepAlive();
 	}
 
 
+	private void setKeepAlive(SelectionKey key, boolean keep){
+		((HttpChannelContext) key.attachment()).setKeepAlive(keep);
+	}
+	
 	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
-		ByteBuffer buffer = (ByteBuffer) key.attachment();
+		HttpChannelContext ctx = (HttpChannelContext) key.attachment();
 		try {
-			clientChannel.read(buffer);
+			clientChannel.read(ctx.getBufferIn());
 		} catch (IOException e) {
 			logger.warn("Could not read buffer: {}", e.getMessage());
 			Closeables.closeQuietly(clientChannel);
 		}
-		buffer.flip();
+		ctx.getBufferIn().flip();
 		
-		return doGetHttpRequest(key, clientChannel, buffer);
+		return doGetHttpRequest(key, clientChannel, ctx);
 	}
 	
-	private HttpRequest doGetHttpRequest(SelectionKey key, SocketChannel clientChannel, ByteBuffer buffer) {
+	private HttpRequest doGetHttpRequest(SelectionKey key, SocketChannel clientChannel, HttpChannelContext ctx) {
 		//do we have any unfinished http post requests for this channel?
 		HttpRequest request = null;
-		if (partials.containsKey(clientChannel)) {
-			request = HttpRequest.continueParsing(buffer, partials.get(clientChannel));
-			if (! (request instanceof PartialHttpRequest)) {	// received the entire payload/body
-				partials.remove(clientChannel);
-			}
+		if (ctx.getContext() != null) {
+			request = HttpRequest.continueParsing(ctx.getBufferIn(), ctx.getContext());
+//			if (! (request instanceof PartialHttpRequest)) {	// received the entire payload/body
+//				partials.remove(clientChannel);
+//			}
 		} else {
-			request = HttpRequest.of(buffer);
+			request = HttpRequest.of(ctx.getBufferIn());
 			if (request instanceof PartialHttpRequest) {
-				partials.put(key.channel(), (PartialHttpRequest) request);
+				ctx.setContext((PartialHttpRequest) request);
 			}
+			
 		}
 		return request;
 	}

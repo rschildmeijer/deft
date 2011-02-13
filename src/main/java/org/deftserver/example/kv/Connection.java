@@ -2,6 +2,7 @@ package org.deftserver.example.kv;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
@@ -32,7 +33,8 @@ public class Connection {
 			channel = SocketChannel.open(new InetSocketAddress(host, port));
 			channel.configureBlocking(false);
 		} catch (IOException e) { e.printStackTrace(); }
-		//IOLoop.INSTANCE.addHandler(channel, handler, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+		
+		IOLoop.INSTANCE.addHandler(channel, handler, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
 		//iostream = new IOStream(channel, ioLoop);
 	}
 

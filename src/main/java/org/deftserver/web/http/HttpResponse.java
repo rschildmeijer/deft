@@ -67,7 +67,7 @@ public class HttpResponse {
 		try {
 			channel.write(responseData.getByteBuffer());
 		} catch (IOException e) {
-			logger.error("ClosedChannelException during channel.write(): {}", e.getMessage());
+			logger.error("ClosedChannelException during channel.write()", e);
 			Closeables.closeQuietly(key.channel());
 		}
 		long bytesFlushed = responseData.position();
@@ -77,10 +77,12 @@ public class HttpResponse {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_WRITE);
 			} catch (ClosedChannelException e) {
-				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
+				logger.error("ClosedChannelException during flush()", e);
 				Closeables.closeQuietly(key.channel());
 			}
-			key.attach(responseData);
+			
+			HttpChannelContext ctx = (HttpChannelContext)key.attachment();
+			ctx.setBufferOut(responseData.getByteBuffer());
 		} else {
 			responseData.clear();
 		}
@@ -100,14 +102,22 @@ public class HttpResponse {
 		// close (or register for read) iff 
 		// (a) DBB is attached but all data is sent to wire (hasRemaining == false)
 		// (b) no DBB is attached (never had to register for write)
-		if (key.attachment() instanceof DynamicByteBuffer) {
-			DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
-			if (!(dbb).hasRemaining()) {
-				protocol.closeOrRegisterForRead(key);
-			} 
-		} else {
+//		if (key.attachment() instanceof DynamicByteBuffer) {
+//			DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
+//			if (!(dbb).hasRemaining()) {
+//				protocol.closeOrRegisterForRead(key);
+//			} 
+//		} else {
+//			protocol.closeOrRegisterForRead(key);
+//		}
+		
+		HttpChannelContext ctx = (HttpChannelContext)key.attachment();
+		if (ctx.getBufferOut() == null){
+			protocol.closeOrRegisterForRead(key);
+		} else if (!ctx.getBufferOut().hasRemaining()){
 			protocol.closeOrRegisterForRead(key);
 		}
+		
 		return bytesWritten;
 	}
 	

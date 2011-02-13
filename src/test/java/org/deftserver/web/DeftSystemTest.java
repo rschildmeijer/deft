@@ -264,7 +264,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/no_body", new NoBodyRequestHandler());
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
-		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
+//		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
 		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
 		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
 		reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
@@ -810,7 +810,7 @@ public class DeftSystemTest {
 		assertTrue(latch.getCount() == 0);
 	}
 
-	@Test
+/*	@Test
 	public void keyValueStoreClientTest() throws ClientProtocolException, IOException {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
 		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/redis");
@@ -823,7 +823,7 @@ public class DeftSystemTest {
 		assertEquals(5, response.getAllHeaders().length);
 		assertEquals("7", response.getFirstHeader("Content-Length").getValue());
 		assertEquals("kickass", convertStreamToString(response.getEntity().getContent()).trim());
-	}
+	}*/
 
 	//ning === http://github.com/ning/async-http-client
 	@Test

@@ -3,6 +3,7 @@ package org.deftserver.io.buffer;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
+import org.deftserver.web.http.HttpServerDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,10 @@ public class DynamicByteBuffer {
 	private void ensureCapacity(int size) {
 		int remaining = backend.remaining();
 		if (size > remaining) {
+			
+			int missing = size - remaining;
 			logger.debug("allocating new DynamicByteBuffer, old capacity {}: ", backend.capacity());
-			int newSize =  (int) (Math.max(backend.capacity(), size) * 1.5);
+			int newSize =  backend.capacity() + missing + HttpServerDescriptor.WRITE_BUFFER_SIZE; // Add a load factor to improve capacity when needed
 			reallocate(newSize);
 		}
 	}
@@ -57,6 +60,7 @@ public class DynamicByteBuffer {
 		System.arraycopy(backend.array(), 0, newBuffer, 0, backend.position());
 		backend = ByteBuffer.wrap(newBuffer);
 		backend.position(oldPosition);
+
 		logger.debug("allocated new DynamicByteBufer, new capacity: {}", backend.capacity());
 	}
 	
