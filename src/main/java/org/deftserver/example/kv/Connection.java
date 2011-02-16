@@ -7,6 +7,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncResult;
@@ -34,7 +35,7 @@ public class Connection {
 			channel.configureBlocking(false);
 		} catch (IOException e) { e.printStackTrace(); }
 		
-		IOLoop.INSTANCE.addHandler(channel, handler, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+		IOLoopFactory.getLoopController().addHandler(channel, handler, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
 		//iostream = new IOStream(channel, ioLoop);
 	}
 
@@ -54,7 +55,7 @@ public class Connection {
 	public void write(String data, AsyncResult<String> cb) {
 		DynamicByteBuffer dbb = DynamicByteBuffer.allocate(1024);
 		dbb.put(data.getBytes(Charsets.UTF_8));
-		SelectionKey key = IOLoop.INSTANCE.addHandler(channel, handler, SelectionKey.OP_WRITE, dbb);
+		SelectionKey key = IOLoopFactory.getLoopController().addHandler(channel, handler, SelectionKey.OP_WRITE, dbb);
 		handler.addReadCallback(key, cb);
 		//this.iostream.write(data);		
 	}

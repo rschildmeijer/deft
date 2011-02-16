@@ -1,6 +1,7 @@
 package org.deftserver.example;
 
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.AsyncResult;
@@ -18,7 +19,7 @@ public class AsyncDbHandler extends RequestHandler{
 	@Asynchronous
 	public void get(HttpRequest request, final HttpResponse response) {
 		logger.debug("Entering AsyncDbHandler.get");
-		IOLoop.INSTANCE.addTimeout(new Timeout(500, new AsyncCallback() {
+		IOLoopFactory.getLoopController().addTimeout(new Timeout(500, new AsyncCallback() {
 			
 			@Override
 			public void onCallback() {

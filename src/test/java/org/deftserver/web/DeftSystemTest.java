@@ -41,6 +41,7 @@ import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.example.kv.Client;
 import org.deftserver.example.kv.KeyValueStore;
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpException;
@@ -782,11 +783,11 @@ public class DeftSystemTest {
 		Timeout t3 = new Timeout(now+1400, cb);
 		Timeout t4 = new Timeout(now+1600, cb);
 		Timeout t5 = new Timeout(now+1800, cb);
-		IOLoop.INSTANCE.addTimeout(t1);
-		IOLoop.INSTANCE.addTimeout(t2);
-		IOLoop.INSTANCE.addTimeout(t3);
-		IOLoop.INSTANCE.addTimeout(t4);
-		IOLoop.INSTANCE.addTimeout(t5);
+		IOLoopFactory.getLoopController().addTimeout(t1);
+		IOLoopFactory.getLoopController().addTimeout(t2);
+		IOLoopFactory.getLoopController().addTimeout(t3);
+		IOLoopFactory.getLoopController().addTimeout(t4);
+		IOLoopFactory.getLoopController().addTimeout(t5);
 
 		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
 		assertTrue(latch.getCount() == 0);
@@ -800,11 +801,11 @@ public class DeftSystemTest {
 			@Override public void onCallback() { latch.countDown(); }
 		
 		};
-		IOLoop.INSTANCE.addCallback(cb);
-		IOLoop.INSTANCE.addCallback(cb);
-		IOLoop.INSTANCE.addCallback(cb);
-		IOLoop.INSTANCE.addCallback(cb);
-		IOLoop.INSTANCE.addCallback(cb);
+		IOLoopFactory.getLoopController().addCallback(cb);
+		IOLoopFactory.getLoopController().addCallback(cb);
+		IOLoopFactory.getLoopController().addCallback(cb);
+		IOLoopFactory.getLoopController().addCallback(cb);
+		IOLoopFactory.getLoopController().addCallback(cb);
 		
 		latch.await(5 * 1000, TimeUnit.MILLISECONDS);
 		assertTrue(latch.getCount() == 0);

@@ -2,6 +2,7 @@ package org.deftserver.io;
 
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.SocketChannel;
 
 
 /**
@@ -10,7 +11,7 @@ import java.nio.channels.SelectionKey;
  */
 public interface IOHandler {
 
-	void handleAccept(SelectionKey key) throws IOException;
+	void handleAccept(SocketChannel clientChannel) throws IOException;
 	
 	void handleRead(SelectionKey key) throws IOException;
 	

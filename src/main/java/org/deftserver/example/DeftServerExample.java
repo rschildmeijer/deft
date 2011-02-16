@@ -3,6 +3,7 @@ package org.deftserver.example;
 import java.util.Map;
 
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.web.Application;
 import org.deftserver.web.HttpServer;
 import org.deftserver.web.handler.RequestHandler;

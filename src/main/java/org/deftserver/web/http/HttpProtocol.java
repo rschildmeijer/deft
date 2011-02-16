@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.TimeoutFactory;
@@ -38,11 +39,11 @@ public class HttpProtocol implements IOHandler {
 	}
 	
 	@Override
-	public void handleAccept(SelectionKey key) throws IOException {
+	public void handleAccept(SocketChannel clientChannel) throws IOException {
 		logger.debug("handle accept...");
-		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
-		clientChannel.configureBlocking(false);
-		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, new HttpChannelContext(ByteBuffer.allocate(READ_BUFFER_SIZE)));
+//		SocketChannel clientChannel = ((ServerSocketChannel) clientChannel.channel()).accept();
+//		clientChannel.configureBlocking(false);
+		IOLoopFactory.getLoopController().addHandler(clientChannel, this, SelectionKey.OP_READ, new HttpChannelContext(ByteBuffer.allocate(READ_BUFFER_SIZE)));
 	}
 
 	@Override
@@ -60,12 +61,11 @@ public class HttpProtocol implements IOHandler {
 			//Only close if not async. In that case its up to RH to close it (+ don't close if it's a partial request).
 			if (!rh.isMethodAsynchronous(request.getMethod())) {
 				response.finish();
-				
-				
+
 			}else {
 				if (request.isKeepAlive()) {
 					setKeepAlive(key, true);
-//					IOLoop.INSTANCE.addKeepAliveTimeout(
+//					IOLoopFactory.getLoopController().addKeepAliveTimeout(
 //							clientChannel, 
 //							TimeoutFactory.keepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
 //					);

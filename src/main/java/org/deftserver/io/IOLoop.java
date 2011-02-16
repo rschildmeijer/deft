@@ -8,6 +8,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.deftserver.io.IOLoopFactory.Mode;
 import org.deftserver.io.callback.CallbackManager;
 import org.deftserver.io.callback.JMXDebuggableCallbackManager;
 import org.deftserver.io.timeout.JMXDebuggableTimeoutManager;
@@ -29,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-public enum IOLoop implements IOLoopMXBean {
+public enum IOLoop implements IOLoopMXBean, IOLoopController {
 
 	INSTANCE;
 
@@ -54,7 +56,8 @@ public enum IOLoop implements IOLoopMXBean {
 
 	public void start() {
 		Thread.currentThread().setName("I/O-LOOP");
-
+		IOLoopFactory.setMode(Mode.SINGLE_THREADED);
+		
 		while (true) {
 			long selectorTimeout = 250; // 250 ms
 			try {
@@ -71,10 +74,9 @@ public enum IOLoop implements IOLoopMXBean {
 						.iterator();
 				while (keys.hasNext()) {
 					SelectionKey key = keys.next();
-					if (key.isValid()) {
-
+					
 						if (key.isAcceptable()) {
-							handler.handleAccept(key);
+							this.handleAccept(key);
 						}
 						if (key.isValid() && key.isReadable()) {
 							handler.handleRead(key);
@@ -84,7 +86,6 @@ public enum IOLoop implements IOLoopMXBean {
 							handler.handleWrite(key);
 						}
 
-					}
 					keys.remove();
 				}
 				long ms = tm.execute();
@@ -96,6 +97,20 @@ public enum IOLoop implements IOLoopMXBean {
 			} catch (IOException e) {
 				logger.error("Exception received in IOLoop: {}", e);
 			}
+		}
+	}
+	
+	private void handleAccept(SelectionKey key){
+		
+		try {
+			SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
+			clientChannel.configureBlocking(false);
+			handler.handleAccept(clientChannel);
+		
+			logger.trace("Accepted clientChannel {}", clientChannel);
+			
+		} catch (IOException e) {
+			logger.error("I/O Unable to accept new connection from selected key", e);
 		}
 	}
 
@@ -113,6 +128,7 @@ public enum IOLoop implements IOLoopMXBean {
 	private SelectionKey registerChannel(SelectableChannel channel,
 			int interestOps, Object attachment) {
 		try {
+		
 			return channel.register(selector, interestOps, attachment);
 		} catch (ClosedChannelException e) {
 			removeHandler(channel);

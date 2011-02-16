@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
 
+import org.deftserver.io.IOAcceptLoop;
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.IOLoopFactory;
@@ -12,9 +13,9 @@ import org.deftserver.web.http.HttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpServer {
+public class MultiThreadedHttpServer {
 	
-	private final Logger logger = LoggerFactory.getLogger(HttpServer.class);
+	private final Logger logger = LoggerFactory.getLogger(MultiThreadedHttpServer.class);
 	
 	private static final int MIN_PORT_NUMBER = 1;
 	private static final int MAX_PORT_NUMBER = 65535;
@@ -22,15 +23,19 @@ public class HttpServer {
 	private ServerSocketChannel serverChannel;
 	
 	private final IOHandler protocol;
+	
+	private final IOAcceptLoop loop;
 
-	public HttpServer(Application application) {
+	public MultiThreadedHttpServer(Application application) {
 		protocol = new HttpProtocol(application);
 		try {
 			serverChannel = ServerSocketChannel.open();
 			serverChannel.configureBlocking(false);
+			
 		} catch (IOException e) {
 			logger.error("Error creating ServerSocketChannel: {}", e);
 		}
+		loop = new IOAcceptLoop(protocol, 2);
 	}
 
 	/**
@@ -47,16 +52,12 @@ public class HttpServer {
 		} catch (IOException e) {
 			logger.error("Could not bind socket: {}", e);
 		}
-		registerHandler();
+		
+		loop.registerAcceptChannel(serverChannel);
 	}
 	
-	private void registerHandler() {
-		IOLoopFactory.getLoopController().addHandler(
-				serverChannel,
-				protocol, 
-				SelectionKey.OP_ACCEPT,
-				null /*attachment*/
-		);
-	}
+public void start(){
+	loop.start();
+}
 
 }

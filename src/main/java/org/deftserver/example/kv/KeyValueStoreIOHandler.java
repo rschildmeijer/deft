@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
+import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.web.AsyncResult;
@@ -25,11 +26,11 @@ public class KeyValueStoreIOHandler implements IOHandler {
 	private final Map<SelectionKey, AsyncResult<String>> rcbs = Maps.newHashMap();
 
 	@Override
-	public void handleAccept(SelectionKey key) throws IOException {
+	public void handleAccept(SocketChannel clientChannel) throws IOException {
 //		logger.debug("[KeyValueStoreHandler] handle accept...");
 //		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
 //		clientChannel.configureBlocking(false);
-//		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+//		IOLoopFactory.getLoopController().addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
 	}
 
 	@Override
@@ -74,7 +75,7 @@ public class KeyValueStoreIOHandler implements IOHandler {
 		} catch (IOException e) {
 			logger.error("[KeyValueStoreHandler] Failed to send data to client: {}", e.getMessage());
 		}
-		IOLoop.INSTANCE.addHandler(channel, this, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
+		IOLoopFactory.getLoopController().addHandler(channel, this, SelectionKey.OP_READ, ByteBuffer.allocate(1024));
 	}
 	
 	void addReadCallback(SelectionKey key, AsyncResult<String> cb) {
