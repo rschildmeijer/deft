@@ -32,6 +32,8 @@ public enum IOLoop implements IOLoopMXBean {
 	
 	INSTANCE;
 	
+	private boolean running = false;
+	
 	private final Logger logger = LoggerFactory.getLogger(IOLoop.class);
 
 	private Selector selector;
@@ -52,15 +54,16 @@ public enum IOLoop implements IOLoopMXBean {
 	
 	public void start() {
 		Thread.currentThread().setName("I/O-LOOP");
-
-		while (true) {
-			long selectorTimeout = 250; // 250 ms
+		running = true;
+		
+		long selectorTimeout = 250; // 250 ms
+		while (running) {
 			try {
 				if (selector.select(selectorTimeout) == 0) {
 					long ms = tm.execute();
-					selectorTimeout = Math.min(ms, selectorTimeout);
+					selectorTimeout = Math.min(ms, /*selectorTimeout*/ 250);
 					if (cm.execute()) {
-						selectorTimeout = 0;
+						selectorTimeout = 1;
 					}
 					continue;
 				}
@@ -72,6 +75,9 @@ public enum IOLoop implements IOLoopMXBean {
 					if (key.isAcceptable()) {
 						handler.handleAccept(key);
 					}
+					if (key.isConnectable()) {
+						handler.handleConnect(key);
+					}
 					if (key.isReadable()) {
 						handler.handleRead(key);
 					}
@@ -81,15 +87,20 @@ public enum IOLoop implements IOLoopMXBean {
 					keys.remove();
 				}
 				long ms = tm.execute();
-				selectorTimeout = Math.min(ms, selectorTimeout);
+				selectorTimeout = Math.min(ms, /*selectorTimeout*/ 250);
 				if (cm.execute()) { 
-					selectorTimeout = 0; 
+					selectorTimeout = 1; 
 				}
 
 			} catch (IOException e) {
 				logger.error("Exception received in IOLoop: {}", e);			
 			}
 		}
+	}
+	
+	public void stop() {
+		running = false;
+		logger.debug("Stopping IOLoop...");
 	}
 
 	public SelectionKey addHandler(SelectableChannel channel, IOHandler handler, int interestOps, Object attachment) {
@@ -99,6 +110,18 @@ public enum IOLoop implements IOLoopMXBean {
 	
 	public void removeHandler(SelectableChannel channel) {
 		handlers.remove(channel);
+	}
+	
+	/**
+	 * 
+	 * @param newInterestOps The complete new set of interest operations.
+	 */
+	public void updateHandler(SelectableChannel channel, int newInterestOps) {
+		if (handlers.containsKey(channel)) {
+			channel.keyFor(selector).interestOps(newInterestOps);
+		} else {
+			logger.warn("Tried to update interestOps for an unknown SelectableChannel.");
+		}
 	}
 	
 	private SelectionKey registerChannel(SelectableChannel channel, int interestOps, Object attachment) {

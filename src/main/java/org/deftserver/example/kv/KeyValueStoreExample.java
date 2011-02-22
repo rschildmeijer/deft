@@ -19,18 +19,9 @@ public class KeyValueStoreExample {
 	private final static Logger logger = LoggerFactory.getLogger(KeyValueStoreExample.class);
 	private final static int PORT = 8080;
 	
-	private static class HelloWorldRequestHandler extends RequestHandler {
-
-		@Override
-		public void get(HttpRequest request, HttpResponse response) {
-			response.write("hello world");
-		}
-
-	}
-	
 	private static class KeyValueStoreExampleRequestHandler extends RequestHandler {
 
-		private final Client client = new Client();
+		private final KeyValueStoreClient client = new KeyValueStoreClient(KeyValueStore.HOST, KeyValueStore.PORT);
 		
 		public KeyValueStoreExampleRequestHandler() {
 			new KeyValueStore().start();
@@ -49,12 +40,9 @@ public class KeyValueStoreExample {
 	}
 	
 	public static void main(String[] args) {
-		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
-		reqHandlers.put("/", new HelloWorldRequestHandler());
-		reqHandlers.put("/kv", new KeyValueStoreExampleRequestHandler());
-		
-		Application application = new Application(reqHandlers);
-
+		Map<String, RequestHandler> handlers = new HashMap<String, RequestHandler>();
+		handlers.put("/kv", new KeyValueStoreExampleRequestHandler());
+		Application application = new Application(handlers);
 		logger.debug("Starting up server on port: " + PORT);
 		HttpServer server = new HttpServer(application);
 		server.listen(PORT);

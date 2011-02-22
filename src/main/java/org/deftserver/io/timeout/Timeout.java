@@ -9,8 +9,6 @@ public class Timeout {
 	private final AsyncCallback cb;
 	private boolean cancelled = false;
 	
-	private final AsyncCallback nopCb = new AsyncCallback() { @Override public void onCallback() { /*nop*/} };
-
 	public Timeout(long timeout, AsyncCallback cb) {
 		this.timeout = timeout;
 		this.cb = cb;
@@ -29,7 +27,7 @@ public class Timeout {
 	}
 
 	public AsyncCallback getCallback() {
-		return cancelled ? nopCb : cb;
+		return cancelled ? AsyncCallback.nopCb : cb;
 	}
 
 }

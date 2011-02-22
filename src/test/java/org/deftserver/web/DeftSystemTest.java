@@ -38,13 +38,14 @@ import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
-import org.deftserver.example.kv.Client;
 import org.deftserver.example.kv.KeyValueStore;
+import org.deftserver.example.kv.KeyValueStoreClient;
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpException;
 import org.deftserver.web.http.HttpRequest;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -191,7 +192,7 @@ public class DeftSystemTest {
 
 	public static class KeyValueStoreExampleRequestHandler extends RequestHandler {
 
-		private final Client client = new Client();
+		private final KeyValueStoreClient client = new KeyValueStoreClient(KeyValueStore.HOST, KeyValueStore.PORT);
 
 		public KeyValueStoreExampleRequestHandler() {
 			new KeyValueStore().start();
@@ -287,6 +288,12 @@ public class DeftSystemTest {
 				new HttpServer(application).listen(PORT);
 				IOLoop.INSTANCE.start(); }
 		}).start();
+	}
+	
+	@AfterClass
+	public static void tearDown() throws InterruptedException {
+		IOLoop.INSTANCE.addCallback(new AsyncCallback() { @Override public void onCallback() { IOLoop.INSTANCE.stop(); }});
+		Thread.sleep(300);
 	}
 
 	@Test
@@ -1058,7 +1065,7 @@ public class DeftSystemTest {
 		assertEquals(expected, convertStreamToString(response.getEntity().getContent()).trim());
 		assertEquals(expected.length()+"", response.getFirstHeader("Content-Length").getValue());
 	}
-
+	
 	public String convertStreamToString(InputStream is) throws IOException {
 		if (is != null) {
 			StringBuilder sb = new StringBuilder();

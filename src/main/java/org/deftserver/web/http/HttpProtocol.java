@@ -44,6 +44,11 @@ public class HttpProtocol implements IOHandler {
 		clientChannel.configureBlocking(false);
 		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
 	}
+	
+	@Override
+	public void handleConnect(SelectionKey key) throws IOException {
+		logger.error("handle connect in HttpProcotol...");
+	}
 
 	@Override
 	public void handleRead(SelectionKey key) throws IOException {

@@ -11,6 +11,8 @@ import java.nio.channels.SelectionKey;
 public interface IOHandler {
 
 	void handleAccept(SelectionKey key) throws IOException;
+
+	void handleConnect(SelectionKey key) throws IOException;
 	
 	void handleRead(SelectionKey key) throws IOException;
 	

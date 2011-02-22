@@ -15,7 +15,7 @@ public interface TimeoutManager {
 	
 	/**
 	 * 
-	 * @return the positive number of milliseconds until next scheduled timeout.
+	 * @return the positive number (>0) of milliseconds until next scheduled timeout.
 	 */
 	long execute();
 	

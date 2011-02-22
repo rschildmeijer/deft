@@ -35,7 +35,7 @@ public class KeyValueStore extends Thread {
 		logger.debug("Initializing KeyValueStore");
 		initialize();
 	}
-
+	
 	public void run() {
 		try {
 			logger.debug("KeyValueStore waiting for clients...");	
@@ -44,24 +44,30 @@ public class KeyValueStore extends Thread {
 			BufferedWriter os = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()));
 			BufferedReader is = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			String input = is.readLine();
+			logger.debug("KeyValueStore received input: {}", input);
 			if (input.split("\\s+").length == 2) {
 				input = input.split("\\s+")[1];	// "GET deft" => "deft"
 			}
-			logger.debug("KeyValueStore received input: {}", input);
+			int sleep = 250;
 			if (input != null) {
-				logger.debug("KeyValueStore server sleeps...");
+				logger.debug("KeyValueStore server sleeps " + sleep + "ms..." );
 				try {
-					Thread.sleep(1*500);
+					Thread.sleep(sleep);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 				logger.debug("KeyValueStore woke up...");
-				String value = dict.get(input);
+				String value = dict.get(input) + "\r\n";
 				os.write(value, 0, value.length());
-				logger.debug("KeyValueStore echoed back");
+				logger.debug("KeyValueStore echoed back: " + value);
 				os.flush();
 			}
 
+			try {
+				Thread.sleep(sleep);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			{	// cleanup
 				try {
 					if (is != null)
