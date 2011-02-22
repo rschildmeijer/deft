@@ -9,6 +9,9 @@ Features
     - Bug fix. ConcurrentModificationException if a new timeout was added in a timeout callback (#89)
     - Http HEAD support (#58)
     - Bug fix. RequestHandler not found if query parameters is present. (#104)
+    - Periodic callbacks. Schedule a job to be executed by the IOLoop every nth ms. (#90)
+    - Bug Fix. Selector timeout tuning. (#108)
+    - Asynchronous socket to help third party developers. (#109)
 
 Configuration
 ------------
