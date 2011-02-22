@@ -89,12 +89,13 @@ public class AsynchronousSocket implements IOHandler {
 	@Override
 	public void handleConnect(SelectionKey key) throws IOException {
 		logger.debug("handle connect...");
-		((SocketChannel) channel).finishConnect();
-		connectCallback.onCallback();
-		connectCallback = AsyncCallback.nopCb;
-		interestOps &= ~SelectionKey.OP_CONNECT;
-		IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
-		
+		if (((SocketChannel) channel).isConnectionPending()) {
+			((SocketChannel) channel).finishConnect();
+			connectCallback.onCallback();
+			connectCallback = AsyncCallback.nopCb;
+			interestOps &= ~SelectionKey.OP_CONNECT;
+			IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
+		}
 	}
 	
 	/**
