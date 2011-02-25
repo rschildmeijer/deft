@@ -50,6 +50,10 @@ public class HttpServer {
 		registerHandler();
 	}
 	
+	public void start (){
+		registerHandler();
+	}
+	
 	private void registerHandler() {
 		IOLoopFactory.getLoopController().addHandler(
 				serverChannel,

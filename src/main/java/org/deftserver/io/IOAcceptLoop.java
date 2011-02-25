@@ -47,6 +47,7 @@ public class IOAcceptLoop {
 			workers.add(new DefaultIOWorkerLoop(handler));
 			i++;
 		}
+	
 	}
 
 	public void start() {
@@ -110,7 +111,7 @@ public class IOAcceptLoop {
 			}
 			worker = workersIterator.next();
 			worker.addChannel(clientChannel);
-			LOG.trace("Accepted clientChannel {} added to worker {}", clientChannel, worker);
+			LOG.debug("Accepted clientChannel {} added to worker {}", clientChannel, worker);
 			
 		} catch (IOException e) {
 			LOG.error("I/O Unable to accept new connection from selected key", e);

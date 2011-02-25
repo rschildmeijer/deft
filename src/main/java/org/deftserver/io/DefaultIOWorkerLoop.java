@@ -14,7 +14,9 @@ import org.deftserver.io.callback.JMXDebuggableCallbackManager;
 import org.deftserver.io.timeout.JMXDebuggableTimeoutManager;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.io.timeout.TimeoutManager;
+import org.deftserver.util.Closeables;
 import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +33,8 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 	private final TimeoutManager tm ;
 	private final CallbackManager cm;
 	
+	private final AsyncResponseQueue responseQueue; 
+	
 	
 	private static final ThreadLocal<DefaultIOWorkerLoop> tlocal = new ThreadLocal<DefaultIOWorkerLoop>();
 
@@ -39,6 +43,7 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 			selector = Selector.open();
 			tm = new JMXDebuggableTimeoutManager();
 			cm = new JMXDebuggableCallbackManager();
+			responseQueue = new AsyncResponseQueue();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -57,7 +62,7 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 	
 	@Override
 	public void commitAddedChannels() {
-		if (newChannels.size() > 0) {
+		if (!newChannels.isEmpty() ) {
 			this.selector.wakeup();
 		}
 		
@@ -71,7 +76,8 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 	@Override
 	public SelectionKey addHandler(SelectableChannel channel,
 			IOHandler handler, int interestOps, Object attachment) {
-		this.handler = handler;
+//		this.handler = handler;
+		
 		return registerChannel(channel, interestOps, attachment);
 	}
 
@@ -96,11 +102,11 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 	private SelectionKey registerChannel(SelectableChannel channel,
 			int interestOps, Object attachment) {
 		try {
-		
+			LOG.debug("Registering channel for {} on channel {}", interestOps, channel);
 			return channel.register(selector, interestOps, attachment);
 		} catch (ClosedChannelException e) {
-			removeHandler(channel);
 			LOG.error("Could not register channel: {}", e.getMessage());
+			Closeables.closeQuietly(channel);
 		}
 		return null;
 	}
@@ -155,6 +161,18 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 		return tlocal.get();
 	}
 	
+	
+	@Override
+	public void planifyResponse() {
+		responseQueue.planify();
+	}
+	
+	@Override
+	public void pushResponse(HttpResponse response) {
+		responseQueue.pushResponseToSend(response);
+		
+	}
+	
 	/**
 	 * Runs the eternal loop on one core
 	 */
@@ -166,20 +184,23 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 		
 		while (true) {
 			long selectorTimeout = 250; // 250 ms
+		//	LOG.debug("begin select loop");
 			try {
 				if (selector.select(selectorTimeout) == 0) {
 					long ms = tm.execute();
 					selectorTimeout = Math.min(ms, selectorTimeout);
 					cm.execute();
 					registerAddedChannels();
+					responseQueue.sendQueuedResponses();
 					continue;
 				}
 				// Accepts all pending SocketChannel from accept loop
 				registerAddedChannels();
+				responseQueue.sendQueuedResponses();
 				
 				Iterator<SelectionKey> keys = selector.selectedKeys()
 						.iterator();
-				while (keys.hasNext()) {
+				while ( keys.hasNext()) {
 					SelectionKey key = keys.next();
 						if (key.isValid() && key.isReadable()) {
 							handler.handleRead(key);
@@ -196,9 +217,12 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 				if (cm.execute()) {
 					selectorTimeout = 0;
 				}
+			//	registerAddedChannels();
 
 			} catch (IOException e) {
 				LOG.error("Exception received in IOLoop: {}", e);
+			} catch (Exception e){
+				LOG.error("Exception received in IOLoop:", e);
 			}
 		}
 		

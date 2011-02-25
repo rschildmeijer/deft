@@ -64,11 +64,15 @@ public class HttpResponse {
 
 		SocketChannel channel = (SocketChannel) key.channel();
 		responseData.flip();	// prepare for write
+		if (logger.isDebugEnabled()){
+			logger.debug("#id : {} - Sending Response chunk :\n{}", ((HttpChannelContext) key.attachment()).getId(), new String (responseData.array(), 0, responseData.limit()));
+		}
 		try {
 			channel.write(responseData.getByteBuffer());
 		} catch (IOException e) {
 			logger.error("ClosedChannelException during channel.write()", e);
-			Closeables.closeQuietly(key.channel());
+			Closeables.cancelAndCloseQuietly(key);
+			return 0;
 		}
 		long bytesFlushed = responseData.position();
 
@@ -78,7 +82,8 @@ public class HttpResponse {
 				key.channel().register(key.selector(), SelectionKey.OP_WRITE);
 			} catch (ClosedChannelException e) {
 				logger.error("ClosedChannelException during flush()", e);
-				Closeables.closeQuietly(key.channel());
+				Closeables.cancelAndCloseQuietly(key);
+				return 0;
 			}
 			
 			HttpChannelContext ctx = (HttpChannelContext)key.attachment();
@@ -92,6 +97,7 @@ public class HttpResponse {
 	public long finish() {
 		long bytesWritten = 0;
 		SocketChannel clientChannel = (SocketChannel) key.channel();
+		logger.debug("#id: {} - Finish and commit HTTP Reponse", ((HttpChannelContext) key.attachment()).getId());
 		if (clientChannel.isOpen()) {
 			if (!headersCreated) {
 				setEtagAndContentLength();
@@ -114,7 +120,7 @@ public class HttpResponse {
 		HttpChannelContext ctx = (HttpChannelContext)key.attachment();
 		if (ctx.getBufferOut() == null){
 			protocol.closeOrRegisterForRead(key);
-		} else if (!ctx.getBufferOut().hasRemaining()){
+		}else if (!ctx.getBufferOut().hasRemaining()){
 			protocol.closeOrRegisterForRead(key);
 		}
 		
@@ -122,9 +128,9 @@ public class HttpResponse {
 	}
 	
 	private void setEtagAndContentLength() {
-		if (responseData.position() > 0) {
-			setHeader("Etag", HttpUtil.getEtag(responseData.array()));
-		}
+	//	if (responseData.position() > 0) {
+		//	setHeader("Etag", HttpUtil.getEtag(responseData.array()));
+	//	}
 		setHeader("Content-Length", String.valueOf(responseData.position()));
 	}
 	
@@ -142,7 +148,7 @@ public class HttpResponse {
 	}
 	
 	public long write(File file) {
-		//setHeader("Etag", HttpUtil.getEtag(file));
+	//	setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));
 		long bytesWritten = 0;
 		flush(); // write initial line + headers

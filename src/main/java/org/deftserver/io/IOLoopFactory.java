@@ -7,7 +7,7 @@ public class IOLoopFactory {
 		MULTI_THREADED;
 	}
 	
-	private static  Mode mode;
+	private static  Mode mode = Mode.SINGLE_THREADED;
 	
 	 static void setMode(Mode _mode){
 		 mode  = _mode;
@@ -15,7 +15,7 @@ public class IOLoopFactory {
 	
 	public static IOLoopController getLoopController (){
 		if(mode == Mode.SINGLE_THREADED){
-			return IOLoopFactory.getLoopController();
+			return IOLoop.INSTANCE;
 		}else {
 			return DefaultIOWorkerLoop.getInstance();
 		}

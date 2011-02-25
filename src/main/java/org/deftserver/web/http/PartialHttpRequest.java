@@ -1,6 +1,9 @@
 package org.deftserver.web.http;
 
+import java.nio.charset.CharacterCodingException;
 import java.util.Map;
+
+import org.deftserver.io.buffer.DynamicByteBuffer;
 
 
 /**
@@ -12,27 +15,34 @@ import java.util.Map;
 
 public class PartialHttpRequest extends HttpRequest {
 	
-	private final String requestLine;
-	private String unfinishedBody;
 
+	private StringBuffer unfinishedBody;
+
+	private boolean finished = false;
+	
+	public PartialHttpRequest(String[] requestLine, Map<String, String> generalHeaders, DynamicByteBuffer body) {
+		super(requestLine, generalHeaders, body);
+		
+	}
+
+	
 	public PartialHttpRequest(String requestLine, Map<String, String> generalHeaders, String body) {
-		super("POST <> Unfinished request\r\n", generalHeaders);
-		this.requestLine = requestLine;
-		this.unfinishedBody = body;
+		super(requestLine, generalHeaders);
+		unfinishedBody = new StringBuffer(body);
 	}
 
 	public void appendBody(String nextChunk) {
-		unfinishedBody += nextChunk;
+		unfinishedBody.append(nextChunk);
 	}
 	
-	@Override
-	public String getBody() {
-		return unfinishedBody;
+	public void finish(){
+		finished = true;
 	}
 	
-	@Override
-	public String getRequestLine() {
-		return requestLine;
+
+	
+	public boolean isFinished(){
+		return finished;
 	}
 	
 }

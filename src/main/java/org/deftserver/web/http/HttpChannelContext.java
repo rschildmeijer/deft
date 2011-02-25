@@ -7,6 +7,8 @@ import org.deftserver.io.buffer.DynamicByteBuffer;
 
 public class HttpChannelContext implements ChannelContext<PartialHttpRequest> {
 
+	private Long id;
+	
 	private ByteBuffer bufferIn;
 	
 	private ByteBuffer bufferOut;
@@ -15,8 +17,17 @@ public class HttpChannelContext implements ChannelContext<PartialHttpRequest> {
 	
 	private boolean keepAlive = false;
 	
-	public HttpChannelContext(ByteBuffer buff) {
+	public HttpChannelContext(ByteBuffer buff, Long id) {
 		bufferIn = buff;
+		this.id = id;
+	}
+	
+	public Long getId() {
+		return id;
+	}
+	
+	public void setId(Long id) {
+		this.id = id;
 	}
 	
 	@Override

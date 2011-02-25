@@ -1,28 +1,27 @@
 package org.deftserver.web.http;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
+
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
+
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+
 import java.util.Map;
 
-import org.deftserver.util.ArrayUtil;
+import org.deftserver.io.buffer.DynamicByteBuffer;
+
 import org.deftserver.web.HttpVerb;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.core.joran.spi.Pattern;
-import ch.qos.logback.core.pattern.util.RegularEscapeUtil;
 
-import com.google.common.base.Charsets;
+
 import com.google.common.collect.ImmutableMultimap;
 
+
 public class HttpRequest {
+	
+	private static final Logger LOG = LoggerFactory.getLogger(HttpRequest.class);
 	
 	private final String requestLine;
 	private final HttpVerb method;
@@ -30,11 +29,28 @@ public class HttpRequest {
 	private final String version; 
 	private Map<String, String> headers;
 	private ImmutableMultimap<String, String> parameters;
-	private String body;
+
 	private boolean keepAlive;
-	private static Charset  charset = Charsets.UTF_8;
-	private static CharsetDecoder decoder = charset.newDecoder();
+
     
+	private String bodyString;
+	private DynamicByteBuffer body;
+	private int contentLength;
+	
+	public HttpRequest(String[] requestLine, Map<String, String> headers, DynamicByteBuffer  _body) {
+		this.requestLine = new StringBuffer(requestLine[0]).append(' ').append(requestLine[1]).append(' ').append(requestLine[2]).toString();
+		
+		method = HttpVerb.valueOf(requestLine[0]);
+		requestedPath = requestLine[1];
+		version = requestLine[2];
+		this.headers = headers;	
+		body = _body;
+		initKeepAlive();
+		parameters = parseParameters(requestedPath);
+		if (headers.containsKey("content-length")){
+			contentLength = Integer.parseInt(headers.get("content-length").trim());
+		}
+	}
 	
 	public HttpRequest(String requestLine, Map<String, String> headers) {
 		this.requestLine = requestLine;
@@ -50,15 +66,16 @@ public class HttpRequest {
 	
 	public HttpRequest(String requestLine, Map<String, String> headers, String body) {
 		this(requestLine, headers);
-		this.body = body;
+		this.bodyString = body;
 	}
 	
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
-			
+			return new HttpRequestParser(buffer).parseRequestBuffer();
+	/*		
 			String raw =  decoder.decode(buffer).toString();
 			
-			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //TODO fix a better regexp for this
+			String[] headersAndBody = raw.split("\\r\\n\\r\\n"); //
 			String[] headerFields = headersAndBody[0].split("\\r\\n");
 			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");
             
@@ -80,19 +97,21 @@ public class HttpRequest {
 					return new PartialHttpRequest(requestLine, generalHeaders, body);
 				}
 			}
-			return new HttpRequest(requestLine, generalHeaders, body);
+			return new HttpRequest(requestLine, generalHeaders, body);*/
 		} catch (Exception t) {
+			LOG.error("Bad HTTP format", t);
 			return MalFormedHttpRequest.instance;
 		}
 	}
 	
 	public static HttpRequest continueParsing(ByteBuffer buffer, PartialHttpRequest unfinished) {
-		String nextChunk = null;
+
+		return new HttpRequestParser(unfinished, buffer).parseRequestBuffer();		
+/*		String nextChunk = null;
 		try {
 			nextChunk = decoder.decode(buffer).toString();
 		} catch (CharacterCodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOG.error("Bad encoding while reading to request body", e);
 		}
 		unfinished.appendBody(nextChunk);
 		
@@ -101,7 +120,7 @@ public class HttpRequest {
 			return unfinished;
 		} else {
 			return new HttpRequest(unfinished.getRequestLine(), unfinished.getHeaders(), unfinished.getBody());
-		}
+		}*/
 	}
 	
 	public String getRequestLine() {
@@ -112,6 +131,10 @@ public class HttpRequest {
 		return requestedPath;
 	}
     
+	public boolean isFinished(){
+		return true;
+	}
+	
 	public String getVersion() {
 		return version;
 	}
@@ -126,6 +149,10 @@ public class HttpRequest {
 	
 	public HttpVerb getMethod() {
 		return method;
+	}
+	
+	public int getContentLength() {
+		return contentLength;
 	}
 	
 	/**
@@ -146,8 +173,18 @@ public class HttpRequest {
 	}	
 	
 	public String getBody() {
+		if (body != null){
+
+				return new String(body.getByteBuffer().array(), 0, body.getByteBuffer().limit());
+
+		}
+		return bodyString;
+	}
+	
+	public DynamicByteBuffer getBodyBuffer(){
 		return body;
 	}
+	
 	
 	/**
 	 * Returns a collection of all values associated with the provided parameter.
@@ -163,24 +200,28 @@ public class HttpRequest {
 	
 	@Override
 	public String toString() {
-		String result = "METHOD: " + method + "\n";
-		result += "VERSION: " + version + "\n";
-		result += "PATH: " + requestedPath + "\n";
 		
-		result += "--- HEADER --- \n";
+		StringBuilder sb = new StringBuilder();
+		sb.append("METHOD: ").append(method).append("\n");
+		sb.append("VERSION: ").append(version).append("\n");
+		sb.append("PATH: ").append(requestedPath).append("\n");
+		
+		sb.append("--- HEADER --- \n");
 		for (String key : headers.keySet()) {
-			String value = headers.get(key);
-			result += key + ":" + value + "\n";
+			sb.append(key).append(":").append( headers.get(key)).append("\n");
 		}
 		
-		result += "--- PARAMETERS --- \n";
+		sb.append("--- PARAMETERS --- \n");
 		for (String key : parameters.keySet()) {
 			Collection<String> values = parameters.get(key);
 			for (String value : values) {
-				result += key + ":" + value + "\n";
+				sb.append(key).append( ":").append(value).append("\n");
 			}
 		}
-		return result;
+		
+		sb.append("---- BODY ---- \n");
+		sb.append(this.getBody());
+		return sb.toString();
 	}
 	
 	private ImmutableMultimap<String, String> parseParameters(String requestLine) {

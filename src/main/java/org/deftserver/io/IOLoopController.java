@@ -6,6 +6,7 @@ import java.nio.channels.SocketChannel;
 
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.http.HttpResponse;
 
 public interface IOLoopController {
 
@@ -23,5 +24,7 @@ public interface IOLoopController {
 
 	  void addCallback(AsyncCallback callback);
 
+	  void pushResponse(HttpResponse response);
 
+	  void planifyResponse();
 }

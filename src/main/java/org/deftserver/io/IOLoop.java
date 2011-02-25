@@ -25,6 +25,7 @@ import org.deftserver.io.timeout.TimeoutManager;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.MXBeanUtil;
 import org.deftserver.web.AsyncCallback;
+import org.deftserver.web.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,15 +44,18 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
 
 	private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
 	private final CallbackManager cm = new JMXDebuggableCallbackManager();
-
+	private final AsyncResponseQueue responseQueue; 
+	
 	private IOLoop() {
 
 		try {
 			selector = Selector.open();
+			
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
+		responseQueue = new AsyncResponseQueue();
 	}
 
 	public void start() {
@@ -67,9 +71,10 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
 					if (cm.execute()) {
 						selectorTimeout = 0;
 					}
+					responseQueue.sendQueuedResponses();
 					continue;
 				}
-
+				responseQueue.sendQueuedResponses();
 				Iterator<SelectionKey> keys = selector.selectedKeys()
 						.iterator();
 				while (keys.hasNext()) {
@@ -171,6 +176,17 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
 					}
 				});
 		return Lists.newLinkedList(readables);
+	}
+	
+	@Override
+	public void planifyResponse() {
+		responseQueue.planify();
+	}
+	
+	@Override
+	public void pushResponse(HttpResponse response) {
+		responseQueue.pushResponseToSend(response);
+		
 	}
 
 }
