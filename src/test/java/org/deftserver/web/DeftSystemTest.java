@@ -34,10 +34,8 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
-import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.example.kv.KeyValueStore;
 import org.deftserver.example.kv.KeyValueStoreClient;
 import org.deftserver.io.IOLoop;
@@ -257,7 +255,6 @@ public class DeftSystemTest {
 	public static void setup() {
 		Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
 		reqHandlers.put("/", new ExampleRequestHandler());
-		reqHandlers.put("/mySql", new AsyncDbHandler());
 		reqHandlers.put("/w", new WRequestHandler());
 		reqHandlers.put("/ww", new WWRequestHandler());
 		reqHandlers.put("/wwfw", new WWFWRequestHandler());
@@ -272,7 +269,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/no_body", new NoBodyRequestHandler());
 		reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
 		reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
-		reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
+		reqHandlers.put("/keyvalue", new KeyValueStoreExampleRequestHandler());
 		reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
 		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
 		reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
@@ -562,34 +559,6 @@ public class DeftSystemTest {
 	}
 
 	@Test
-	public void asynchronousRequestTest() throws ClientProtocolException, IllegalStateException, IOException {
-		for (int i = 1; i <= 4; i++) {
-			doAsynchronousRequestTest();
-		}
-	}
-
-	private void doAsynchronousRequestTest() throws ClientProtocolException, IOException, IllegalStateException {
-		List<Header> headers = new LinkedList<Header>();
-		headers.add(new BasicHeader("Connection", "Close"));
-		HttpParams params = new BasicHttpParams();
-		params.setParameter("http.default-headers", headers);
-
-		DefaultHttpClient httpclient = new DefaultHttpClient(params);
-		HttpConnectionParams.setConnectionTimeout(params, 40 * 1000);
-		HttpConnectionParams.setSoTimeout(params, 100 * 1000);
-
-		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/mySql");
-		HttpResponse response = httpclient.execute(httpget);
-
-		assertNotNull(response);
-		assertEquals(200, response.getStatusLine().getStatusCode());
-		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
-		assertEquals("OK", response.getStatusLine().getReasonPhrase());
-		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
-		assertEquals("Name: Jim123", payLoad);
-	}
-
-	@Test
 	public void keepAliveRequestTest() throws ClientProtocolException, IOException {
 		List<Header> headers = new LinkedList<Header>();
 		headers.add(new BasicHeader("Connection", "Keep-Alive"));
@@ -828,7 +797,7 @@ public class DeftSystemTest {
 	@Test
 	public void keyValueStoreClientTest() throws ClientProtocolException, IOException {
 		DefaultHttpClient httpclient = new DefaultHttpClient();
-		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/redis");
+		HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/keyvalue");
 		HttpResponse response = httpclient.execute(httpget);
 
 		assertNotNull(response);

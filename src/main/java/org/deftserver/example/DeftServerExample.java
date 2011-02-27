@@ -8,6 +8,7 @@ import org.deftserver.web.HttpServer;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpRequest;
 import org.deftserver.web.http.HttpResponse;
+import org.deftserver.web.http.HttpServerDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,20 +38,18 @@ public class DeftServerExample {
 	public static void main(String[] args) {
 		Map<String, RequestHandler> handlers = Maps.newHashMap();
 		handlers.put("/", new ExampleRequestHandler());
-		handlers.put("/mySql", new AsyncDbHandler());
 		
 		Application application = new Application(handlers);
 		application.setStaticContentDir("static");
 		
-		//HttpServerDescriptor.KEEP_ALIVE_TIMEOUT = 30 * 1000;	// 30s  
-		//HttpServerDescriptor.READ_BUFFER_SIZE = 1500;			// 1500 bytes 
-		//HttpServerDescriptor.WRITE_BUFFER_SIZE = 1500;			// 1500 bytes 
+		HttpServerDescriptor.KEEP_ALIVE_TIMEOUT = 30 * 1000;	// 30s  
+		HttpServerDescriptor.READ_BUFFER_SIZE = 1500;			// 1500 bytes 
+		HttpServerDescriptor.WRITE_BUFFER_SIZE = 1500;			// 1500 bytes 
 		
 
 		logger.debug("Starting up server on port: " + PORT);
 		HttpServer server = new HttpServer(application);
 		server.listen(PORT);
 		IOLoop.INSTANCE.start();
-	
 	}
 }
