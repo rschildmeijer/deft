@@ -120,7 +120,9 @@ public class AsynchronousSocketTest {
 	}
 	
 	private void onReadComplete(String result) {
-		latch.countDown();
+		if ("ROGER".equals(result)) {
+			latch.countDown();
+		}
 		assertEquals("ROGER", result);
 	}
 	

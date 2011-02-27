@@ -8,6 +8,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
 import org.deftserver.util.Closeables;
+import org.deftserver.util.NopAsyncResult;
 import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.AsyncResult;
 import org.slf4j.Logger;
@@ -21,14 +22,17 @@ public class AsynchronousSocket implements IOHandler {
 	
 	private final int DEFAULT_BYTEBUFFER_SIZE = 1024;
 	
+	private final AsyncResult<String> nopAsyncResult = NopAsyncResult.of(String.class).nopAsyncResult;
+	
 	private final SelectableChannel channel;
 	private int interestOps;
 	
 	private String readDelimiter = "";
+	private int readBytes = Integer.MAX_VALUE;
 	
 	private AsyncCallback connectCallback = AsyncCallback.nopCb;
 	private AsyncCallback closeCallback = AsyncCallback.nopCb;
-	private AsyncResult<String> readCallback = NopAsyncStringResult;
+	private AsyncResult<String> readCallback = nopAsyncResult;
 	private AsyncCallback writeCallback = AsyncCallback.nopCb;
 	
 	private final StringBuilder readBuffer = new StringBuilder();
@@ -62,13 +66,8 @@ public class AsynchronousSocket implements IOHandler {
 	 * Close the socket.
 	 */
 	public void close() {
-		try {
-			channel.close();
-			closeCallback.onCallback();
-			closeCallback = AsyncCallback.nopCb;
-		} catch (IOException e) {
-			logger.error("Could not close SocketChannel: {}", e.getMessage());
-		}
+		Closeables.closeQuietly(channel);
+		invokeCloseCallback();
 	}
 	
 	public void setCloseCallback(AsyncCallback ccb) {
@@ -91,8 +90,7 @@ public class AsynchronousSocket implements IOHandler {
 		logger.debug("handle connect...");
 		if (((SocketChannel) channel).isConnectionPending()) {
 			((SocketChannel) channel).finishConnect();
-			connectCallback.onCallback();
-			connectCallback = AsyncCallback.nopCb;
+			invokeConnectCallback();
 			interestOps &= ~SelectionKey.OP_CONNECT;
 			IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
 		}
@@ -107,12 +105,11 @@ public class AsynchronousSocket implements IOHandler {
 		ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BYTEBUFFER_SIZE);
 		int read = ((SocketChannel) key.channel()).read(buffer);
 		if (read == -1) {	// EOF
-			closeCallback.onCallback();
-			closeCallback = AsyncCallback.nopCb;
+			invokeCloseCallback();
 			Closeables.closeQuietly(key.channel());
 			return;
 		}
-		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.UTF_8));
+		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.US_ASCII));
 		logger.debug("readBuffer size: {}", readBuffer.length());
 		checkReadState();
 	}
@@ -136,20 +133,61 @@ public class AsynchronousSocket implements IOHandler {
 		readCallback = rcb;
 		checkReadState();
 	}
+
+	/**
+	 * Reads from the underlaying SelectableChannel until n bytes are read. When it its, the given
+	 * AsyncResult will be invoked.
+	 */
+	public void readBytes(int n, AsyncResult<String> rcb) {
+		logger.debug("readBytes #bytes: {}", n);
+		readBytes = n;
+		readCallback = rcb;
+		checkReadState();
+	}
 	
 	/**
 	 *  If readBuffer contains readDelimiter, client read is finished => invoke readCallback
+	 *  Or if readBytes bytes are read, client read is finished => invoke readCallback
 	 */
 	private void checkReadState() {
 		int index = readBuffer.indexOf(readDelimiter);
 		if (index != -1 && !readDelimiter.isEmpty()) {
 			String result = readBuffer.substring(0, index /*+ readDelimiter.length()*/);
-			readCallback.onSuccess(result);
 			readBuffer.delete(0, index + readDelimiter.length());
 			logger.debug("readBuffer size: {}", readBuffer.length());
 			readDelimiter = "";
-			readCallback = NopAsyncStringResult;
+			invokeReadCallback(result);
+		} else if (readBuffer.length() >= readBytes) {
+			String result = readBuffer.substring(0, readBytes);
+			readBuffer.delete(0, readBytes);
+			logger.debug("readBuffer size: {}", readBuffer.length());
+			readBytes = Integer.MAX_VALUE;
+			invokeReadCallback(result);
 		}
+	}
+
+	private void invokeReadCallback(String result) {
+		AsyncResult<String> cb = readCallback;
+		readCallback = nopAsyncResult;
+		cb.onSuccess(result);
+	}
+	
+	private void invokeWriteCallback() {
+		AsyncCallback cb = writeCallback;
+		writeCallback = AsyncCallback.nopCb;
+		cb.onCallback();
+	}
+	
+	private void invokeCloseCallback() {
+		AsyncCallback cb = closeCallback;
+		closeCallback = AsyncCallback.nopCb;
+		cb.onCallback();
+	}
+	
+	private void invokeConnectCallback() {
+		AsyncCallback cb = connectCallback;
+		connectCallback = AsyncCallback.nopCb;
+		cb.onCallback();
 	}
 
 	/**
@@ -175,8 +213,7 @@ public class AsynchronousSocket implements IOHandler {
 			}
 		} catch (IOException e) {
 			logger.error("IOException during write: {}", e.getMessage());
-			closeCallback.onCallback();
-			closeCallback = AsyncCallback.nopCb;
+			invokeCloseCallback();
 			Closeables.closeQuietly(channel);
 		}
 		writeBuffer.delete(0, written);
@@ -186,19 +223,8 @@ public class AsynchronousSocket implements IOHandler {
 			IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_WRITE);
 		} else {
 			IOLoop.INSTANCE.updateHandler(channel, interestOps &= ~SelectionKey.OP_WRITE);
-			writeCallback.onCallback();
-			writeCallback = AsyncCallback.nopCb;
+			invokeWriteCallback();
 		}
 	}
-
-
-	private static final AsyncResult<String> NopAsyncStringResult = new AsyncResult<String>() {
-
-		@Override public void onFailure(Throwable caught) {}
-		
-		@Override public void onSuccess(String result) {} 
-	
-	};
-
 
 }
