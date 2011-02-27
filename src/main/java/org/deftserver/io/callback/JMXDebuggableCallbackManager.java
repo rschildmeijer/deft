@@ -1,6 +1,8 @@
 package org.deftserver.io.callback;
 
+import java.util.AbstractCollection;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.deftserver.util.MXBeanUtil;
 import org.deftserver.web.AsyncCallback;
@@ -13,7 +15,7 @@ public class JMXDebuggableCallbackManager implements CallbackManager, CallbackMa
 
 	private final Logger logger = LoggerFactory.getLogger(JMXDebuggableCallbackManager.class);
 	
-	private final List<AsyncCallback> callbacks = Lists.newLinkedList();
+	private final AbstractCollection<AsyncCallback> callbacks = new ConcurrentLinkedQueue<AsyncCallback>();
 	
 	{ 	// instance initialization block
 		MXBeanUtil.registerMXBean(this, "org.deftserver.io.callback:type=JMXDebuggableCallbackManager"); 
