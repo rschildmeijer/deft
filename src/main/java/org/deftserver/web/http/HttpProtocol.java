@@ -47,6 +47,7 @@ public class HttpProtocol implements IOHandler {
 	public void handleAccept(SocketChannel clientChannel) throws IOException {
 		Long id = alConnections.incrementAndGet();
 		logger.debug("handle accept on {} #id: {}", clientChannel, id);
+
 //		SocketChannel clientChannel = ((ServerSocketChannel) clientChannel.channel()).accept();
 //		clientChannel.configureBlocking(false);
 		

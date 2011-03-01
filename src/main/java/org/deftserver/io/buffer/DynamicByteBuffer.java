@@ -28,6 +28,12 @@ public class DynamicByteBuffer {
 		backend.put(src);
 	}
 	
+	public void put(byte[] src, int offset, int length) {
+		ensureCapacity(length);
+		backend.put(src, offset, length);
+	}
+	
+	
 	public void prepend(String data) {
 		byte[] bytes = data.getBytes(Charsets.UTF_8);
 		int newSize = bytes.length + backend.position();

@@ -55,7 +55,11 @@ public class HttpResponse {
 		return this;
 	}
 
-	public long flush() {
+	public long flush(){
+		return flush(false);
+	}
+	
+	public long flush(boolean finish) {
 		if (!headersCreated) {
 			String initial = createInitalLineAndHeaders();			
 			responseData.prepend(initial);
@@ -102,7 +106,7 @@ public class HttpResponse {
 			if (!headersCreated) {
 				setEtagAndContentLength();
 			}
-			bytesWritten = flush();
+			bytesWritten = flush(true);
 		}
 		
 		// close (or register for read) iff 
@@ -148,7 +152,7 @@ public class HttpResponse {
 	}
 	
 	public long write(File file) {
-	//	setHeader("Etag", HttpUtil.getEtag(file));
+		setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));
 		long bytesWritten = 0;
 		flush(); // write initial line + headers

@@ -33,8 +33,9 @@ From: abcde@qwert.com
 	private String method = "GET";
 	private String version = "1.1";
 	private String requestedPath = "/";
-	private Map<String, String> headers = new HashMap<String, String>();
+	private Multimap<String, String> headers = HashMultimap.create();
 	private Multimap<String, String> getParameters = HashMultimap.create();
+	private String body;
 	
 	public HttpRequestHelper() {
 		headers.put("Host", "localhost:8080");
@@ -43,11 +44,19 @@ From: abcde@qwert.com
 	}
 	
 	
+	public void setMethod(String method) {
+		this.method = method;
+	}
+	
 	public String getRequestAsString() {
 		String requestLine = createRequestLine();
 		String headerString = createHeaders();
-		//TODO Body
+
+		
 		String request = requestLine + headerString;
+		if (body != null){
+			request += body;
+		}
 		return request;
 	}
 
@@ -61,12 +70,19 @@ From: abcde@qwert.com
 		return ByteBuffer.wrap(getRequestAsBytes());
 	}
 	
-	public String addHeader(String name, String value) {
+	public void setBody(String body){
+		if (body != null){
+			headers.put("Content-Length", body.length()+"");
+			this.body = body;
+		}
+	}
+	
+	public boolean addHeader(String name, String value) {
 		return headers.put(name, value);
 	}
 	
-	public String removeHeader(String name) {
-		return headers.remove(name);
+	public void removeHeader(String name) {
+		  headers.removeAll(name);
 	}
 	
 	public boolean addGetParameter(String name, String value) {
@@ -146,8 +162,9 @@ From: abcde@qwert.com
 	private String createHeaders() {
 		String result = "";
 		for(String headerKey : headers.keySet()) {
-			String headerValue = headers.get(headerKey);
-			result += headerKey + ": " + headerValue + "\r\n"; 
+			for (String headerValue : headers.get(headerKey)){
+				result += headerKey + ": " + headerValue + "\r\n";
+			}
 		}
 		result += "\r\n";
 		return result;

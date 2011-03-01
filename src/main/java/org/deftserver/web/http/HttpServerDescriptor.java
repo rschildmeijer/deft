@@ -21,5 +21,9 @@ public class HttpServerDescriptor {
 	 * Size of the write (send) buffer.
 	 */
 	public static int WRITE_BUFFER_SIZE = 1024;	// 1024 bytes
+	
+	public static int REQUEST_LINE_MAX_SIZE = 500;
+	
+	public static int MAX_HEADER_LINE_COUNT = 30;
 
 }

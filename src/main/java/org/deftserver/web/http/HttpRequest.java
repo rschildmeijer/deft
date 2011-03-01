@@ -23,11 +23,13 @@ public class HttpRequest {
 	
 	private static final Logger LOG = LoggerFactory.getLogger(HttpRequest.class);
 	
+	private static final HttpRequestParser parser = new HttpRequestParser();
+	
 	private final String requestLine;
 	private final HttpVerb method;
 	private final String requestedPath;	// correct name?
 	private final String version; 
-	private Map<String, String> headers;
+	protected Map<String, String> headers;
 	private ImmutableMultimap<String, String> parameters;
 
 	private boolean keepAlive;
@@ -35,7 +37,7 @@ public class HttpRequest {
     
 	private String bodyString;
 	private DynamicByteBuffer body;
-	private int contentLength;
+	protected int contentLength;
 	
 	public HttpRequest(String[] requestLine, Map<String, String> headers, DynamicByteBuffer  _body) {
 		this.requestLine = new StringBuffer(requestLine[0]).append(' ').append(requestLine[1]).append(' ').append(requestLine[2]).toString();
@@ -71,7 +73,7 @@ public class HttpRequest {
 	
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
-			return new HttpRequestParser(buffer).parseRequestBuffer();
+			return parser.parseRequestBuffer(buffer);
 	/*		
 			String raw =  decoder.decode(buffer).toString();
 			
@@ -106,7 +108,7 @@ public class HttpRequest {
 	
 	public static HttpRequest continueParsing(ByteBuffer buffer, PartialHttpRequest unfinished) {
 
-		return new HttpRequestParser(unfinished, buffer).parseRequestBuffer();		
+		return parser.parseRequestBuffer(buffer, unfinished);		
 /*		String nextChunk = null;
 		try {
 			nextChunk = decoder.decode(buffer).toString();
