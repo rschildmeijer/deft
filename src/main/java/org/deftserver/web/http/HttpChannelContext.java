@@ -3,7 +3,8 @@ package org.deftserver.web.http;
 import java.nio.ByteBuffer;
 
 import org.deftserver.io.ChannelContext;
-import org.deftserver.io.buffer.DynamicByteBuffer;
+import org.deftserver.io.IOHandler;
+
 
 public class HttpChannelContext implements ChannelContext<PartialHttpRequest> {
 
@@ -17,9 +18,14 @@ public class HttpChannelContext implements ChannelContext<PartialHttpRequest> {
 	
 	private boolean keepAlive = false;
 	
-	public HttpChannelContext(ByteBuffer buff, Long id) {
-		bufferIn = buff;
+	
+	public HttpChannelContext(Long id) {
 		this.id = id;
+	}
+	
+	public HttpChannelContext(ByteBuffer buff, Long id) {
+		this(id);
+		bufferIn = buff;
 	}
 	
 	public Long getId() {
@@ -57,6 +63,12 @@ public class HttpChannelContext implements ChannelContext<PartialHttpRequest> {
 	
 	public void setContext(PartialHttpRequest req){
 		request = req;
+	}
+	
+	@Override
+	public IOHandler getHandler() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 	

@@ -1,6 +1,9 @@
 package org.deftserver.io;
 
+import static org.deftserver.web.http.HttpServerDescriptor.READ_BUFFER_SIZE;
+
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -35,6 +38,8 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 	
 	private final AsyncResponseQueue responseQueue; 
 	
+	private final ByteBuffer inputBuffer;
+	
 	
 	private static final ThreadLocal<DefaultIOWorkerLoop> tlocal = new ThreadLocal<DefaultIOWorkerLoop>();
 
@@ -44,6 +49,7 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 			tm = new JMXDebuggableTimeoutManager();
 			cm = new JMXDebuggableCallbackManager();
 			responseQueue = new AsyncResponseQueue();
+			inputBuffer = ByteBuffer.allocate(READ_BUFFER_SIZE);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -81,6 +87,16 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
 		return registerChannel(channel, interestOps, attachment);
 	}
 
+	
+	@Override
+	public SelectionKey registerReadHandler(SelectableChannel channel,
+			IOHandler handler, @SuppressWarnings("rawtypes") ChannelContext ctx) {
+		if(ctx.getBufferIn() == null){
+			ctx.setBufferIn(inputBuffer);
+		}
+		return registerChannel(channel, SelectionKey.OP_READ, ctx);
+	}
+	
 	/* (non-Javadoc)
 	 * @see org.deftserver.io.IOLoopController#removeHandler(java.nio.channels.SelectableChannel)
 	 */

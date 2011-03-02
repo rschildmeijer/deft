@@ -17,7 +17,7 @@ public class HttpRequestParser {
 
 	private boolean headersCompleted = false;
 	
-	private HttpRequest result = null;
+
 	
 
 	
@@ -29,7 +29,6 @@ public class HttpRequestParser {
 		HttpParser parser= new HttpParser(buffer);
 		if (result == null){
 			result = parse(parser);
-			
 		}
 		else {
 		    continueParsing(parser,result);

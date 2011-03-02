@@ -12,6 +12,19 @@ public interface IOLoopController {
 
 	  SelectionKey addHandler(SelectableChannel channel,
 			IOHandler handler, int interestOps, Object attachment);
+	  
+	  /**
+	   * Registers Read OPS on the given channel setting the context as attachment
+	   * if the context does not contains a input buffer then the controller 
+	   * will set its default buffer. 
+	   * 
+	   * @param channel
+	   * @param handler
+	   * @param attachment
+	   * @return
+	   */
+	  SelectionKey registerReadHandler(SelectableChannel channel,
+				IOHandler handler, ChannelContext ctx);
 
 	  void removeHandler(SelectableChannel channel);
 

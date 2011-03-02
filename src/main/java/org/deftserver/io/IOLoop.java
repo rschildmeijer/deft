@@ -3,6 +3,7 @@ package org.deftserver.io;
 import static com.google.common.collect.Collections2.transform;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
@@ -123,6 +124,17 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
 			IOHandler handler, int interestOps, Object attachment) {
 		this.handler = handler;
 		return registerChannel(channel, interestOps, attachment);
+	}
+	
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public SelectionKey registerReadHandler(SelectableChannel channel,
+			IOHandler handler, ChannelContext ctx) {
+		if(ctx.getBufferIn() == null){
+			ctx.setBufferIn(ByteBuffer.allocate(1500));
+		}
+		return registerChannel(channel, SelectionKey.OP_READ, ctx);
 	}
 
 	public void removeHandler(SelectableChannel channel) {

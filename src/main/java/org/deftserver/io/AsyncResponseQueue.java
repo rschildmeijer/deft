@@ -3,8 +3,6 @@ package org.deftserver.io;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.deftserver.io.timeout.Timeout;
-import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.http.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
