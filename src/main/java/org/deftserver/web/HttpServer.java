@@ -7,6 +7,7 @@ import java.nio.channels.ServerSocketChannel;
 
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
+import org.deftserver.util.Closeables;
 import org.deftserver.web.http.HttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,12 +25,6 @@ public class HttpServer {
 
 	public HttpServer(Application application) {
 		protocol = new HttpProtocol(application);
-		try {
-			serverChannel = ServerSocketChannel.open();
-			serverChannel.configureBlocking(false);
-		} catch (IOException e) {
-			logger.error("Error creating ServerSocketChannel: {}", e);
-		}
 	}
 
 	/**
@@ -40,6 +35,14 @@ public class HttpServer {
 			throw new IllegalArgumentException("Invalid port number. Valid range: [" + 
 					MIN_PORT_NUMBER + ", " + MAX_PORT_NUMBER + ")");
 		}
+		
+		try {
+			serverChannel = ServerSocketChannel.open();
+			serverChannel.configureBlocking(false);
+		} catch (IOException e) {
+			logger.error("Error creating ServerSocketChannel: {}", e);
+		}
+		
 		InetSocketAddress endpoint = new InetSocketAddress(port);	// use "any" address
 		try {
 			serverChannel.socket().bind(endpoint);
@@ -47,6 +50,14 @@ public class HttpServer {
 			logger.error("Could not bind socket: {}", e);
 		}
 		registerHandler();
+	}
+	
+	/**
+	 * Unbinds the port and shutdown the HTTP server
+	 */
+	public void stop() {
+		logger.debug("Stopping HTTP server");
+		Closeables.closeQuietly(serverChannel);
 	}
 	
 	private void registerHandler() {

@@ -47,6 +47,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -1033,6 +1034,20 @@ public class DeftSystemTest {
 		final String expected = "value1 value2";
 		assertEquals(expected, convertStreamToString(response.getEntity().getContent()).trim());
 		assertEquals(expected.length()+"", response.getFirstHeader("Content-Length").getValue());
+	}
+	
+	@Test
+	public void multipleStartStopCombinations() throws InterruptedException {
+		final HttpServer server = new HttpServer(new Application(Maps.<String, RequestHandler>newHashMap()));
+		
+		final int n = 10;
+		final CountDownLatch latch = new CountDownLatch(n);
+		for (int i = 0; i < n; i++) {
+			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { server.listen(PORT+1); }});
+			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { server.stop(); latch.countDown(); }});
+		}
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());
 	}
 	
 	public String convertStreamToString(InputStream is) throws IOException {
