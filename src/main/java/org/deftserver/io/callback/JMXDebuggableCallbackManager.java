@@ -18,7 +18,7 @@ public class JMXDebuggableCallbackManager implements CallbackManager, CallbackMa
 	private final AbstractCollection<AsyncCallback> callbacks = new ConcurrentLinkedQueue<AsyncCallback>();
 	
 	{ 	// instance initialization block
-		MXBeanUtil.registerMXBean(this, "org.deftserver.io.callback:type=JMXDebuggableCallbackManager"); 
+		MXBeanUtil.registerMXBean(this, "CallbackManager"); 
 	}
 	
 	@Override

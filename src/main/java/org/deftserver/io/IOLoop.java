@@ -49,7 +49,7 @@ public enum IOLoop implements IOLoopMXBean {
 		} catch (IOException e) {
 			logger.error("Could not open selector: {}", e.getMessage());
 		}
-		MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
+		MXBeanUtil.registerMXBean(this, "IOLoop");
 	}
 	
 	public void start() {

@@ -21,7 +21,7 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 	private final Map<SelectableChannel, DecoratedTimeout> index = Maps.newHashMap();
 
 	{ 	// instance initialization block
-		MXBeanUtil.registerMXBean(this, "org.deftserver.io.timeout:type=JMXDebuggableTimeoutManager"); 
+		MXBeanUtil.registerMXBean(this, "TimeoutManager"); 
 	}
 
 	@Override
