@@ -72,7 +72,7 @@ public class HttpRequest {
 	
 	public static HttpRequest of(ByteBuffer buffer) {
 		try {
-			String raw = new String(buffer.array(), 0, buffer.limit(), Charsets.US_ASCII);
+			String raw = new String(buffer.array(), 0, buffer.limit(), Charsets.ISO_8859_1);
 			String[] headersAndBody = RAW_VALUE_PATTERN.split(raw); 
 			String[] headerFields = HEADERS_BODY_PATTERN.split(headersAndBody[0]);
 			headerFields = ArrayUtil.dropFromEndWhile(headerFields, "");

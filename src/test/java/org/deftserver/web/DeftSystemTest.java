@@ -31,6 +31,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
@@ -904,23 +905,23 @@ public class DeftSystemTest {
 		assertEquals(_450KBResponseEntityRequestHandler.entity, payLoad);
 	}
 	
-//	@Test
-//	public void smallHttpPostBodyTest() throws ClientProtocolException, IOException {
-//		final String body = "Roger Schildmeijer";
-//		
-//		DefaultHttpClient httpclient = new DefaultHttpClient();
-//		HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
-//		httppost.setEntity(new StringEntity(body));
-//		HttpResponse response = httpclient.execute(httppost);	
-//		
-//		assertNotNull(response);
-//		assertEquals(200, response.getStatusLine().getStatusCode());
-//		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
-//		assertEquals("OK", response.getStatusLine().getReasonPhrase());
-//		assertEquals(5, response.getAllHeaders().length);
-//		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
-//		assertEquals(body, payLoad);
-//	}
+	@Test
+	public void smallHttpPostBodyWithUnusualCharactersTest() throws ClientProtocolException, IOException {
+		final String body = "Räger Schildmäijår";
+		
+		DefaultHttpClient httpclient = new DefaultHttpClient();
+		HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
+		httppost.setEntity(new StringEntity(body));	// HTTP 1.1 says that the default charset is ISO-8859-1
+		HttpResponse response = httpclient.execute(httppost);	
+		
+		assertNotNull(response);
+		assertEquals(200, response.getStatusLine().getStatusCode());
+		assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine().getProtocolVersion());
+		assertEquals("OK", response.getStatusLine().getReasonPhrase());
+		assertEquals(5, response.getAllHeaders().length);
+		String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
+		assertEquals(body, payLoad);
+	}
 	
 	@Test
 	public void smallHttpPostBodyTest() throws ClientProtocolException, IOException, InterruptedException {
