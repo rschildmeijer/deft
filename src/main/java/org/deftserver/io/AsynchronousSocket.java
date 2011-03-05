@@ -1,5 +1,6 @@
 package org.deftserver.io;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -38,9 +39,11 @@ public class AsynchronousSocket implements IOHandler {
 	private final StringBuilder readBuffer = new StringBuilder();
 	private final StringBuilder writeBuffer = new StringBuilder();
 	
+	private boolean reachedEOF = false;
+	
 	public AsynchronousSocket(SelectableChannel channel) {
 		this.channel = channel;
-		interestOps = /*SelectionKey.OP_ACCEPT | */SelectionKey.OP_CONNECT;
+		interestOps = SelectionKey.OP_CONNECT;
 		if (channel instanceof SocketChannel && (((SocketChannel) channel).isConnected())) {
 			interestOps |= SelectionKey.OP_READ;
 		}
@@ -105,11 +108,11 @@ public class AsynchronousSocket implements IOHandler {
 		ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BYTEBUFFER_SIZE);
 		int read = ((SocketChannel) key.channel()).read(buffer);
 		if (read == -1) {	// EOF
-			invokeCloseCallback();
-			Closeables.closeQuietly(key.channel());
+			reachedEOF = true;
+			IOLoop.INSTANCE.updateHandler(channel, interestOps &= ~SelectionKey.OP_READ);
 			return;
 		}
-		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.US_ASCII));
+		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.ISO_8859_1));
 		logger.debug("readBuffer size: {}", readBuffer.length());
 		checkReadState();
 	}
@@ -146,30 +149,41 @@ public class AsynchronousSocket implements IOHandler {
 	}
 	
 	/**
-	 *  If readBuffer contains readDelimiter, client read is finished => invoke readCallback
-	 *  Or if readBytes bytes are read, client read is finished => invoke readCallback
+	 *  If readBuffer contains readDelimiter, client read is finished => invoke readCallback (onSuccess)
+	 *  Or if readBytes bytes are read, client read is finished => invoke readCallback (onSuccess)
+	 *  Of if end-of-stream is reached => invoke readCallback (onFailure)
 	 */
 	private void checkReadState() {
+		if (reachedEOF) {
+			invokeReadFailureCallback(new EOFException("Reached end-of-stream"));
+			return;
+		}
 		int index = readBuffer.indexOf(readDelimiter);
 		if (index != -1 && !readDelimiter.isEmpty()) {
 			String result = readBuffer.substring(0, index /*+ readDelimiter.length()*/);
 			readBuffer.delete(0, index + readDelimiter.length());
 			logger.debug("readBuffer size: {}", readBuffer.length());
 			readDelimiter = "";
-			invokeReadCallback(result);
+			invokeReadSuccessfulCallback(result);
 		} else if (readBuffer.length() >= readBytes) {
 			String result = readBuffer.substring(0, readBytes);
 			readBuffer.delete(0, readBytes);
 			logger.debug("readBuffer size: {}", readBuffer.length());
 			readBytes = Integer.MAX_VALUE;
-			invokeReadCallback(result);
+			invokeReadSuccessfulCallback(result);
 		}
 	}
 
-	private void invokeReadCallback(String result) {
+	private void invokeReadSuccessfulCallback(String result) {
 		AsyncResult<String> cb = readCallback;
 		readCallback = nopAsyncResult;
 		cb.onSuccess(result);
+	}
+	
+	private void invokeReadFailureCallback(Exception e) {
+		AsyncResult<String> cb = readCallback;
+		readCallback = nopAsyncResult;
+		cb.onFailure(e);
 	}
 	
 	private void invokeWriteCallback() {
