@@ -6,6 +6,12 @@ import com.google.common.collect.Maps;
 
 public class HttpResponse {
 	
+	private final long requestTime;
+	
+	public HttpResponse(long requestStarted) {
+		requestTime = System.currentTimeMillis() - requestStarted;
+	}
+	
 	private String statusLine;
 	private final Map<String, String> headers = Maps.newHashMap();
 	private String body;
@@ -34,10 +40,17 @@ public class HttpResponse {
 		return body;
 	}
 	
+	/**
+	 * @return The total execution time of the request/response round trip.
+	 */
+	public long getRequestTime() {
+		return requestTime;
+	}
+	
 	@Override
 	public String toString() {
 		return "HttpResponse [body=" + body + ", headers=" + headers
-				+ "\n, statusLine=" + statusLine + "]";
+				+ "\n, statusLine=" + statusLine + "]\n" + ", request time: " + requestTime +"ms";
 	}
 	
 }

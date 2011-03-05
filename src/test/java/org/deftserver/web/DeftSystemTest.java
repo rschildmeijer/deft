@@ -9,9 +9,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -44,6 +46,7 @@ import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpException;
 import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.client.AsynchronousHttpClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -1050,6 +1053,57 @@ public class DeftSystemTest {
 		latch.await(5, TimeUnit.SECONDS);
 		assertEquals(0, latch.getCount());
 	}
+	
+	@Test
+	public void connectToUnresolvableAddressUsingAsynchronousHttpClient() throws InterruptedException {
+		final String unresolvableAddress = "http://ttasfdqwertyuiop.se./start";
+		final CountDownLatch latch = new CountDownLatch(1);
+		final AsynchronousHttpClient client = new AsynchronousHttpClient();
+		final AsyncCallback runByIOLoop = new AsyncCallback() {
+
+			public void onCallback() {
+				client.fetch(unresolvableAddress, new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+					public void onSuccess(org.deftserver.web.http.client.HttpResponse result) { client.close(); }
+
+					public void onFailure(Throwable caught) { 
+						if (caught instanceof UnresolvedAddressException) latch.countDown();
+						client.close();
+					}
+				});
+			}
+		};
+		IOLoop.INSTANCE.addCallback(runByIOLoop);
+		
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());
+	}
+
+	@Test
+	public void connectToUnconnectableAddressUsingAsynchronousHttpClient() throws InterruptedException {
+		final String unconnectableAddress = "http://localhost:8039/start";
+		final CountDownLatch latch = new CountDownLatch(1);
+		final AsynchronousHttpClient client = new AsynchronousHttpClient();
+		final AsyncCallback runByIOLoop = new AsyncCallback() {
+
+			public void onCallback() {
+				client.fetch(unconnectableAddress, new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+					public void onSuccess(org.deftserver.web.http.client.HttpResponse result) { client.close(); }
+
+					public void onFailure(Throwable caught) { 
+						if (caught instanceof ConnectException) latch.countDown();
+						client.close();
+					}
+				});
+			}
+		};
+		IOLoop.INSTANCE.addCallback(runByIOLoop);
+		
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());
+	}
+	
 	
 	public String convertStreamToString(InputStream is) throws IOException {
 		if (is != null) {

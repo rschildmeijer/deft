@@ -2,11 +2,13 @@ package org.deftserver.io;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 
 import org.deftserver.util.Closeables;
 import org.deftserver.util.NopAsyncResult;
@@ -23,7 +25,8 @@ public class AsynchronousSocket implements IOHandler {
 	
 	private final int DEFAULT_BYTEBUFFER_SIZE = 1024;
 	
-	private final AsyncResult<String> nopAsyncResult = NopAsyncResult.of(String.class).nopAsyncResult;
+	private final AsyncResult<String> nopAsyncStringResult = NopAsyncResult.of(String.class).nopAsyncResult;
+	private final AsyncResult<Boolean> nopAsyncBooleanResult = NopAsyncResult.of(Boolean.class).nopAsyncResult;
 	
 	private final SelectableChannel channel;
 	private int interestOps;
@@ -31,9 +34,9 @@ public class AsynchronousSocket implements IOHandler {
 	private String readDelimiter = "";
 	private int readBytes = Integer.MAX_VALUE;
 	
-	private AsyncCallback connectCallback = AsyncCallback.nopCb;
+	private AsyncResult<Boolean> connectCallback = nopAsyncBooleanResult;
 	private AsyncCallback closeCallback = AsyncCallback.nopCb;
-	private AsyncResult<String> readCallback = nopAsyncResult;
+	private AsyncResult<String> readCallback = nopAsyncStringResult;
 	private AsyncCallback writeCallback = AsyncCallback.nopCb;
 	
 	private final StringBuilder readBuffer = new StringBuilder();
@@ -53,7 +56,7 @@ public class AsynchronousSocket implements IOHandler {
 	/**
 	 * Connects to the given host port tuple and invokes the given callback when a successful connection is established.
 	 */
-	public void connect(String host, int port, AsyncCallback ccb) {
+	public void connect(String host, int port, AsyncResult<Boolean> ccb) {
 		IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_CONNECT);
 		connectCallback = ccb;
 		if (channel instanceof SocketChannel) {
@@ -61,6 +64,10 @@ public class AsynchronousSocket implements IOHandler {
 				((SocketChannel) channel).connect(new InetSocketAddress(host, port));
 			} catch (IOException e) {
 				logger.error("Failed to connect to: {}, message: {} ", host, e.getMessage());
+				invokeConnectFailureCallback(e);
+			} catch (UnresolvedAddressException e) {
+				logger.warn("Unresolvable host: {}", host);
+				invokeConnectFailureCallback(e);
 			}
 		}
 	}
@@ -91,11 +98,17 @@ public class AsynchronousSocket implements IOHandler {
 	@Override
 	public void handleConnect(SelectionKey key) throws IOException {
 		logger.debug("handle connect...");
-		if (((SocketChannel) channel).isConnectionPending()) {
-			((SocketChannel) channel).finishConnect();
-			invokeConnectCallback();
-			interestOps &= ~SelectionKey.OP_CONNECT;
-			IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
+		SocketChannel sc = (SocketChannel) channel;
+		if (sc.isConnectionPending()) {
+			try {
+				sc.finishConnect();
+				invokeConnectSuccessfulCallback();
+				interestOps &= ~SelectionKey.OP_CONNECT;
+				IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
+			} catch (ConnectException e) {
+				logger.warn("Connect failed: {}", e.getMessage());
+				invokeConnectFailureCallback(e);
+			}
 		}
 	}
 	
@@ -176,13 +189,13 @@ public class AsynchronousSocket implements IOHandler {
 
 	private void invokeReadSuccessfulCallback(String result) {
 		AsyncResult<String> cb = readCallback;
-		readCallback = nopAsyncResult;
+		readCallback = nopAsyncStringResult;
 		cb.onSuccess(result);
 	}
 	
 	private void invokeReadFailureCallback(Exception e) {
 		AsyncResult<String> cb = readCallback;
-		readCallback = nopAsyncResult;
+		readCallback = nopAsyncStringResult;
 		cb.onFailure(e);
 	}
 	
@@ -198,10 +211,16 @@ public class AsynchronousSocket implements IOHandler {
 		cb.onCallback();
 	}
 	
-	private void invokeConnectCallback() {
-		AsyncCallback cb = connectCallback;
-		connectCallback = AsyncCallback.nopCb;
-		cb.onCallback();
+	private void invokeConnectSuccessfulCallback() {
+		AsyncResult<Boolean> cb = connectCallback;
+		connectCallback = nopAsyncBooleanResult;
+		cb.onSuccess(true);
+	}
+	
+	private void invokeConnectFailureCallback(Exception e) {
+		AsyncResult<Boolean> cb = connectCallback;
+		connectCallback = nopAsyncBooleanResult;
+		cb.onFailure(e);;
 	}
 
 	/**

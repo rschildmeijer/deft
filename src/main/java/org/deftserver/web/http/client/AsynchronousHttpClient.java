@@ -25,6 +25,7 @@ public class AsynchronousHttpClient {
 	private AsynchronousSocket socket;
 	
 	private HttpRequest request;
+	private long requestStarted;
 	private HttpResponse response;
 	private AsyncResult<HttpResponse> responseCallback;
 	
@@ -54,6 +55,7 @@ public class AsynchronousHttpClient {
 	}
 	
 	private void doFetch(AsyncResult<HttpResponse> cb) {
+		requestStarted = System.currentTimeMillis();
 		try {
 			socket = new AsynchronousSocket(SocketChannel.open().configureBlocking(false));
 		} catch (IOException e) {
@@ -64,8 +66,11 @@ public class AsynchronousHttpClient {
 		port = port == -1 ? 80 : port;
 		socket.connect(
 				request.getURL().getHost(), 
-				port, 
-				new AsyncCallback() { public void onCallback() { onConnect(); }}
+				port,
+				new AsyncResult<Boolean>() {
+					public void onFailure(Throwable t) { responseCallback.onFailure(t); }
+					public void onSuccess(Boolean result) { onConnect(); }
+				}
 		);
 		startTimeout();
 	}
@@ -135,7 +140,7 @@ public class AsynchronousHttpClient {
 	private void onHeaders(String result) {
 		logger.debug("headers: {}", result);
 		cancelTimeout();
-		response = new HttpResponse();
+		response = new HttpResponse(requestStarted);
 		String[] headers = result.split("\r\n");
 		response.setStatuLine(headers[0]);	// first entry contains status line (e.g. HTTP/1.1 200 OK)
 		for (int i = 1; i < headers.length; i++) {

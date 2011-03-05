@@ -78,7 +78,7 @@ public enum IOLoop implements IOLoopMXBean {
 					if (key.isConnectable()) {
 						handler.handleConnect(key);
 					}
-					if (key.isReadable()) {
+					if (key.isValid() && key.isReadable()) {
 						handler.handleRead(key);
 					}
 					if (key.isValid() && key.isWritable()) {

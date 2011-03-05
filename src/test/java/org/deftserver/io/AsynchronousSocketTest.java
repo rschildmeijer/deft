@@ -95,7 +95,10 @@ public class AsynchronousSocketTest {
 	
 	@Test
 	public void connectWriteAndReadCallbackTest() throws InterruptedException, IOException {
-		AsyncCallback ccb = new AsyncCallback() { @Override public void onCallback() { onConnect(); }};
+		AsyncResult<Boolean> ccb = new AsyncResult<Boolean>() {
+			public void onFailure(Throwable caught) { }
+			public void onSuccess(Boolean result) { onConnect(); }
+		};
 		socket.connect(HOST, PORT, ccb);
 		
 		latch.await(5, TimeUnit.SECONDS);
