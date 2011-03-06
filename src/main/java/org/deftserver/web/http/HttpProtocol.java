@@ -44,7 +44,7 @@ public class HttpProtocol implements IOHandler {
         // clientChannel.configureBlocking(false);
 
         IOLoopFactory.getLoopController().registerReadHandler(clientChannel,
-                this, new HttpChannelContext(id));
+                this, new HttpChannelContext(this, id));
     }
 
     @Override

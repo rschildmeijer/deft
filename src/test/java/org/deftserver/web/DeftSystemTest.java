@@ -298,7 +298,7 @@ public class DeftSystemTest {
         reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
         reqHandlers.put("/static_file_handler",
                 new UserDefinedStaticContentHandler());
-        // reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
+        reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
         reqHandlers
                 .put("/450kb_body", new _450KBResponseEntityRequestHandler());
         reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
@@ -927,22 +927,25 @@ public class DeftSystemTest {
         assertTrue(latch.getCount() == 0);
     }
 
-    /*
-     * @Test public void keyValueStoreClientTest() throws
-     * ClientProtocolException, IOException { DefaultHttpClient httpclient = new
-     * DefaultHttpClient(); HttpGet httpget = new HttpGet("http://localhost:" +
-     * PORT + "/redis"); HttpResponse response = httpclient.execute(httpget);
-     * 
-     * assertNotNull(response); assertEquals(200,
-     * response.getStatusLine().getStatusCode()); assertEquals(new
-     * ProtocolVersion("HTTP", 1, 1),
-     * response.getStatusLine().getProtocolVersion()); assertEquals("OK",
-     * response.getStatusLine().getReasonPhrase()); assertEquals(5,
-     * response.getAllHeaders().length); assertEquals("7",
-     * response.getFirstHeader("Content-Length").getValue());
-     * assertEquals("kickass",
-     * convertStreamToString(response.getEntity().getContent()).trim()); }
-     */
+    @Test
+    public void keyValueStoreClientTest() throws ClientProtocolException,
+            IOException {
+        DefaultHttpClient httpclient = new
+
+        DefaultHttpClient();
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/redis");
+        HttpResponse response = httpclient.execute(httpget);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
+                .getStatusLine().getProtocolVersion());
+        assertEquals("OK", response.getStatusLine().getReasonPhrase());
+        assertEquals(4, response.getAllHeaders().length);
+        assertEquals("7", response.getFirstHeader("Content-Length").getValue());
+        assertEquals("kickass",
+                convertStreamToString(response.getEntity().getContent()).trim());
+    }
 
     // ning === http://github.com/ning/async-http-client
     @Test
@@ -1063,6 +1066,7 @@ public class DeftSystemTest {
         assertEquals(_450KBResponseEntityRequestHandler.entity, payLoad);
     }
 
+    //
     // @Test
     // public void smallHttpPostBodyTest() throws ClientProtocolException,
     // IOException {
@@ -1075,12 +1079,12 @@ public class DeftSystemTest {
     //
     // assertNotNull(response);
     // assertEquals(200, response.getStatusLine().getStatusCode());
-    // assertEquals(new ProtocolVersion("HTTP", 1, 1),
-    // response.getStatusLine().getProtocolVersion());
+    // assertEquals(new ProtocolVersion("HTTP", 1, 1), response
+    // .getStatusLine().getProtocolVersion());
     // assertEquals("OK", response.getStatusLine().getReasonPhrase());
     // assertEquals(5, response.getAllHeaders().length);
-    // String payLoad =
-    // convertStreamToString(response.getEntity().getContent()).trim();
+    // String payLoad = convertStreamToString(
+    // response.getEntity().getContent()).trim();
     // assertEquals(body, payLoad);
     // }
 
