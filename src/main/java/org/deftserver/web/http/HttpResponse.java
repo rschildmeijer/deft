@@ -97,9 +97,9 @@ public class HttpResponse {
             }
 
             HttpChannelContext ctx = (HttpChannelContext) key.attachment();
-            if (ctx != null) {
-                ctx.setBufferOut(responseData.getByteBuffer());
-            }
+
+            ctx.setBufferOut(responseData.getByteBuffer());
+
         } else {
             responseData.clear();
         }
@@ -132,9 +132,7 @@ public class HttpResponse {
         // }
 
         HttpChannelContext ctx = (HttpChannelContext) key.attachment();
-        if (ctx == null) {
-            return bytesWritten;
-        }
+
         if (ctx.getBufferOut() == null) {
             protocol.closeOrRegisterForRead(key);
         } else if (!ctx.getBufferOut().hasRemaining()) {
