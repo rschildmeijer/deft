@@ -64,15 +64,15 @@ public class AsynchronousHttpClient {
 		responseCallback = cb;
 		int port = request.getURL().getPort();
 		port = port == -1 ? 80 : port;
+		startTimeout();
 		socket.connect(
 				request.getURL().getHost(), 
 				port,
 				new AsyncResult<Boolean>() {
-					public void onFailure(Throwable t) { responseCallback.onFailure(t); }
+					public void onFailure(Throwable t) { onConnectFailure(t); }
 					public void onSuccess(Boolean result) { onConnect(); }
 				}
 		);
-		startTimeout();
 	}
 	
 	public void close() {
@@ -81,6 +81,7 @@ public class AsynchronousHttpClient {
 	}
 	
 	private void startTimeout() {
+		logger.debug("start timeout...");
 		timeout = new Timeout(
 				System.currentTimeMillis() + TIMEOUT, 
 				new AsyncCallback() { public void onCallback() { onTimeout(); } }
@@ -89,6 +90,7 @@ public class AsynchronousHttpClient {
 	}
 	
 	private void cancelTimeout() {
+		logger.debug("cancel timeout...");
 		timeout.cancel();
 		timeout = null;
 	}
@@ -109,6 +111,15 @@ public class AsynchronousHttpClient {
 				makeRequestLineAndHeaders(), 
 				new AsyncCallback() { public void onCallback() { onWriteComplete(); }}
 		);
+	}
+	
+	private void onConnectFailure(Throwable t) {
+		logger.debug("Connect failed...");
+		cancelTimeout();
+		AsyncResult<HttpResponse> cb = responseCallback;
+		responseCallback = nopAsyncResult;
+		cb.onFailure(t);
+		close();
 	}
 
 	/**
