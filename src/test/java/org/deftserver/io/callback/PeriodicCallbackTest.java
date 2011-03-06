@@ -25,8 +25,8 @@ public class PeriodicCallbackTest {
 		AsyncCallback cb = new AsyncCallback() {
 			@Override public void onCallback() { latch.countDown(); }
 		};
-		PeriodicCallback pcb = new PeriodicCallback(cb, period);
-		pcb.start();
+		final PeriodicCallback pcb = new PeriodicCallback(cb, period);
+		IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { pcb.start(); }});
 		
 		latch.await(5, TimeUnit.SECONDS);
 		pcb.cancel();
