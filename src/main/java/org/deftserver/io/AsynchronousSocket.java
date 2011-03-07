@@ -21,15 +21,12 @@ import com.google.common.base.Charsets;
 
 public class AsynchronousSocket implements IOHandler {
 
-    private static final Logger logger = LoggerFactory
-            .getLogger(AsynchronousSocket.class);
+    private static final Logger logger = LoggerFactory.getLogger(AsynchronousSocket.class);
 
     private final int DEFAULT_BYTEBUFFER_SIZE = 1024;
 
-    private final AsyncResult<String> nopAsyncStringResult = NopAsyncResult
-            .of(String.class).nopAsyncResult;
-    private final AsyncResult<Boolean> nopAsyncBooleanResult = NopAsyncResult
-            .of(Boolean.class).nopAsyncResult;
+    private final AsyncResult<String> nopAsyncStringResult = NopAsyncResult.of(String.class).nopAsyncResult;
+    private final AsyncResult<Boolean> nopAsyncBooleanResult = NopAsyncResult.of(Boolean.class).nopAsyncResult;
 
     private final SelectableChannel channel;
     private int interestOps;
@@ -50,12 +47,11 @@ public class AsynchronousSocket implements IOHandler {
     public AsynchronousSocket(SelectableChannel channel) {
         this.channel = channel;
         interestOps = SelectionKey.OP_CONNECT;
-        if (channel instanceof SocketChannel
-                && (((SocketChannel) channel).isConnected())) {
+        if (channel instanceof SocketChannel && (((SocketChannel) channel).isConnected())) {
             interestOps |= SelectionKey.OP_READ;
         }
-        IOLoopFactory.getLoopController().addHandler(channel, this,
-                interestOps, null);
+        IOLoopFactory.getLoopController().addHandler(channel, this, interestOps,
+                new DefaultChannelContext(this));
     }
 
     /**
@@ -68,11 +64,9 @@ public class AsynchronousSocket implements IOHandler {
         connectCallback = ccb;
         if (channel instanceof SocketChannel) {
             try {
-                ((SocketChannel) channel).connect(new InetSocketAddress(host,
-                        port));
+                ((SocketChannel) channel).connect(new InetSocketAddress(host, port));
             } catch (IOException e) {
-                logger.error("Failed to connect to: {}, message: {} ", host,
-                        e.getMessage());
+                logger.error("Failed to connect to: {}, message: {} ", host, e.getMessage());
                 invokeConnectFailureCallback(e);
             } catch (UnresolvedAddressException e) {
                 logger.warn("Unresolvable host: {}", host);
@@ -96,8 +90,10 @@ public class AsynchronousSocket implements IOHandler {
     /**
      * Should only be invoked by the IOLoop
      */
-    public void handleAccept(SocketChannel clientChannel) throws IOException {
-    };
+    @Override
+    public void handleAccept(SocketChannel key) throws IOException {
+        logger.debug("handle accept...");
+    }
 
     /**
      * Should only be invoked by the IOLoop
@@ -134,8 +130,7 @@ public class AsynchronousSocket implements IOHandler {
                     interestOps &= ~SelectionKey.OP_READ);
             return;
         }
-        readBuffer.append(new String(buffer.array(), 0, buffer.position(),
-                Charsets.ISO_8859_1));
+        readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.ISO_8859_1));
         logger.debug("readBuffer size: {}", readBuffer.length());
         checkReadState();
     }
@@ -259,8 +254,8 @@ public class AsynchronousSocket implements IOHandler {
         int written = 0;
         try {
             if (((SocketChannel) channel).isConnected()) {
-                written = ((SocketChannel) channel).write(ByteBuffer
-                        .wrap(writeBuffer.toString().getBytes()));
+                written = ((SocketChannel) channel).write(ByteBuffer.wrap(writeBuffer.toString()
+                        .getBytes()));
             }
         } catch (IOException e) {
             logger.error("IOException during write: {}", e.getMessage());

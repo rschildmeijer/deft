@@ -39,7 +39,6 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
-import org.deftserver.example.AsyncDbHandler;
 import org.deftserver.example.kv.KeyValueStore;
 import org.deftserver.example.kv.KeyValueStoreClient;
 import org.deftserver.io.IOLoop;
@@ -167,8 +166,7 @@ public class DeftSystemTest {
         }
     }
 
-    private static class ThrowingHttpExceptionRequestHandler extends
-            RequestHandler {
+    private static class ThrowingHttpExceptionRequestHandler extends RequestHandler {
         @Override
         public void get(org.deftserver.web.http.HttpRequest request,
                 org.deftserver.web.http.HttpResponse response) {
@@ -176,8 +174,7 @@ public class DeftSystemTest {
         }
     }
 
-    private static class AsyncThrowingHttpExceptionRequestHandler extends
-            RequestHandler {
+    private static class AsyncThrowingHttpExceptionRequestHandler extends RequestHandler {
         @Asynchronous
         @Override
         public void get(org.deftserver.web.http.HttpRequest request,
@@ -188,16 +185,14 @@ public class DeftSystemTest {
 
     public static class NoBodyRequestHandler extends RequestHandler {
         @Override
-        public void get(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.setStatusCode(200);
         }
     }
 
     public static class MovedPermanentlyRequestHandler extends RequestHandler {
         @Override
-        public void get(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.setStatusCode(301);
             response.setHeader("Location", "/");
         }
@@ -205,17 +200,15 @@ public class DeftSystemTest {
 
     public static class UserDefinedStaticContentHandler extends RequestHandler {
         @Override
-        public void get(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.write(new File("src/test/resources/test.txt"));
         }
     }
 
-    public static class KeyValueStoreExampleRequestHandler extends
-            RequestHandler {
+    public static class KeyValueStoreExampleRequestHandler extends RequestHandler {
 
-        private final KeyValueStoreClient client = new KeyValueStoreClient(
-                KeyValueStore.HOST, KeyValueStore.PORT);
+        private final KeyValueStoreClient client = new KeyValueStoreClient(KeyValueStore.HOST,
+                KeyValueStore.PORT);
 
         public KeyValueStoreExampleRequestHandler() {
             new KeyValueStore().start();
@@ -224,8 +217,7 @@ public class DeftSystemTest {
 
         @Override
         @Asynchronous
-        public void get(HttpRequest request,
-                final org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, final org.deftserver.web.http.HttpResponse response) {
             client.get("deft", new AsyncResult<String>() {
                 @Override
                 public void onFailure(Throwable caught) { /* ignore */
@@ -240,8 +232,7 @@ public class DeftSystemTest {
 
     }
 
-    public static class _450KBResponseEntityRequestHandler extends
-            RequestHandler {
+    public static class _450KBResponseEntityRequestHandler extends RequestHandler {
         public static String entity;
 
         static {
@@ -254,16 +245,14 @@ public class DeftSystemTest {
         }
 
         @Override
-        public void get(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.write(entity);
         }
     }
 
     public static class EchoingPostBodyRequestHandler extends RequestHandler {
         @Override
-        public void post(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void post(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.write(request.getBody());
         }
     }
@@ -271,8 +260,7 @@ public class DeftSystemTest {
     public static class AuthenticatedRequestHandler extends RequestHandler {
         @Override
         @Authenticated
-        public void get(HttpRequest request,
-                org.deftserver.web.http.HttpResponse response) {
+        public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
             response.write(request.getHeader("user"));
         }
 
@@ -286,8 +274,7 @@ public class DeftSystemTest {
         @Override
         public void get(org.deftserver.web.http.HttpRequest request,
                 org.deftserver.web.http.HttpResponse response) {
-            response.write(request.getParameter("key1") + " "
-                    + request.getParameter("key2"));
+            response.write(request.getParameter("key1") + " " + request.getParameter("key2"));
         }
     }
 
@@ -295,7 +282,6 @@ public class DeftSystemTest {
     public static void setup() {
         Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
         reqHandlers.put("/", new ExampleRequestHandler());
-        reqHandlers.put("/mySql", new AsyncDbHandler());
         reqHandlers.put("/w", new WRequestHandler());
         reqHandlers.put("/ww", new WWRequestHandler());
         reqHandlers.put("/wwfw", new WWFWRequestHandler());
@@ -304,18 +290,14 @@ public class DeftSystemTest {
         reqHandlers.put("/delete", new DeleteRequestHandler());
         reqHandlers.put("/post", new PostRequestHandler());
         reqHandlers.put("/put", new PutRequestHandler());
-        reqHandlers.put("/capturing/([0-9]+)",
-                new CapturingRequestRequestHandler());
+        reqHandlers.put("/capturing/([0-9]+)", new CapturingRequestRequestHandler());
         reqHandlers.put("/throw", new ThrowingHttpExceptionRequestHandler());
-        reqHandlers.put("/async_throw",
-                new AsyncThrowingHttpExceptionRequestHandler());
+        reqHandlers.put("/async_throw", new AsyncThrowingHttpExceptionRequestHandler());
         reqHandlers.put("/no_body", new NoBodyRequestHandler());
         reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
-        reqHandlers.put("/static_file_handler",
-                new UserDefinedStaticContentHandler());
+        reqHandlers.put("/static_file_handler", new UserDefinedStaticContentHandler());
         reqHandlers.put("/keyvalue", new KeyValueStoreExampleRequestHandler());
-        reqHandlers
-                .put("/450kb_body", new _450KBResponseEntityRequestHandler());
+        reqHandlers.put("/450kb_body", new _450KBResponseEntityRequestHandler());
         reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
         reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
         reqHandlers.put("/query_params", new QueryParamsRequestHandler());
@@ -347,13 +329,11 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void simpleGetRequestTest() throws ClientProtocolException,
-            IOException {
+    public void simpleGetRequestTest() throws ClientProtocolException, IOException {
         doSimpleGetRequest();
     }
 
-    private void doSimpleGetRequest() throws ClientProtocolException,
-            IOException {
+    private void doSimpleGetRequest() throws ClientProtocolException, IOException {
         List<Header> headers = new LinkedList<Header>();
         headers.add(new BasicHeader("Connection", "Close"));
         HttpParams params = new BasicHttpParams();
@@ -362,12 +342,12 @@ public class DeftSystemTest {
         HttpClient httpclient = new DefaultHttpClient(params);
         HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
         HttpResponse response = httpclient.execute(httpget);
-        List<String> expectedHeaders = Arrays.asList(new String[] { "Server",
-                "Date", "Content-Length", "Connection" });
+        List<String> expectedHeaders = Arrays.asList(new String[] { "Server", "Date",
+                "Content-Length", "Connection" });
 
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
 
         assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
@@ -376,10 +356,10 @@ public class DeftSystemTest {
             assertTrue(response.getFirstHeader(header) != null);
         }
 
-        assertEquals(expectedPayload,
-                convertStreamToString(response.getEntity().getContent()).trim());
-        assertEquals(expectedPayload.length() + "",
-                response.getFirstHeader("Content-Length").getValue());
+        assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent())
+                .trim());
+        assertEquals(expectedPayload.length() + "", response.getFirstHeader("Content-Length")
+                .getValue());
     }
 
     /**
@@ -401,11 +381,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("1", payLoad);
         assertEquals(4, response.getAllHeaders().length);
         assertEquals("1", response.getFirstHeader("Content-Length").getValue());
@@ -424,11 +403,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("12", payLoad);
         assertEquals(4, response.getAllHeaders().length);
         assertEquals("2", response.getFirstHeader("Content-Length").getValue());
@@ -447,11 +425,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("123", payLoad);
         assertEquals(3, response.getAllHeaders().length);
     }
@@ -469,11 +446,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("12", payLoad);
         assertEquals(3, response.getAllHeaders().length);
     }
@@ -491,11 +467,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("12", payLoad);
         assertEquals(3, response.getAllHeaders().length);
     }
@@ -508,17 +483,15 @@ public class DeftSystemTest {
         params.setParameter("http.default-headers", headers);
 
         HttpClient httpclient = new DefaultHttpClient(params);
-        HttpDelete httpdelete = new HttpDelete("http://localhost:" + PORT
-                + "/delete");
+        HttpDelete httpdelete = new HttpDelete("http://localhost:" + PORT + "/delete");
         HttpResponse response = httpclient.execute(httpdelete);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("delete", payLoad);
     }
 
@@ -535,11 +508,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("post", payLoad);
     }
 
@@ -556,11 +528,10 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("put", payLoad);
     }
 
@@ -572,40 +543,35 @@ public class DeftSystemTest {
         params.setParameter("http.default-headers", headers);
 
         HttpClient httpclient = new DefaultHttpClient(params);
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/capturing/1911");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/1911");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("/capturing/1911", payLoad);
     }
 
     @Test
-    public void erroneousCapturingTest() throws ClientProtocolException,
-            IOException {
+    public void erroneousCapturingTest() throws ClientProtocolException, IOException {
         List<Header> headers = new LinkedList<Header>();
         headers.add(new BasicHeader("Connection", "Close"));
         HttpParams params = new BasicHttpParams();
         params.setParameter("http.default-headers", headers);
 
         HttpClient httpclient = new DefaultHttpClient(params);
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/capturing/r1911");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/capturing/r1911");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(404, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("Not Found", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("Requested URL: /capturing/r1911 was not found", payLoad);
     }
 
@@ -642,8 +608,7 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void keepAliveRequestTest() throws ClientProtocolException,
-            IOException {
+    public void keepAliveRequestTest() throws ClientProtocolException, IOException {
         List<Header> headers = new LinkedList<Header>();
         headers.add(new BasicHeader("Connection", "Keep-Alive"));
         HttpParams params = new BasicHttpParams();
@@ -656,40 +621,36 @@ public class DeftSystemTest {
         }
     }
 
-    private void doKeepAliveRequestTest(DefaultHttpClient httpclient)
-            throws IOException, ClientProtocolException {
+    private void doKeepAliveRequestTest(DefaultHttpClient httpclient) throws IOException,
+            ClientProtocolException {
         HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals(expectedPayload, payLoad);
     }
 
     @Test
-    public void HTTP_1_0_noConnectionHeaderTest()
-            throws ClientProtocolException, IOException {
+    public void HTTP_1_0_noConnectionHeaderTest() throws ClientProtocolException, IOException {
         HttpParams params = new BasicHttpParams();
-        HttpProtocolParams
-                .setVersion(params, new ProtocolVersion("HTTP", 1, 0));
+        HttpProtocolParams.setVersion(params, new ProtocolVersion("HTTP", 1, 0));
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals(expectedPayload, payLoad);
     }
 
@@ -701,58 +662,48 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(500, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
-        assertEquals("Internal Server Error", response.getStatusLine()
-                .getReasonPhrase());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
+        assertEquals("Internal Server Error", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("exception message", payLoad);
     }
 
     @Test
-    public void asyncHttpExceptionTest() throws ClientProtocolException,
-            IOException {
+    public void asyncHttpExceptionTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/async_throw");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/async_throw");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(500, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
-        assertEquals("Internal Server Error", response.getStatusLine()
-                .getReasonPhrase());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
+        assertEquals("Internal Server Error", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("exception message", payLoad);
     }
 
     @Test
-    public void staticFileRequestTest() throws ClientProtocolException,
-            IOException {
+    public void staticFileRequestTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/src/test/resources/test.txt");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/src/test/resources/test.txt");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(8, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("test.txt", payLoad);
     }
 
     @Test
-    public void pictureStaticFileRequestTest() throws ClientProtocolException,
-            IOException {
+    public void pictureStaticFileRequestTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpGet httpget = new HttpGet("http://localhost:" + PORT
                 + "/src/test/resources/n792205362_2067.jpg");
@@ -760,20 +711,17 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(8, response.getAllHeaders().length);
-        assertEquals("54963", response.getFirstHeader("Content-Length")
-                .getValue());
-        assertEquals("image/jpeg", response.getFirstHeader("Content-Type")
-                .getValue());
+        assertEquals("54963", response.getFirstHeader("Content-Length").getValue());
+        assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
         assertNotNull(response.getFirstHeader("Last-Modified"));
     }
 
     @Test
-    public void pictureStaticLargeFileRequestTest()
-            throws ClientProtocolException, IOException {
+    public void pictureStaticLargeFileRequestTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpGet httpget = new HttpGet("http://localhost:" + PORT
                 + "/src/test/resources/f4_impact_1_original.jpg");
@@ -781,15 +729,14 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(8, response.getAllHeaders().length);
         // assertEquals("2145094",
         // response.getFirstHeader("Content-Length").getValue()); // my mb says
         // 2145066, imac says 2145094
-        assertEquals("image/jpeg", response.getFirstHeader("Content-Type")
-                .getValue());
+        assertEquals("image/jpeg", response.getFirstHeader("Content-Type").getValue());
         assertNotNull(response.getFirstHeader("Last-Modified"));
         // TODO RS 101026 Verify that the actual body/entity is 2145094 bytes
         // big (when we have support for "large" file)
@@ -800,12 +747,12 @@ public class DeftSystemTest {
         HttpClient httpclient = new DefaultHttpClient();
         HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/no_body");
         HttpResponse response = httpclient.execute(httpget);
-        List<String> expectedHeaders = Arrays.asList(new String[] { "Server",
-                "Date", "Content-Length", "Connection" });
+        List<String> expectedHeaders = Arrays.asList(new String[] { "Server", "Date",
+                "Content-Length", "Connection" });
 
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
 
         assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
@@ -814,24 +761,21 @@ public class DeftSystemTest {
             assertTrue(response.getFirstHeader(header) != null);
         }
 
-        assertEquals("",
-                convertStreamToString(response.getEntity().getContent()).trim());
+        assertEquals("", convertStreamToString(response.getEntity().getContent()).trim());
         assertEquals("0", response.getFirstHeader("Content-Length").getValue());
     }
 
     @Test
-    public void movedPermanentlyRequest() throws ClientProtocolException,
-            IOException {
+    public void movedPermanentlyRequest() throws ClientProtocolException, IOException {
         HttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/moved_perm");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/moved_perm");
         HttpResponse response = httpclient.execute(httpget);
-        List<String> expectedHeaders = Arrays.asList(new String[] { "Server",
-                "Date", "Content-Length", "Connection" });
+        List<String> expectedHeaders = Arrays.asList(new String[] { "Server", "Date",
+                "Content-Length", "Connection" });
 
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
 
         assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
@@ -840,10 +784,10 @@ public class DeftSystemTest {
             assertTrue(response.getFirstHeader(header) != null);
         }
 
-        assertEquals(expectedPayload,
-                convertStreamToString(response.getEntity().getContent()).trim());
-        assertEquals(expectedPayload.length() + "",
-                response.getFirstHeader("Content-Length").getValue());
+        assertEquals(expectedPayload, convertStreamToString(response.getEntity().getContent())
+                .trim());
+        assertEquals(expectedPayload.length() + "", response.getFirstHeader("Content-Length")
+                .getValue());
     }
 
     @Test
@@ -856,18 +800,16 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void userDefinedStaticContentHandlerTest()
-            throws ClientProtocolException, IOException {
+    public void userDefinedStaticContentHandlerTest() throws ClientProtocolException, IOException {
         // /static_file_handler
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/static_file_handler");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/static_file_handler");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(5, response.getAllHeaders().length);
         assertEquals("8", response.getFirstHeader("Content-Length").getValue());
@@ -923,8 +865,7 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void keyValueStoreClientTest() throws ClientProtocolException,
-            IOException {
+    public void keyValueStoreClientTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new
 
         DefaultHttpClient();
@@ -933,169 +874,110 @@ public class DeftSystemTest {
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
         assertEquals("7", response.getFirstHeader("Content-Length").getValue());
-        assertEquals("kickass",
-                convertStreamToString(response.getEntity().getContent()).trim());
+        assertEquals("kickass", convertStreamToString(response.getEntity().getContent()).trim());
     }
 
     // ning === http://github.com/ning/async-http-client
     @Test
-    public void doSimpleAsyncRequestTestWithNing() throws IOException,
-            InterruptedException {
+    public void doSimpleAsyncRequestTestWithNing() throws IOException, InterruptedException {
         int iterations = 100;
         final CountDownLatch latch = new CountDownLatch(iterations);
         AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
         for (int i = 1; i <= iterations; i++) {
 
-            asyncHttpClient
-                    .prepareGet("http://localhost:" + PORT + "/")
-                    .execute(
-                            new AsyncCompletionHandler<com.ning.http.client.Response>() {
+            asyncHttpClient.prepareGet("http://localhost:" + PORT + "/").execute(
+                    new AsyncCompletionHandler<com.ning.http.client.Response>() {
 
-                                @Override
-                                public com.ning.http.client.Response onCompleted(
-                                        com.ning.http.client.Response response)
-                                        throws Exception {
-                                    String body = response.getResponseBody();
-                                    assertEquals(expectedPayload, body);
-                                    {
-                                        List<String> expectedHeaders = Arrays
-                                                .asList(new String[] {
-                                                        "Server", "Date",
-                                                        "Content-Length",
-                                                        "Connection" });
-                                        assertEquals(200,
-                                                response.getStatusCode());
-                                        assertEquals(expectedHeaders.size(),
-                                                response.getHeaders().size());
-                                        for (String header : expectedHeaders) {
-                                            assertTrue(response
-                                                    .getHeader(header) != null);
-                                        }
-                                        assertEquals(expectedPayload.length()
-                                                + "", response
-                                                .getHeader("Content-Length"));
-                                    }
-                                    latch.countDown();
-                                    return response;
+                        @Override
+                        public com.ning.http.client.Response onCompleted(
+                                com.ning.http.client.Response response) throws Exception {
+                            String body = response.getResponseBody();
+                            assertEquals(expectedPayload, body);
+                            {
+                                List<String> expectedHeaders = Arrays.asList(new String[] {
+                                        "Server", "Date", "Content-Length", "Connection" });
+                                assertEquals(200, response.getStatusCode());
+                                assertEquals(expectedHeaders.size(), response.getHeaders().size());
+                                for (String header : expectedHeaders) {
+                                    assertTrue(response.getHeader(header) != null);
                                 }
+                                assertEquals(expectedPayload.length() + "",
+                                        response.getHeader("Content-Length"));
+                            }
+                            latch.countDown();
+                            return response;
+                        }
 
-                                @Override
-                                public void onThrowable(Throwable t) {
-                                    assertTrue(false);
-                                }
+                        @Override
+                        public void onThrowable(Throwable t) {
+                            assertTrue(false);
+                        }
 
-                            });
+                    });
         }
         latch.await(15 * 1000, TimeUnit.MILLISECONDS);
         assertEquals(0, latch.getCount());
     }
 
-    // TODO 101108 RS enable when /mySql (AsyncDbHandler is properly
-    // implemented)
-    // ning === http://github.com/ning/async-http-client
-    // @Test
-    // public void doAsynchronousRequestTestWithNing() throws IOException,
-    // InterruptedException {
-    // int iterations = 200;
-    // final CountDownLatch latch = new CountDownLatch(iterations);
-    // AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-    // for (int i = 1; i <= iterations; i++) {
-    //
-    // asyncHttpClient.prepareGet("http://localhost:" + PORT + "/mySql").
-    // execute(new AsyncCompletionHandler<com.ning.http.client.Response>(){
-    //
-    // @Override
-    // public com.ning.http.client.Response
-    // onCompleted(com.ning.http.client.Response response) throws Exception{
-    // String body = response.getResponseBody();
-    // assertEquals("Name: Jim123", body);
-    // List<String> expectedHeaders = Arrays.asList(new String[] {"Server",
-    // "Date", "Content-Length", "Etag", "Connection"});
-    // assertEquals(200, response.getStatusCode());
-    // assertEquals(expectedHeaders.size(),
-    // response.getHeaders().getHeaderNames().size());
-    // for (String header : expectedHeaders) {
-    // assertTrue(response.getHeader(header) != null);
-    // }
-    // assertEquals(""+ "Name: Jim123".length(),
-    // response.getHeader("Content-Length"));
-    // latch.countDown();
-    // return response;
-    // }
-    //
-    // @Override
-    // public void onThrowable(Throwable t){
-    // assertTrue(false);
-    // }
-    //
-    // });
-    // }
-    // latch.await(15 * 1000, TimeUnit.MILLISECONDS);
-    // assertEquals(0, latch.getCount());
-    // }
-
     @Test
     public void _450KBEntityTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/450kb_body");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/450kb_body");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
         // assertEquals(450*1024,
         // Integer.parseInt(response.getFirstHeader("Content-Length").getValue())/8);
         // assertEquals(450*1024,
         // _450KBResponseEntityRequestHandlr.entity.getBytes(Charsets.UTF_8).length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals(_450KBResponseEntityRequestHandler.entity, payLoad);
     }
 
     @Test
-    public void smallHttpPostBodyWithUnusualCharactersTest()
-            throws ClientProtocolException, IOException {
+    public void smallHttpPostBodyWithUnusualCharactersTest() throws ClientProtocolException,
+            IOException {
         final String body = "Räger Schildmäijår";
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
         HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
-        httppost.setEntity(new StringEntity(body)); // HTTP 1.1 says that the
-                                                    // default charset is
-                                                    // ISO-8859-1
+        httppost.setEntity(new StringEntity(body, "UTF-8")); // HTTP 1.1 says
+                                                             // that the
+        // default charset is
+        // ISO-8859-1
         HttpResponse response = httpclient.execute(httppost);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        assertEquals(5, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        assertEquals(4, response.getAllHeaders().length);
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals(body, payLoad);
     }
 
     @Test
-    public void smallHttpPostBodyTest() throws ClientProtocolException,
-            IOException, InterruptedException {
+    public void smallHttpPostBodyTest() throws ClientProtocolException, IOException,
+            InterruptedException {
         final String body = "Roger Schildmeijer";
         final CountDownLatch latch = new CountDownLatch(1);
         AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-        asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo")
-                .setBody(body).execute(new AsyncCompletionHandler<Response>() {
+        asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo").setBody(body)
+                .execute(new AsyncCompletionHandler<Response>() {
 
                     @Override
-                    public Response onCompleted(Response response)
-                            throws Exception {
+                    public Response onCompleted(Response response) throws Exception {
                         assertNotNull(response);
                         assertEquals(200, response.getStatusCode());
                         assertEquals("OK", response.getStatusText());
@@ -1116,8 +998,8 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void largeHttpPostBodyTest() throws ClientProtocolException,
-            IOException, InterruptedException {
+    public void largeHttpPostBodyTest() throws ClientProtocolException, IOException,
+            InterruptedException {
         String body = "Roger Schildmeijer: 0\n";
         for (int i = 1; i <= 1000; i++) {
             body += "Roger Schildmeijer: " + i + "\n";
@@ -1125,12 +1007,11 @@ public class DeftSystemTest {
         final String expectedBody = body;
         final CountDownLatch latch = new CountDownLatch(1);
         AsyncHttpClient asyncHttpClient = new AsyncHttpClient();
-        asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo")
-                .setBody(body).execute(new AsyncCompletionHandler<Response>() {
+        asyncHttpClient.preparePost("http://localhost:" + PORT + "/echo").setBody(body)
+                .execute(new AsyncCompletionHandler<Response>() {
 
                     @Override
-                    public Response onCompleted(Response response)
-                            throws Exception {
+                    public Response onCompleted(Response response) throws Exception {
                         assertNotNull(response);
                         assertEquals(200, response.getStatusCode());
                         assertEquals("OK", response.getStatusText());
@@ -1151,42 +1032,36 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void authenticatedRequestHandlerTest()
-            throws ClientProtocolException, IOException {
+    public void authenticatedRequestHandlerTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/authenticated");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/authenticated");
         httpget.setHeader("user", "Roger Schildmeijer");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("Roger Schildmeijer", payLoad);
     }
 
     @Test
-    public void notAuthenticatedRequestHandlerTest()
-            throws ClientProtocolException, IOException {
+    public void notAuthenticatedRequestHandlerTest() throws ClientProtocolException, IOException {
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT
-                + "/authenticated");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/authenticated");
         httpget.setHeader("wrong_header", "Roger Schildmeijer");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
         assertEquals(403, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("Forbidden", response.getStatusLine().getReasonPhrase());
         assertEquals(4, response.getAllHeaders().length);
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
+        String payLoad = convertStreamToString(response.getEntity().getContent()).trim();
         assertEquals("Authentication failed", payLoad);
     }
 
@@ -1196,12 +1071,12 @@ public class DeftSystemTest {
         HttpGet httpget = new HttpGet("http://localhost:" + PORT
                 + "/query_params?key1=value1&key2=value2");
         HttpResponse response = httpclient.execute(httpget);
-        List<String> expectedHeaders = Arrays.asList(new String[] { "Server",
-                "Date", "Content-Length", "Etag", "Connection" });
+        List<String> expectedHeaders = Arrays.asList(new String[] { "Server", "Date",
+                "Content-Length", "Connection" });
 
         assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response.getStatusLine()
+                .getProtocolVersion());
         assertEquals("OK", response.getStatusLine().getReasonPhrase());
 
         assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
@@ -1211,10 +1086,8 @@ public class DeftSystemTest {
         }
 
         final String expected = "value1 value2";
-        assertEquals(expected,
-                convertStreamToString(response.getEntity().getContent()).trim());
-        assertEquals(expected.length() + "",
-                response.getFirstHeader("Content-Length").getValue());
+        assertEquals(expected, convertStreamToString(response.getEntity().getContent()).trim());
+        assertEquals(expected.length() + "", response.getFirstHeader("Content-Length").getValue());
     }
 
     @Test
@@ -1250,12 +1123,10 @@ public class DeftSystemTest {
         final AsyncCallback runByIOLoop = new AsyncCallback() {
 
             public void onCallback() {
-                client.fetch(
-                        unresolvableAddress,
+                client.fetch(unresolvableAddress,
                         new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
 
-                            public void onSuccess(
-                                    org.deftserver.web.http.client.HttpResponse result) {
+                            public void onSuccess(org.deftserver.web.http.client.HttpResponse result) {
                                 client.close();
                             }
 
@@ -1282,12 +1153,10 @@ public class DeftSystemTest {
         final AsyncCallback runByIOLoop = new AsyncCallback() {
 
             public void onCallback() {
-                client.fetch(
-                        unconnectableAddress,
+                client.fetch(unconnectableAddress,
                         new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
 
-                            public void onSuccess(
-                                    org.deftserver.web.http.client.HttpResponse result) {
+                            public void onSuccess(org.deftserver.web.http.client.HttpResponse result) {
                                 client.close();
                             }
 
@@ -1311,8 +1180,7 @@ public class DeftSystemTest {
             String line;
 
             try {
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(is, "UTF-8"));
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
