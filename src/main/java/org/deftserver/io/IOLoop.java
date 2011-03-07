@@ -54,7 +54,7 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        MXBeanUtil.registerMXBean(this, "IOLoop");
+        MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
         responseQueue = new AsyncResponseQueue();
     }
 

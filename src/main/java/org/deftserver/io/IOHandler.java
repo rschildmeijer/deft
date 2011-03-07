@@ -4,19 +4,18 @@ import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 
-
 /**
- * TODO RS 101024 Add javadoc 
- *
+ * TODO RS 101024 Add javadoc
+ * 
  */
 public interface IOHandler {
 
-	void handleAccept(SocketChannel clientChannel) throws IOException;
+    void handleAccept(SocketChannel clientChannel) throws IOException;
 
-	void handleConnect(SelectionKey key) throws IOException;
-	
-	void handleRead(SelectionKey key) throws IOException;
-	
-	void handleWrite(SelectionKey key);
-	
+    void handleConnect(SelectionKey key) throws IOException;
+
+    void handleRead(SelectionKey key) throws IOException;
+
+    void handleWrite(SelectionKey key);
+
 }

@@ -200,17 +200,19 @@ public class HttpProtocol implements IOHandler {
             if (request instanceof PartialHttpRequest) {
                 ctx.setContext((PartialHttpRequest) request);
             }
+	
+
 
         }
         ctx.getBufferIn().clear();
         return request;
     }
-
+    
     @Override
     public void handleConnect(SelectionKey key) throws IOException {
         logger.error("handle connect in HttpProcotol...");
     }
-
+    
     @Override
     public String toString() {
         return "HttpProtocol";

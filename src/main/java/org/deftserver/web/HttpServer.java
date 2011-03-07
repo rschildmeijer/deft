@@ -38,7 +38,7 @@ public class HttpServer {
                     "Invalid port number. Valid range: [" + MIN_PORT_NUMBER
                             + ", " + MAX_PORT_NUMBER + ")");
         }
-        
+
         try {
             serverChannel = ServerSocketChannel.open();
             serverChannel.configureBlocking(false);
@@ -62,7 +62,7 @@ public class HttpServer {
         logger.debug("Stopping HTTP server");
         Closeables.closeQuietly(serverChannel);
     }
-    
+
     public void start() {
         registerHandler();
     }

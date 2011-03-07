@@ -220,7 +220,7 @@ public class HttpRequest {
                 // We need to check if the parameter has a value associated with
                 // it.
                 if (keyValueArray.length > 1) { // name, value
-                    builder.put(keyValueArray[0], keyValueArray[1]);
+                    builder.put(keyValueArray[0], keyValueArray[1]); 
                 }
             }
         }
