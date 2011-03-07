@@ -14,9 +14,10 @@ public class MXBeanUtil {
 	
 	private MXBeanUtil() {}
 
-	public static void registerMXBean(Object self, String mbeanName) {
+	public static void registerMXBean(Object self, String type) {
 		MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 		try {
+			String mbeanName = "org.deftserver:type=" + type + ",name=" + self.getClass().getSimpleName();
 			mbs.registerMBean(self, new ObjectName(mbeanName));
 		}
 		catch (Exception e) {

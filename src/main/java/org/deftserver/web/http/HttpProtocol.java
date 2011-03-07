@@ -207,6 +207,11 @@ public class HttpProtocol implements IOHandler {
     }
 
     @Override
+    public void handleConnect(SelectionKey key) throws IOException {
+        logger.error("handle connect in HttpProcotol...");
+    }
+
+    @Override
     public String toString() {
         return "HttpProtocol";
     }

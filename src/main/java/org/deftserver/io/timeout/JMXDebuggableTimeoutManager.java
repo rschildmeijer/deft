@@ -64,10 +64,9 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 		// makes a defensive copy to avoid (1) CME (new timeouts are added this iteration) and (2) IO starvation.
 		TreeMultiset<DecoratedTimeout> defensive = TreeMultiset.create(timeouts);
 		Iterator<DecoratedTimeout> iter = defensive.iterator();
-		DecoratedTimeout candidate = null;
 		final long now = System.currentTimeMillis();
 		while (iter.hasNext()) {
-			candidate = iter.next();
+		    DecoratedTimeout candidate = iter.next();
 			if (candidate.timeout.getTimeout() > now) { break; }
 			candidate.timeout.getCallback().onCallback();
 			index.remove(candidate.channel);
@@ -75,7 +74,7 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 			timeouts.remove(candidate);
 			logger.debug("Timeout triggered: {}", candidate.timeout);
 		}
-		return timeouts.isEmpty() ? Long.MAX_VALUE : Math.max(0, candidate.timeout.getTimeout() - now);
+		return timeouts.isEmpty() ? Long.MAX_VALUE : Math.max(1, timeouts.iterator().next().timeout.getTimeout() - now);
 	}
 
 	// implements TimoutMXBean

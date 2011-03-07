@@ -6,7 +6,9 @@ package org.deftserver.web;
 * 	async call (similar to {@link AsyncResult}).
 */
 public interface AsyncCallback {
-
+	
+	public static final AsyncCallback nopCb = new AsyncCallback() { @Override public void onCallback() { /*nop*/} };
+	
 	void onCallback();
 	
 }

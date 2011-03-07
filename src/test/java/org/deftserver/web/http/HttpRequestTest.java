@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import org.deftserver.util.ArrayUtil;
 import org.deftserver.util.HttpRequestHelper;
 import org.deftserver.util.HttpUtil;
 import org.deftserver.web.http.HttpRequest;
+import org.junit.Assert;
 import org.junit.Test;
 
 
@@ -331,5 +333,27 @@ public class HttpRequestTest {
 		assertEquals(expected, request.getHeader("TESTKEY"));
 		assertEquals(expected, request.getHeader("testkey"));
 	}
+	
+	@Test 
+	public void testHttpRequestNoQueryString() {
+		String requestLine = "GET /foobar HTTP/1.1 ";
+		HttpRequest request = new HttpRequest(requestLine, new HashMap<String, String>());
+		Assert.assertEquals("/foobar", request.getRequestedPath());
+	}
+	
+	@Test 
+	public void testHttpRequestNullQueryString() {
+		String requestLine = "GET /foobar? HTTP/1.1 ";
+		HttpRequest request = new HttpRequest(requestLine, new HashMap<String, String>());
+		Assert.assertEquals("/foobar", request.getRequestedPath());
+	}
+	
+	@Test 
+	public void testHttpRequestNullQueryStringTrailingSlash() {
+		String requestLine = "GET /foobar/? HTTP/1.1 ";
+		HttpRequest request = new HttpRequest(requestLine, new HashMap<String, String>());
+		Assert.assertEquals("/foobar/", request.getRequestedPath());
+	}
+	
 
 }

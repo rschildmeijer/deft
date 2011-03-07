@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.deftserver.io.IOLoopFactory.Mode;
 import org.deftserver.io.callback.CallbackManager;
@@ -39,6 +40,8 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
 
     private Selector selector;
 
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
     private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
     private final CallbackManager cm = new JMXDebuggableCallbackManager();
     private final AsyncResponseQueue responseQueue;
@@ -51,7 +54,7 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        MXBeanUtil.registerMXBean(this, "org.deftserver.web:type=IOLoop");
+        MXBeanUtil.registerMXBean(this, "IOLoop");
         responseQueue = new AsyncResponseQueue();
     }
 
@@ -59,14 +62,16 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
         Thread.currentThread().setName("I/O-LOOP");
         IOLoopFactory.setMode(Mode.SINGLE_THREADED);
 
-        while (true) {
-            long selectorTimeout = 250; // 250 ms
+        long selectorTimeout = 250; // 250 ms
+        running.set(true);
+        while (running.get()) {
+
             try {
                 if (selector.select(selectorTimeout) == 0) {
                     long ms = tm.execute();
-                    selectorTimeout = Math.min(ms, selectorTimeout);
+                    selectorTimeout = Math.min(ms, 250);
                     if (cm.execute()) {
-                        selectorTimeout = 0;
+                        selectorTimeout = 1;
                     }
                     responseQueue.sendQueuedResponses();
                     continue;
@@ -81,6 +86,11 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
                     if (key.isAcceptable()) {
                         this.handleAccept(key);
                     }
+
+                    if (key.isConnectable()) {
+                        handle.handleConnect(key);
+                    }
+
                     if (key.isValid() && key.isReadable()) {
                         handle.handleRead(key);
                     }
@@ -92,15 +102,20 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
                     keys.remove();
                 }
                 long ms = tm.execute();
-                selectorTimeout = Math.min(ms, selectorTimeout);
+                selectorTimeout = Math.min(ms, 250);
                 if (cm.execute()) {
-                    selectorTimeout = 0;
+                    selectorTimeout = 1;
                 }
 
             } catch (IOException e) {
                 logger.error("Exception received in IOLoop: {}", e);
             }
         }
+    }
+
+    public void stop() {
+        running.set(false);
+        logger.debug("Stopping IOLoop...");
     }
 
     private void handleAccept(SelectionKey key) {
@@ -127,6 +142,20 @@ public enum IOLoop implements IOLoopMXBean, IOLoopController {
         // ((ChannelContext) attachment).setHandler(handler);
         // }
         return registerChannel(channel, interestOps, attachment);
+    }
+
+    /**
+     * 
+     * @param newInterestOps
+     *            The complete new set of interest operations.
+     */
+    public void updateHandler(SelectableChannel channel, int newInterestOps) {
+        SelectionKey key = channel.keyFor(selector);
+        if (key != null) {
+            key.interestOps(newInterestOps);
+        } else {
+            logger.warn("Tried to update interestOps for an unknown SelectableChannel.");
+        }
     }
 
     @SuppressWarnings("rawtypes")

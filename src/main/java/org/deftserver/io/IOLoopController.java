@@ -10,34 +10,35 @@ import org.deftserver.web.http.HttpResponse;
 
 public interface IOLoopController {
 
-	  SelectionKey addHandler(SelectableChannel channel,
-			IOHandler handler, int interestOps, Object attachment);
-	  
-	  /**
-	   * Registers Read OPS on the given channel setting the context as attachment
-	   * if the context does not contains a input buffer then the controller 
-	   * will set its default buffer. 
-	   * 
-	   * @param channel
-	   * @param handler
-	   * @param attachment
-	   * @return
-	   */
-	  SelectionKey registerReadHandler(SelectableChannel channel,
-				IOHandler handler, ChannelContext ctx);
+    SelectionKey addHandler(SelectableChannel channel, IOHandler handler,
+            int interestOps, Object attachment);
 
-	  void removeHandler(SelectableChannel channel);
+    /**
+     * Registers Read OPS on the given channel setting the context as attachment
+     * if the context does not contains a input buffer then the controller will
+     * set its default buffer.
+     * 
+     * @param channel
+     * @param handler
+     * @param attachment
+     * @return
+     */
+    SelectionKey registerReadHandler(SelectableChannel channel,
+            IOHandler handler, ChannelContext ctx);
 
-	  void addKeepAliveTimeout(SocketChannel channel,
-			Timeout keepAliveTimeout);
+    void updateHandler(SelectableChannel channel, int newInterestOps);
 
-	  boolean hasKeepAliveTimeout(SelectableChannel channel);
+    void removeHandler(SelectableChannel channel);
 
-	  void addTimeout(Timeout timeout);
+    void addKeepAliveTimeout(SocketChannel channel, Timeout keepAliveTimeout);
 
-	  void addCallback(AsyncCallback callback);
+    boolean hasKeepAliveTimeout(SelectableChannel channel);
 
-	  void pushResponse(HttpResponse response);
+    void addTimeout(Timeout timeout);
 
-	  void planifyResponse();
+    void addCallback(AsyncCallback callback);
+
+    void pushResponse(HttpResponse response);
+
+    void planifyResponse();
 }

@@ -9,9 +9,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.UnresolvedAddressException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -31,24 +33,27 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.apache.http.params.HttpProtocolParams;
 import org.deftserver.example.AsyncDbHandler;
-import org.deftserver.example.kv.Client;
 import org.deftserver.example.kv.KeyValueStore;
+import org.deftserver.example.kv.KeyValueStoreClient;
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.IOLoopFactory;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.handler.RequestHandler;
 import org.deftserver.web.http.HttpException;
 import org.deftserver.web.http.HttpRequest;
+import org.deftserver.web.http.client.AsynchronousHttpClient;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
@@ -209,7 +214,8 @@ public class DeftSystemTest {
     public static class KeyValueStoreExampleRequestHandler extends
             RequestHandler {
 
-        private final Client client = new Client();
+        private final KeyValueStoreClient client = new KeyValueStoreClient(
+                KeyValueStore.HOST, KeyValueStore.PORT);
 
         public KeyValueStoreExampleRequestHandler() {
             new KeyValueStore().start();
@@ -276,6 +282,15 @@ public class DeftSystemTest {
         }
     }
 
+    private static class QueryParamsRequestHandler extends RequestHandler {
+        @Override
+        public void get(org.deftserver.web.http.HttpRequest request,
+                org.deftserver.web.http.HttpResponse response) {
+            response.write(request.getParameter("key1") + " "
+                    + request.getParameter("key2"));
+        }
+    }
+
     @BeforeClass
     public static void setup() {
         Map<String, RequestHandler> reqHandlers = new HashMap<String, RequestHandler>();
@@ -298,11 +313,12 @@ public class DeftSystemTest {
         reqHandlers.put("/moved_perm", new MovedPermanentlyRequestHandler());
         reqHandlers.put("/static_file_handler",
                 new UserDefinedStaticContentHandler());
-        reqHandlers.put("/redis", new KeyValueStoreExampleRequestHandler());
+        reqHandlers.put("/keyvalue", new KeyValueStoreExampleRequestHandler());
         reqHandlers
                 .put("/450kb_body", new _450KBResponseEntityRequestHandler());
         reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
         reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
+        reqHandlers.put("/query_params", new QueryParamsRequestHandler());
 
         final Application application = new Application(reqHandlers);
         application.setStaticContentDir("src/test/resources");
@@ -317,6 +333,17 @@ public class DeftSystemTest {
                 IOLoop.INSTANCE.start();
             }
         }).start();
+    }
+
+    @AfterClass
+    public static void tearDown() throws InterruptedException {
+        IOLoop.INSTANCE.addCallback(new AsyncCallback() {
+            @Override
+            public void onCallback() {
+                IOLoop.INSTANCE.stop();
+            }
+        });
+        Thread.sleep(300);
     }
 
     @Test
@@ -615,38 +642,6 @@ public class DeftSystemTest {
     }
 
     @Test
-    public void asynchronousRequestTest() throws ClientProtocolException,
-            IllegalStateException, IOException {
-        for (int i = 1; i <= 4; i++) {
-            doAsynchronousRequestTest();
-        }
-    }
-
-    private void doAsynchronousRequestTest() throws ClientProtocolException,
-            IOException, IllegalStateException {
-        List<Header> headers = new LinkedList<Header>();
-        headers.add(new BasicHeader("Connection", "Close"));
-        HttpParams params = new BasicHttpParams();
-        params.setParameter("http.default-headers", headers);
-
-        DefaultHttpClient httpclient = new DefaultHttpClient(params);
-        HttpConnectionParams.setConnectionTimeout(params, 40 * 1000);
-        HttpConnectionParams.setSoTimeout(params, 100 * 1000);
-
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/mySql");
-        HttpResponse response = httpclient.execute(httpget);
-
-        assertNotNull(response);
-        assertEquals(200, response.getStatusLine().getStatusCode());
-        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-                .getStatusLine().getProtocolVersion());
-        assertEquals("OK", response.getStatusLine().getReasonPhrase());
-        String payLoad = convertStreamToString(
-                response.getEntity().getContent()).trim();
-        assertEquals("Name: Jim123", payLoad);
-    }
-
-    @Test
     public void keepAliveRequestTest() throws ClientProtocolException,
             IOException {
         List<Header> headers = new LinkedList<Header>();
@@ -933,7 +928,7 @@ public class DeftSystemTest {
         DefaultHttpClient httpclient = new
 
         DefaultHttpClient();
-        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/redis");
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT + "/keyvalue");
         HttpResponse response = httpclient.execute(httpget);
 
         assertNotNull(response);
@@ -1066,27 +1061,28 @@ public class DeftSystemTest {
         assertEquals(_450KBResponseEntityRequestHandler.entity, payLoad);
     }
 
-    //
-    // @Test
-    // public void smallHttpPostBodyTest() throws ClientProtocolException,
-    // IOException {
-    // final String body = "Roger Schildmeijer";
-    //
-    // DefaultHttpClient httpclient = new DefaultHttpClient();
-    // HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
-    // httppost.setEntity(new StringEntity(body));
-    // HttpResponse response = httpclient.execute(httppost);
-    //
-    // assertNotNull(response);
-    // assertEquals(200, response.getStatusLine().getStatusCode());
-    // assertEquals(new ProtocolVersion("HTTP", 1, 1), response
-    // .getStatusLine().getProtocolVersion());
-    // assertEquals("OK", response.getStatusLine().getReasonPhrase());
-    // assertEquals(5, response.getAllHeaders().length);
-    // String payLoad = convertStreamToString(
-    // response.getEntity().getContent()).trim();
-    // assertEquals(body, payLoad);
-    // }
+    @Test
+    public void smallHttpPostBodyWithUnusualCharactersTest()
+            throws ClientProtocolException, IOException {
+        final String body = "Räger Schildmäijår";
+
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+        HttpPost httppost = new HttpPost("http://localhost:" + PORT + "/echo");
+        httppost.setEntity(new StringEntity(body)); // HTTP 1.1 says that the
+                                                    // default charset is
+                                                    // ISO-8859-1
+        HttpResponse response = httpclient.execute(httppost);
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
+                .getStatusLine().getProtocolVersion());
+        assertEquals("OK", response.getStatusLine().getReasonPhrase());
+        assertEquals(5, response.getAllHeaders().length);
+        String payLoad = convertStreamToString(
+                response.getEntity().getContent()).trim();
+        assertEquals(body, payLoad);
+    }
 
     @Test
     public void smallHttpPostBodyTest() throws ClientProtocolException,
@@ -1192,6 +1188,121 @@ public class DeftSystemTest {
         String payLoad = convertStreamToString(
                 response.getEntity().getContent()).trim();
         assertEquals("Authentication failed", payLoad);
+    }
+
+    @Test
+    public void queryParamsTest() throws ClientProtocolException, IOException {
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpGet httpget = new HttpGet("http://localhost:" + PORT
+                + "/query_params?key1=value1&key2=value2");
+        HttpResponse response = httpclient.execute(httpget);
+        List<String> expectedHeaders = Arrays.asList(new String[] { "Server",
+                "Date", "Content-Length", "Etag", "Connection" });
+
+        assertEquals(200, response.getStatusLine().getStatusCode());
+        assertEquals(new ProtocolVersion("HTTP", 1, 1), response
+                .getStatusLine().getProtocolVersion());
+        assertEquals("OK", response.getStatusLine().getReasonPhrase());
+
+        assertEquals(expectedHeaders.size(), response.getAllHeaders().length);
+
+        for (String header : expectedHeaders) {
+            assertTrue(response.getFirstHeader(header) != null);
+        }
+
+        final String expected = "value1 value2";
+        assertEquals(expected,
+                convertStreamToString(response.getEntity().getContent()).trim());
+        assertEquals(expected.length() + "",
+                response.getFirstHeader("Content-Length").getValue());
+    }
+
+    @Test
+    public void multipleStartStopCombinations() throws InterruptedException {
+        final HttpServer server = new HttpServer(new Application(
+                Maps.<String, RequestHandler> newHashMap()));
+
+        final int n = 10;
+        final CountDownLatch latch = new CountDownLatch(n);
+        for (int i = 0; i < n; i++) {
+            IOLoop.INSTANCE.addCallback(new AsyncCallback() {
+                public void onCallback() {
+                    server.listen(PORT + 1);
+                }
+            });
+            IOLoop.INSTANCE.addCallback(new AsyncCallback() {
+                public void onCallback() {
+                    server.stop();
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await(5, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+    }
+
+    @Test
+    public void connectToUnresolvableAddressUsingAsynchronousHttpClient()
+            throws InterruptedException {
+        final String unresolvableAddress = "http://ttasfdqwertyuiop.se./start";
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AsynchronousHttpClient client = new AsynchronousHttpClient();
+        final AsyncCallback runByIOLoop = new AsyncCallback() {
+
+            public void onCallback() {
+                client.fetch(
+                        unresolvableAddress,
+                        new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+                            public void onSuccess(
+                                    org.deftserver.web.http.client.HttpResponse result) {
+                                client.close();
+                            }
+
+                            public void onFailure(Throwable caught) {
+                                if (caught instanceof UnresolvedAddressException)
+                                    latch.countDown();
+                                client.close();
+                            }
+                        });
+            }
+        };
+        IOLoop.INSTANCE.addCallback(runByIOLoop);
+
+        latch.await(5, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
+    }
+
+    @Test
+    public void connectToUnconnectableAddressUsingAsynchronousHttpClient()
+            throws InterruptedException {
+        final String unconnectableAddress = "http://localhost:8039/start";
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AsynchronousHttpClient client = new AsynchronousHttpClient();
+        final AsyncCallback runByIOLoop = new AsyncCallback() {
+
+            public void onCallback() {
+                client.fetch(
+                        unconnectableAddress,
+                        new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+                            public void onSuccess(
+                                    org.deftserver.web.http.client.HttpResponse result) {
+                                client.close();
+                            }
+
+                            public void onFailure(Throwable caught) {
+                                if (caught instanceof ConnectException)
+                                    latch.countDown();
+                                client.close();
+                            }
+                        });
+            }
+        };
+        IOLoop.INSTANCE.addCallback(runByIOLoop);
+
+        latch.await(5, TimeUnit.SECONDS);
+        assertEquals(0, latch.getCount());
     }
 
     public String convertStreamToString(InputStream is) throws IOException {

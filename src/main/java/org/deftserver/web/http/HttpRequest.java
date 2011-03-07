@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.web.HttpVerb;
@@ -28,6 +29,20 @@ public class HttpRequest {
 
     private boolean keepAlive;
 
+    /** Regex to parse HttpRequest Request Line */
+    public static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(" ");
+    /** Regex to parse out QueryString from HttpRequest */
+    public static final Pattern QUERY_STRING_PATTERN = Pattern.compile("\\?");
+    /** Regex to parse out parameters from query string */
+    public static final Pattern PARAM_STRING_PATTERN = Pattern.compile("\\&|;"); // Delimiter
+                                                                                 // is
+                                                                                 // either
+                                                                                 // &
+                                                                                 // or
+                                                                                 // ;
+    /** Regex to parse out key/value pairs */
+    public static final Pattern KEY_VALUE_PATTERN = Pattern.compile("=");
+
     private String bodyString;
     private DynamicByteBuffer body;
     protected int contentLength;
@@ -39,12 +54,13 @@ public class HttpRequest {
                 .toString();
 
         method = HttpVerb.valueOf(requestLine[0]);
-        requestedPath = requestLine[1];
+        String[] pathFrags = QUERY_STRING_PATTERN.split(requestLine[1]);
+        requestedPath = pathFrags[0];
         version = requestLine[2];
         this.headers = headers;
         body = _body;
         initKeepAlive();
-        parameters = parseParameters(requestedPath);
+        parameters = parseParameters(requestLine[1]);
         if (headers.containsKey("content-length")) {
             contentLength = Integer.parseInt(headers.get("content-length")
                     .trim());
@@ -53,14 +69,17 @@ public class HttpRequest {
 
     public HttpRequest(String requestLine, Map<String, String> headers) {
         this.requestLine = requestLine;
-        String[] elements = requestLine.split(" ");
+
+        String[] elements = REQUEST_LINE_PATTERN.split(requestLine);
+        String[] pathFrags = QUERY_STRING_PATTERN.split(elements[1]);
+        requestedPath = pathFrags[0];
         method = HttpVerb.valueOf(elements[0]);
-        requestedPath = elements[1];
+
         version = elements[2];
         this.headers = headers;
         body = null;
         initKeepAlive();
-        parameters = parseParameters(requestedPath);
+        parameters = parseParameters(elements[1]);
     }
 
     public HttpRequest(String requestLine, Map<String, String> headers,
@@ -72,28 +91,6 @@ public class HttpRequest {
     public static HttpRequest of(ByteBuffer buffer) {
         try {
             return parser.parseRequestBuffer(buffer);
-            /*
-             * String raw = decoder.decode(buffer).toString();
-             * 
-             * String[] headersAndBody = raw.split("\\r\\n\\r\\n"); // String[]
-             * headerFields = headersAndBody[0].split("\\r\\n"); headerFields =
-             * ArrayUtil.dropFromEndWhile(headerFields, "");
-             * 
-             * String requestLine = headerFields[0]; Map<String, String>
-             * generalHeaders = new HashMap<String, String>(); for (int i = 1; i
-             * < headerFields.length; i++) { String[] header =
-             * headerFields[i].split(": ");
-             * generalHeaders.put(header[0].toLowerCase(), header[1]); }
-             * 
-             * String body = ""; for (int i = 1; i < headersAndBody.length; ++i)
-             * { //First entry contains headers body += headersAndBody[i]; }
-             * 
-             * if (requestLine.contains("POST")) { int contentLength =
-             * Integer.parseInt(generalHeaders.get("content-length")); if
-             * (contentLength > body.length()) { return new
-             * PartialHttpRequest(requestLine, generalHeaders, body); } } return
-             * new HttpRequest(requestLine, generalHeaders, body);
-             */
         } catch (Exception t) {
             LOG.error("Bad HTTP format", t);
             return MalFormedHttpRequest.instance;
@@ -104,18 +101,7 @@ public class HttpRequest {
             PartialHttpRequest unfinished) {
 
         return parser.parseRequestBuffer(buffer, unfinished);
-        /*
-         * String nextChunk = null; try { nextChunk =
-         * decoder.decode(buffer).toString(); } catch (CharacterCodingException
-         * e) { LOG.error("Bad encoding while reading to request body", e); }
-         * unfinished.appendBody(nextChunk);
-         * 
-         * int contentLength =
-         * Integer.parseInt(unfinished.getHeader("Content-Length")); if
-         * (contentLength > unfinished.getBody().length()) { return unfinished;
-         * } else { return new HttpRequest(unfinished.getRequestLine(),
-         * unfinished.getHeaders(), unfinished.getBody()); }
-         */
+
     }
 
     public String getRequestLine() {
@@ -224,20 +210,17 @@ public class HttpRequest {
     private ImmutableMultimap<String, String> parseParameters(String requestLine) {
         ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap
                 .builder();
-        String[] str = requestLine.split("\\?");
+        String[] str = QUERY_STRING_PATTERN.split(requestLine);
 
         // Parameters exist
         if (str.length > 1) {
-            String[] paramArray = str[1].split("\\&|;"); // Delimiter is either
-                                                         // & or ;
+            String[] paramArray = PARAM_STRING_PATTERN.split(str[1]);
             for (String keyValue : paramArray) {
-                String[] keyValueArray = keyValue.split("=");
-
+                String[] keyValueArray = KEY_VALUE_PATTERN.split(keyValue);
                 // We need to check if the parameter has a value associated with
                 // it.
-                if (keyValueArray.length > 1) {
-                    builder.put(keyValueArray[0], keyValueArray[1]); // name,
-                                                                     // value
+                if (keyValueArray.length > 1) { // name, value
+                    builder.put(keyValueArray[0], keyValueArray[1]);
                 }
             }
         }

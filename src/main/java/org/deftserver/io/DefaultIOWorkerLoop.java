@@ -87,6 +87,20 @@ public class DefaultIOWorkerLoop implements IOWorkerLoop, IOLoopController {
         return registerChannel(channel, interestOps, attachment);
     }
 
+    /**
+     * 
+     * @param newInterestOps
+     *            The complete new set of interest operations.
+     */
+    public void updateHandler(SelectableChannel channel, int newInterestOps) {
+        SelectionKey key = channel.keyFor(selector);
+        if (key != null) {
+            key.interestOps(newInterestOps);
+        } else {
+            LOG.warn("Tried to update interestOps for an unknown SelectableChannel.");
+        }
+    }
+
     @Override
     public SelectionKey registerReadHandler(SelectableChannel channel,
             IOHandler handler, @SuppressWarnings("rawtypes") ChannelContext ctx) {

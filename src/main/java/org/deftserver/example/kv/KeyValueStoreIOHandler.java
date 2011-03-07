@@ -103,6 +103,12 @@ public class KeyValueStoreIOHandler implements IOHandler {
     }
 
     @Override
+    public void handleConnect(SelectionKey key) throws IOException {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
     public String toString() {
         return "KeyValueStoreIOHandler";
     }

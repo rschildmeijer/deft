@@ -12,6 +12,8 @@ import java.nio.channels.SocketChannel;
 public interface IOHandler {
 
 	void handleAccept(SocketChannel clientChannel) throws IOException;
+
+	void handleConnect(SelectionKey key) throws IOException;
 	
 	void handleRead(SelectionKey key) throws IOException;
 	

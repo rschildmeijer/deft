@@ -39,7 +39,6 @@ public class DeftServerExample {
 	public static void main(String[] args) {
 		Map<String, RequestHandler> handlers = Maps.newHashMap();
 		handlers.put("/", new ExampleRequestHandler());
-		handlers.put("/mySql", new AsyncDbHandler());
 		
 		Application application = new Application(handlers);
 		application.setStaticContentDir("static");
@@ -53,6 +52,5 @@ public class DeftServerExample {
 		HttpServer server = new HttpServer(application);
 		server.listen(PORT);
 		IOLoop.INSTANCE.start();
-	
 	}
 }
