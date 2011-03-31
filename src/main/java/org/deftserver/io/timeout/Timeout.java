@@ -1,5 +1,8 @@
 package org.deftserver.io.timeout;
 
+import java.nio.channels.SocketChannel;
+
+import org.deftserver.util.Closeables;
 import org.deftserver.web.AsyncCallback;
 
 
@@ -28,6 +31,13 @@ public class Timeout {
 
 	public AsyncCallback getCallback() {
 		return cancelled ? AsyncCallback.nopCb : cb;
+	}
+	
+	public static Timeout newKeepAliveTimeout(final SocketChannel clientChannel, long keepAliveTimeout) {
+		return new Timeout(
+				System.currentTimeMillis() + keepAliveTimeout,
+				new AsyncCallback() { public void onCallback() { Closeables.closeQuietly(clientChannel); } }
+		);
 	}
 
 }

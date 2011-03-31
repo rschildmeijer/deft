@@ -15,8 +15,8 @@ import java.util.Map;
 import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.buffer.DynamicByteBuffer;
+import org.deftserver.io.timeout.Timeout;
 import org.deftserver.util.Closeables;
-import org.deftserver.util.TimeoutFactory;
 import org.deftserver.web.Application;
 import org.deftserver.web.handler.RequestHandler;
 import org.slf4j.Logger;
@@ -59,7 +59,7 @@ public class HttpProtocol implements IOHandler {
 		if (request.isKeepAlive()) {
 			IOLoop.INSTANCE.addKeepAliveTimeout(
 					clientChannel, 
-					TimeoutFactory.keepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
+					Timeout.newKeepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
 			);
 		}
 		HttpResponse response = new HttpResponse(this, key, request.isKeepAlive());

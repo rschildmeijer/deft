@@ -10,7 +10,7 @@ public class NopAsyncResult<T> {
 
 		@Override public void onFailure(Throwable caught) {}
 		
-		@Override public void onSuccess(T result) {System.out.println();} 
+		@Override public void onSuccess(T result) {} 
 	
 	};
 	
