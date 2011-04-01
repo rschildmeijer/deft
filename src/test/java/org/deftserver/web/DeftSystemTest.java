@@ -1075,7 +1075,7 @@ public class DeftSystemTest {
 		};
 		IOLoop.INSTANCE.addCallback(runByIOLoop);
 		
-		latch.await(5, TimeUnit.SECONDS);
+		latch.await(30, TimeUnit.SECONDS);
 		assertEquals(0, latch.getCount());
 	}
 
@@ -1100,6 +1100,51 @@ public class DeftSystemTest {
 		};
 		IOLoop.INSTANCE.addCallback(runByIOLoop);
 		
+		latch.await(30, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());
+	}
+	
+	@Test
+	public void multipleAsynchronousHttpClientTest() throws InterruptedException {
+		for (int i = 0; i < 100; i++) {
+			final CountDownLatch latch = new CountDownLatch(1);
+			final String url = "http://localhost:" + PORT + "/";
+			final AsynchronousHttpClient http = new AsynchronousHttpClient();
+			final String[] result = {"BODY_PLACEHOLDER", "STATUSCODE_PLACEHOLDER"};
+			final AsyncResult<org.deftserver.web.http.client.HttpResponse> cb =
+				new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+				public void onSuccess(org.deftserver.web.http.client.HttpResponse response) { 
+					result[0] = response.getBody();
+					result[1] = response.getStatusLine();
+					latch.countDown(); 
+				}
+
+				public void onFailure(Throwable ignore) { }
+			};
+			// make sure that the http.fetch(..) is invoked from the ioloop thread
+			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
+			latch.await(5, TimeUnit.SECONDS);
+			assertEquals(0, latch.getCount());
+			assertEquals("hello test", result[0]);
+			assertEquals("HTTP/1.1 200 OK", result[1]);
+		}
+	}
+	
+	@Test
+	public void AsynchronousHttpClientConnectionFailedTest() throws InterruptedException {
+		final CountDownLatch latch = new CountDownLatch(1);
+		final String url = "http://localhost:" + (PORT+1) + "/";
+		final AsynchronousHttpClient http = new AsynchronousHttpClient();
+		final AsyncResult<org.deftserver.web.http.client.HttpResponse> cb =
+			new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+
+			public void onSuccess(org.deftserver.web.http.client.HttpResponse response) { }
+
+			public void onFailure(Throwable e) { if (e instanceof ConnectException) latch.countDown(); }
+		};
+		// make sure that the http.fetch(..) is invoked from the ioloop thread
+		IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
 		latch.await(5, TimeUnit.SECONDS);
 		assertEquals(0, latch.getCount());
 	}
