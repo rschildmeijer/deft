@@ -14,6 +14,23 @@ import org.deftserver.web.HttpVerb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+* This class implements a simple HTTP 1.1 client on top of Deft's {@code AsynchronousSocket}.
+* It does not currently implement all applicable parts of the HTTP
+* specification.
+* <pre>
+* E.g the following is not supported.
+*  - redirects
+*  - POST and PUT
+*  - Transfer-Encoding: chunked
+* </pre>
+* This class has not been tested extensively in production and
+* should be considered experimental as of the release of
+* Deft 0.3.
+* 
+* This http client is inspired by https://github.com/facebook/tornado/blob/master/tornado/simple_httpclient.py
+* and part of the documentation is simply copy pasted.
+*/
 public class AsynchronousHttpClient {
 
 	private static final Logger logger = LoggerFactory.getLogger(AsynchronousHttpClient.class);
@@ -75,6 +92,9 @@ public class AsynchronousHttpClient {
 		);
 	}
 	
+	/**
+	 * Close the underlaying {@code AsynchronousSocket}.
+	 */
 	public void close() {
 		logger.debug("Closing http client connection...");
 		socket.close(); 

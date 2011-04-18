@@ -7,14 +7,13 @@ import com.google.common.collect.Maps;
 public class HttpResponse {
 	
 	private final long requestTime;
+	private String statusLine;
+	private final Map<String, String> headers = Maps.newHashMap();
+	private String body;
 	
 	public HttpResponse(long requestStarted) {
 		requestTime = System.currentTimeMillis() - requestStarted;
 	}
-	
-	private String statusLine;
-	private final Map<String, String> headers = Maps.newHashMap();
-	private String body;
 	
 	public void setStatuLine(String statusLine) {
 		this.statusLine = statusLine;

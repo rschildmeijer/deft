@@ -3,9 +3,9 @@ package org.deftserver.io;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-
 /**
- * TODO RS 101024 Add javadoc 
+ * {@code IOHandler}s are added to the IOLoop via {@link IOLoop#addHandler} method.
+ * The callbacks defined in the {@code IOHandler} will be invoked by the {@code IOLoop} when io is ready.
  *
  */
 public interface IOHandler {

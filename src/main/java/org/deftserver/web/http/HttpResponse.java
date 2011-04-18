@@ -49,12 +49,22 @@ public class HttpResponse {
 		headers.put(header, value);
 	}
 
+	/**
+	 * The given data data will be sent as the HTTP response upon next flush or when the response is finished.
+	 *
+	 * @return this for chaining purposes.
+	 */
 	public HttpResponse write(String data) {
 		byte[] bytes = data.getBytes(Charsets.UTF_8);
 		responseData.put(bytes);
 		return this;
 	}
 
+	/**
+	 * Explicit flush. 
+	 * 
+	 * @return the number of bytes that were actually written as the result of this flush.
+	 */
 	public long flush() {
 		if (!headersCreated) {
 			String initial = createInitalLineAndHeaders();			
@@ -87,6 +97,13 @@ public class HttpResponse {
 		return bytesFlushed;
 	}
 	
+	/**
+	 * Should only be invoked by third party asynchronous request handlers 
+	 * (or by the Deft framework for synchronous request handlers). 
+	 * If no previous (explicit) flush is invoked, the "Content-Length" and "Etag" header will be calculated and 
+	 * inserted to the HTTP response.
+	 * 
+	 */
 	public long finish() {
 		long bytesWritten = 0;
 		SocketChannel clientChannel = (SocketChannel) key.channel();
@@ -131,6 +148,10 @@ public class HttpResponse {
 		return sb.toString();
 	}
 	
+	/**
+	 * Experimental support.
+	 * Before use, read https://github.com/rschildmeijer/deft/issues/75
+	 */
 	public long write(File file) {
 		//setHeader("Etag", HttpUtil.getEtag(file));
 		setHeader("Content-Length", String.valueOf(file.length()));

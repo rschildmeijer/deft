@@ -44,6 +44,9 @@ public class AsynchronousSocket implements IOHandler {
 	
 	private boolean reachedEOF = false;
 	
+	/**
+	 * Create a new {@code AsynchronousSocket} that will delegate its io operations the given {@code SelectableChannel}.
+	 */
 	public AsynchronousSocket(SelectableChannel channel) {
 		this.channel = channel;
 		interestOps = SelectionKey.OP_CONNECT;
@@ -80,6 +83,9 @@ public class AsynchronousSocket implements IOHandler {
 		invokeCloseCallback();
 	}
 	
+	/**
+	 * The given callback will invoked when the underlaying {@code SelectableChannel} is closed. 
+	 */
 	public void setCloseCallback(AsyncCallback ccb) {
 		closeCallback = ccb;
 	}

@@ -20,6 +20,9 @@ public class PeriodicCallback {
 		this.period = period;
 	}
 	
+	/**
+	 * Start the {@code PeriodicCallback}
+	 */
 	public void start() {
 		IOLoop.INSTANCE.addTimeout(
 				new Timeout(
@@ -36,6 +39,10 @@ public class PeriodicCallback {
 		}
 	}
 	
+	/**
+	 * Cancel the {@code PeriodicCallback}. (No way to resume the cancellation, you will need to create a new
+	 * {@code PeriodicCallback}).
+	 */
 	public void cancel() {
 		this.active = false;
 	}

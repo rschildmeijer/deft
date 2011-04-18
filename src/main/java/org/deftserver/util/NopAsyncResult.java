@@ -2,6 +2,9 @@ package org.deftserver.util;
 
 import org.deftserver.web.AsyncResult;
 
+/**
+ * Convenience class used to limit the Java verboseness.
+ */
 public class NopAsyncResult<T> {
 	
 	private NopAsyncResult() {}

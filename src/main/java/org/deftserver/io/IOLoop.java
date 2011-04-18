@@ -51,7 +51,10 @@ public enum IOLoop implements IOLoopMXBean {
 		}
 		MXBeanUtil.registerMXBean(this, "IOLoop");
 	}
-	
+	/**
+	 * Start the io loop. The thread that invokes this method will be blocked (until {@link IOLoop#stop} is invoked) 
+	 * and will be the io loop thread.
+	 */
 	public void start() {
 		Thread.currentThread().setName("I/O-LOOP");
 		running = true;
@@ -98,22 +101,42 @@ public enum IOLoop implements IOLoopMXBean {
 		}
 	}
 	
+	/**
+	 * Stop the io loop and release the thread (io loop thread) that invoked the {@link IOLoop#start} method.
+	 */
 	public void stop() {
 		running = false;
 		logger.debug("Stopping IOLoop...");
 	}
-
+	
+	/**
+	 * Registers a new {@code IOHandler} with this {@code IOLoop}.
+	 * 
+	 * @param channel The {@code SelectableChannel}
+	 * @param handler {@code IOHandler that will receive the io callbacks.}
+	 * @param interestOps See {@link SelectionKey} for valid values. (Xor for multiple interests).
+	 * @param attachment The {@code attachment} that will be accessible from the returning {@code SelectionKey}s 
+	 * attachment.
+	 * 
+	 */
 	public SelectionKey addHandler(SelectableChannel channel, IOHandler handler, int interestOps, Object attachment) {
 		handlers.put(channel, handler);
 		return registerChannel(channel, interestOps, attachment);		
 	}
 	
+	/**
+	 * Unregisters the previously registered {@code IOHandler}.
+
+	 * @param channel The {@code SelectableChannel} that was registered with a user defined {@code IOHandler}
+	 */
 	public void removeHandler(SelectableChannel channel) {
 		handlers.remove(channel);
 	}
 	
 	/**
+	 * Update an earlier registered {@code SelectableChannel}
 	 * 
+	 * @param channel The {@code SelectableChannel}
 	 * @param newInterestOps The complete new set of interest operations.
 	 */
 	public void updateHandler(SelectableChannel channel, int newInterestOps) {
@@ -124,6 +147,13 @@ public enum IOLoop implements IOLoopMXBean {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param channel
+	 * @param interestOps
+	 * @param attachment
+	 * @return
+	 */
 	private SelectionKey registerChannel(SelectableChannel channel, int interestOps, Object attachment) {
 		try {
 			return channel.register(selector, interestOps, attachment);
@@ -145,7 +175,12 @@ public enum IOLoop implements IOLoopMXBean {
 	public void addTimeout(Timeout timeout) {
 		tm.addTimeout(timeout);
 	}
-	
+
+	/**
+	 * The callback will be invoked in the next iteration in the io loop. This is the only thread safe method that is
+	 * exposed by Deft. 
+	 * This is a convenient way to return control to the io loop.
+	 */
 	public void addCallback(AsyncCallback callback) {
 		cm.addCallback(callback);
 	}
