@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.deftserver.util.MXBeanUtil;
-import org.deftserver.web.http.HttpServerDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,18 +44,6 @@ public class JMXDebuggableTimeoutManager implements TimeoutManager, TimeoutManag
 	@Override
 	public boolean hasKeepAliveTimeout(SelectableChannel channel) {
 		return index.containsKey(channel);
-	}
-
-	@Override
-	public void touch(SelectableChannel channel) {
-		//Prolong/reset keep-alive timeout associated with channel
-		DecoratedTimeout oldTimeout = index.get(channel);
-		timeouts.remove(oldTimeout);
-		Timeout newTimeout = new Timeout(
-				System.currentTimeMillis() + HttpServerDescriptor.KEEP_ALIVE_TIMEOUT, 
-				oldTimeout.timeout.getCallback()
-		);
-		timeouts.add(new DecoratedTimeout(channel, newTimeout));
 	}
 
 	@Override

@@ -78,9 +78,13 @@ public class HttpProtocol implements IOHandler {
 		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
 		logger.debug("pending data about to be written");
 		ByteBuffer toSend = dbb.getByteBuffer();
+		SocketChannel channel = ((SocketChannel) key.channel());
 		try {
 			toSend.flip();	// prepare for write
-			long bytesWritten = ((SocketChannel)key.channel()).write(toSend);
+			long bytesWritten = channel.write(toSend);
+			if (IOLoop.INSTANCE.hasKeepAliveTimeout(channel)) {
+				prolongKeepAliveTimeout(channel);
+			}
 			logger.debug("sent {} bytes to wire", bytesWritten);
 			if (!toSend.hasRemaining()) {
 				logger.debug("sent all data in toSend buffer");
@@ -90,7 +94,7 @@ public class HttpProtocol implements IOHandler {
 			}
 		} catch (IOException e) {
 			logger.error("Failed to send data to client: {}", e.getMessage());
-			Closeables.closeQuietly(key.channel());
+			Closeables.closeQuietly(channel);
 		}
 	}
 	
@@ -98,7 +102,7 @@ public class HttpProtocol implements IOHandler {
 		if (key.isValid() && IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
-				//key.channel().register(key.selector(), SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
+				prolongKeepAliveTimeout(key.channel());
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
 				logger.debug("ClosedChannelException while registrating key for read: {}", e.getMessage());
@@ -110,6 +114,14 @@ public class HttpProtocol implements IOHandler {
 			Closeables.closeQuietly(key.channel());
 		}
 	}
+	
+	public void prolongKeepAliveTimeout(SelectableChannel channel) {
+		IOLoop.INSTANCE.addKeepAliveTimeout(
+				channel, 
+				Timeout.newKeepAliveTimeout(channel, KEEP_ALIVE_TIMEOUT)
+		);
+	}
+	
 	/**
 	 * Clears the buffer (prepares for reuse) attached to the given SelectionKey.
 	 * @return A cleared (position=0, limit=capacity) ByteBuffer which is ready for new reads

@@ -11,11 +11,9 @@ public interface TimeoutManager {
 	
 	boolean hasKeepAliveTimeout(SelectableChannel channel);
 	
-	void touch(SelectableChannel channel); 
-	
 	/**
 	 * 
-	 * @return the positive number (>0) of milliseconds until next scheduled timeout.
+	 * @return the positive number (>0) in milliseconds until the deadline for the next scheduled timeout.
 	 */
 	long execute();
 	

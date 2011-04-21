@@ -11,6 +11,7 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.deftserver.io.IOLoop;
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.DateUtil;
@@ -81,7 +82,9 @@ public class HttpResponse {
 			Closeables.closeQuietly(key.channel());
 		}
 		long bytesFlushed = responseData.position();
-
+		if (IOLoop.INSTANCE.hasKeepAliveTimeout(channel)) {
+			protocol.prolongKeepAliveTimeout(channel);
+		}
 		if (responseData.hasRemaining()) { 
 			responseData.compact();	// make room for more data be "read" in
 			try {

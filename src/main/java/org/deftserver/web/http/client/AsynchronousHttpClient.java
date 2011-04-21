@@ -152,7 +152,6 @@ public class AsynchronousHttpClient {
 	 */
 	private String makeRequestLineAndHeaders() {
 		return request.getVerb() + " " + request.getURL().getPath() + " " + HTTP_VERSION +
-				"From: a@b.com\r\n" +
 				"Host: " + request.getURL().getHost() + "\r\n" +
 				USER_AGENT_HEADER +
 				NEWLINE;

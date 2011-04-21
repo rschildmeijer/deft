@@ -36,7 +36,6 @@ public class JMXDebuggableTimeoutManagerTest {
 		addNopKeepAliveTimeout(c1, now);
 		addNopKeepAliveTimeout(c2, now);
 		addNopKeepAliveTimeout(c3, now+1);
-		tm.touch(c1);
 		
 		assertEquals(11, tm.getNumberOfTimeouts());
 		assertEquals(3, tm.getNumberOfKeepAliveTimeouts());
@@ -44,13 +43,13 @@ public class JMXDebuggableTimeoutManagerTest {
 		Thread.sleep(200);
 	
 		tm.execute();
-		assertEquals(4, tm.getNumberOfTimeouts());
-		assertEquals(1, tm.getNumberOfKeepAliveTimeouts());
+		assertEquals(6, tm.getNumberOfTimeouts());
+		assertEquals(0, tm.getNumberOfKeepAliveTimeouts());
 	
 		Thread.sleep(2000);
 		tm.execute();
-		assertEquals(1, tm.getNumberOfTimeouts());
-		assertEquals(1, tm.getNumberOfKeepAliveTimeouts());
+		assertEquals(0, tm.getNumberOfTimeouts());
+		assertEquals(0, tm.getNumberOfKeepAliveTimeouts());
 	}
 	
 	private void addNopTimeout(long timeout) {
