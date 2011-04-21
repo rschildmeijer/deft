@@ -14,6 +14,7 @@ Features
     - Asynchronous socket to help third party developers. (#109)
     - Asynchronous HTTP client (#97)
     - IOLoop.addCallback is thread safe (#103)
+    - Bug fix. Proper 'keep-alive' management in web server component (#99)
 
 Configuration
 ------------
