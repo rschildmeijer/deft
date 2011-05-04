@@ -7,16 +7,16 @@ import org.deftserver.io.timeout.Timeout;
 import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.AsyncResult;
 import org.deftserver.web.http.client.AsynchronousHttpClient;
-import org.deftserver.web.http.client.HttpResponse;
+import org.deftserver.web.http.client.Response;
 
 public class AsynchronousHttpClientExample {
 
 	public static void main(String[] args) {
 		AsynchronousHttpClient client = new AsynchronousHttpClient();
 		client.fetch("http://tt.se/start/", 
-				new AsyncResult<HttpResponse>() {
+				new AsyncResult<Response>() {
 					public void onFailure(Throwable caught) { out.println("exception:\n" + caught);} 
-					public void onSuccess(HttpResponse response) { out.println("http resonse:\n" + response);} 
+					public void onSuccess(Response response) { out.println("http resonse:\n" + response);} 
 				}
 		);
 		IOLoop.INSTANCE.addTimeout(

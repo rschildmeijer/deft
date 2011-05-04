@@ -37,14 +37,14 @@ public class AsynchronousHttpClient {
 
 	private static final long TIMEOUT = 15 * 1000;	// 15s
 	
-	private static final AsyncResult<HttpResponse> nopAsyncResult = NopAsyncResult.of(HttpResponse.class).nopAsyncResult;
+	private static final AsyncResult<Response> nopAsyncResult = NopAsyncResult.of(Response.class).nopAsyncResult;
 
 	private AsynchronousSocket socket;
 	
-	private HttpRequest request;
+	private Request request;
 	private long requestStarted;
-	private HttpResponse response;
-	private AsyncResult<HttpResponse> responseCallback;
+	private Response response;
+	private AsyncResult<Response> responseCallback;
 	
 	private Timeout timeout;
 	
@@ -61,17 +61,17 @@ public class AsynchronousHttpClient {
 	 * @param url e.g "http://tt.se:80/start/"
 	 * @param cb callback that will be executed when the response is received.
 	 */
-	public void fetch(String url, AsyncResult<HttpResponse> cb) {
-		request = new HttpRequest(url, HttpVerb.GET);
+	public void fetch(String url, AsyncResult<Response> cb) {
+		request = new Request(url, HttpVerb.GET);
 		doFetch(cb);
 	}
 	
-	public void fetch(HttpRequest request, AsyncResult<HttpResponse> cb) {
+	public void fetch(Request request, AsyncResult<Response> cb) {
 		this.request = request;
 		doFetch(cb);
 	}
 	
-	private void doFetch(AsyncResult<HttpResponse> cb) {
+	private void doFetch(AsyncResult<Response> cb) {
 		requestStarted = System.currentTimeMillis();
 		try {
 			socket = new AsynchronousSocket(SocketChannel.open().configureBlocking(false));
@@ -117,7 +117,7 @@ public class AsynchronousHttpClient {
 	
 	private void onTimeout() {
 		logger.debug("Pending operation (connect, read or write) timed out...");
-		AsyncResult<HttpResponse> cb = responseCallback;
+		AsyncResult<Response> cb = responseCallback;
 		responseCallback = nopAsyncResult;
 		cb.onFailure(new TimeoutException("Connection timed out"));
 		close();
@@ -136,7 +136,7 @@ public class AsynchronousHttpClient {
 	private void onConnectFailure(Throwable t) {
 		logger.debug("Connect failed...");
 		cancelTimeout();
-		AsyncResult<HttpResponse> cb = responseCallback;
+		AsyncResult<Response> cb = responseCallback;
 		responseCallback = nopAsyncResult;
 		cb.onFailure(t);
 		close();
@@ -170,7 +170,7 @@ public class AsynchronousHttpClient {
 	private void onHeaders(String result) {
 		logger.debug("headers: {}", result);
 		cancelTimeout();
-		response = new HttpResponse(requestStarted);
+		response = new Response(requestStarted);
 		String[] headers = result.split("\r\n");
 		response.setStatuLine(headers[0]);	// first entry contains status line (e.g. HTTP/1.1 200 OK)
 		for (int i = 1; i < headers.length; i++) {
@@ -194,7 +194,7 @@ public class AsynchronousHttpClient {
 	} 
 	
 	private void invokeResponseCallback() {
-		AsyncResult<HttpResponse> cb = responseCallback;
+		AsyncResult<Response> cb = responseCallback;
 		responseCallback = nopAsyncResult;
 		cb.onSuccess(response);
 	}

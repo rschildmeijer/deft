@@ -1062,9 +1062,9 @@ public class DeftSystemTest {
 		final AsyncCallback runByIOLoop = new AsyncCallback() {
 
 			public void onCallback() {
-				client.fetch(unresolvableAddress, new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+				client.fetch(unresolvableAddress, new AsyncResult<org.deftserver.web.http.client.Response>() {
 
-					public void onSuccess(org.deftserver.web.http.client.HttpResponse result) { client.close(); }
+					public void onSuccess(org.deftserver.web.http.client.Response result) { client.close(); }
 
 					public void onFailure(Throwable caught) { 
 						if (caught instanceof UnresolvedAddressException) latch.countDown();
@@ -1087,9 +1087,9 @@ public class DeftSystemTest {
 		final AsyncCallback runByIOLoop = new AsyncCallback() {
 
 			public void onCallback() {
-				client.fetch(unconnectableAddress, new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+				client.fetch(unconnectableAddress, new AsyncResult<org.deftserver.web.http.client.Response>() {
 
-					public void onSuccess(org.deftserver.web.http.client.HttpResponse result) { client.close(); }
+					public void onSuccess(org.deftserver.web.http.client.Response result) { client.close(); }
 
 					public void onFailure(Throwable caught) { 
 						if (caught instanceof ConnectException) latch.countDown();
@@ -1111,10 +1111,10 @@ public class DeftSystemTest {
 			final String url = "http://localhost:" + PORT + "/";
 			final AsynchronousHttpClient http = new AsynchronousHttpClient();
 			final String[] result = {"BODY_PLACEHOLDER", "STATUSCODE_PLACEHOLDER"};
-			final AsyncResult<org.deftserver.web.http.client.HttpResponse> cb =
-				new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+			final AsyncResult<org.deftserver.web.http.client.Response> cb =
+				new AsyncResult<org.deftserver.web.http.client.Response>() {
 
-				public void onSuccess(org.deftserver.web.http.client.HttpResponse response) { 
+				public void onSuccess(org.deftserver.web.http.client.Response response) { 
 					result[0] = response.getBody();
 					result[1] = response.getStatusLine();
 					latch.countDown(); 
@@ -1136,10 +1136,10 @@ public class DeftSystemTest {
 		final CountDownLatch latch = new CountDownLatch(1);
 		final String url = "http://localhost:" + (PORT+1) + "/";
 		final AsynchronousHttpClient http = new AsynchronousHttpClient();
-		final AsyncResult<org.deftserver.web.http.client.HttpResponse> cb =
-			new AsyncResult<org.deftserver.web.http.client.HttpResponse>() {
+		final AsyncResult<org.deftserver.web.http.client.Response> cb =
+			new AsyncResult<org.deftserver.web.http.client.Response>() {
 
-			public void onSuccess(org.deftserver.web.http.client.HttpResponse response) { }
+			public void onSuccess(org.deftserver.web.http.client.Response response) { }
 
 			public void onFailure(Throwable e) { if (e instanceof ConnectException) latch.countDown(); }
 		};

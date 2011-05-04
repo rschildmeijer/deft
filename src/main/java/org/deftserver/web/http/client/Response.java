@@ -4,14 +4,14 @@ import java.util.Map;
 
 import com.google.common.collect.Maps;
 
-public class HttpResponse {
+public class Response {
 	
 	private final long requestTime;
 	private String statusLine;
 	private final Map<String, String> headers = Maps.newHashMap();
 	private String body;
 	
-	public HttpResponse(long requestStarted) {
+	public Response(long requestStarted) {
 		requestTime = System.currentTimeMillis() - requestStarted;
 	}
 	

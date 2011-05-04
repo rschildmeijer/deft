@@ -7,14 +7,14 @@ import org.deftserver.web.HttpVerb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HttpRequest {
+public class Request {
 	
-	private static final Logger logger = LoggerFactory.getLogger(HttpRequest.class);
+	private static final Logger logger = LoggerFactory.getLogger(Request.class);
 
 	private final URL url;
 	private final HttpVerb verb;
 	
-	public HttpRequest(String url, HttpVerb verb) {
+	public Request(String url, HttpVerb verb) {
 		try {
 			this.url = new URL(url);
 			this.verb = verb;
