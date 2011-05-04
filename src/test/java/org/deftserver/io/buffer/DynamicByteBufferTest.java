@@ -73,16 +73,9 @@ public class DynamicByteBufferTest {
 
 	@Test
 	public void testReallocationLimit() {
-		// First put 7 bytes to the buffer
 		byte[] data = "0123456".getBytes();
 		dbb.put(data);
-		// Check buffer capacity did not changed
 		assertInternalState(10, 7, 10, 10);
-		// Now put 10 more bytes to the buffer
-		// So needed capacity to enclose all data is 10 + 7 = 17
-		// And capacity before call is 10
-		// Old bug was new capacity would be 10*1.5 = 15 which is less than
-		// 17 :p
 		dbb.put("0123456789".getBytes());
 		assertInternalState(25, 17, 25, 25);
 	}
