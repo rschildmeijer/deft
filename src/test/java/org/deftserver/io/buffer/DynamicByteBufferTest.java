@@ -2,7 +2,6 @@ package org.deftserver.io.buffer;
 
 import static org.junit.Assert.assertEquals;
 
-import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -42,11 +41,11 @@ public class DynamicByteBufferTest {
 		assertInternalState(16, 11, 16, 16);
 		
 		dbb.put(data);
-		assertInternalState(24, 22, 24, 24);
+		assertInternalState(33, 22, 33, 33);
 		
 		dbb.put(data);
 		dbb.put(data);
-		assertInternalState(54, 44, 54, 54);
+		assertInternalState(66, 44, 66, 66);
 	}
 	
 	@Test
@@ -65,11 +64,27 @@ public class DynamicByteBufferTest {
 		assertInternalState(expectedCapacity, expectedPosition, expectedLimit, arrayLength);
 		
 		dbb.put(data);
-		expectedCapacity += expectedCapacity * 0.5;	
+		expectedCapacity = 49;	
 		expectedPosition += data.length;
-		expectedLimit 	 += expectedLimit * 0.5;
-		arrayLength 	 += arrayLength * 0.5;
+		expectedLimit 	 = 49;
+		arrayLength 	 = 49;
 		assertInternalState(expectedCapacity, expectedPosition, expectedLimit, arrayLength);
+	}
+
+	@Test
+	public void testReallocationLimit() {
+		// First put 7 bytes to the buffer
+		byte[] data = "0123456".getBytes();
+		dbb.put(data);
+		// Check buffer capacity did not changed
+		assertInternalState(10, 7, 10, 10);
+		// Now put 10 more bytes to the buffer
+		// So needed capacity to enclose all data is 10 + 7 = 17
+		// And capacity before call is 10
+		// Old bug was new capacity would be 10*1.5 = 15 which is less than
+		// 17 :p
+		dbb.put("0123456789".getBytes());
+		assertInternalState(25, 17, 25, 25);
 	}
 	
 }

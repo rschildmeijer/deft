@@ -55,7 +55,8 @@ public class DynamicByteBuffer {
 		int remaining = backend.remaining();
 		if (size > remaining) {
 			logger.debug("allocating new DynamicByteBuffer, old capacity {}: ", backend.capacity());
-			int newSize =  (int) (Math.max(backend.capacity(), size) * 1.5);
+            int missing = size - remaining;
+			int newSize =  (int) ((backend.capacity() + missing) * 1.5);
 			reallocate(newSize);
 		}
 	}
