@@ -1,3 +1,7 @@
+0.4.0
+ * Renaming org.deftserver.web.http.client.{HttpRequest.java -> Request.java} and
+   org.deftserver.web.http.client.{HttpResponse.java -> Response.java}.
+
 0.1.1
  * #56 (Support for all response status codes)
  * #55 (Don't set Etag response header if payload is empty)
