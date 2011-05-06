@@ -3,7 +3,7 @@
  
 Features
 --------
-    - 
+    - Asynchronous HTTP client has configurable redirect support (HTTP status code 301 & 302) (#118)
 
 Configuration
 ------------

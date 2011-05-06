@@ -8,6 +8,7 @@ import org.deftserver.io.AsynchronousSocket;
 import org.deftserver.io.IOLoop;
 import org.deftserver.io.timeout.Timeout;
 import org.deftserver.util.NopAsyncResult;
+import org.deftserver.util.UrlUtil;
 import org.deftserver.web.AsyncCallback;
 import org.deftserver.web.AsyncResult;
 import org.deftserver.web.HttpVerb;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 * specification.
 * <pre>
 * E.g the following is not supported.
-*  - redirects
 *  - POST and PUT
 *  - Transfer-Encoding: chunked
 * </pre>
@@ -49,7 +49,7 @@ public class AsynchronousHttpClient {
 	private Timeout timeout;
 	
 	private static final String HTTP_VERSION = "HTTP/1.1\r\n";
-	private static final String USER_AGENT_HEADER = "User-Agent: Deft AsynchronousHttpClient/0.1\r\n";
+	private static final String USER_AGENT_HEADER = "User-Agent: Deft AsynchronousHttpClient/0.2-SNAPSHOT\r\n";
 	private static final String NEWLINE = "\r\n";
 	
 	public AsynchronousHttpClient() { }
@@ -63,16 +63,16 @@ public class AsynchronousHttpClient {
 	 */
 	public void fetch(String url, AsyncResult<Response> cb) {
 		request = new Request(url, HttpVerb.GET);
-		doFetch(cb);
+		doFetch(cb, System.currentTimeMillis());
 	}
 	
 	public void fetch(Request request, AsyncResult<Response> cb) {
 		this.request = request;
-		doFetch(cb);
+		doFetch(cb, System.currentTimeMillis());
 	}
 	
-	private void doFetch(AsyncResult<Response> cb) {
-		requestStarted = System.currentTimeMillis();
+	private void doFetch(AsyncResult<Response> cb, long requestStarted) {
+		this.requestStarted = requestStarted;
 		try {
 			socket = new AsynchronousSocket(SocketChannel.open().configureBlocking(false));
 		} catch (IOException e) {
@@ -189,8 +189,17 @@ public class AsynchronousHttpClient {
 		logger.debug("body size: {}", body.length());
 		cancelTimeout();
 		response.setBody(body);
-		close();
-		invokeResponseCallback();
+		if ((response.getStatusLine().contains("301") || response.getStatusLine().contains("302")) && 
+			request.isFollowingRedirects() && 
+			request.getMaxRedirects() > 0) {
+				String newUrl = UrlUtil.urlJoin(request.getURL(), response.getHeader("Location"));
+				request = new Request(newUrl, HttpVerb.valueOf(request.getVerb()), true, request.getMaxRedirects() - 1);
+				logger.debug("Following redirect, new url: {}, redirects left: {}", newUrl, request.getMaxRedirects());
+				doFetch(responseCallback, requestStarted);
+		} else {
+			close();
+			invokeResponseCallback();
+		}
 	} 
 	
 	private void invokeResponseCallback() {

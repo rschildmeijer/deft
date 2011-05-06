@@ -1149,8 +1149,31 @@ public class DeftSystemTest {
 		assertEquals(0, latch.getCount());
 	}
 	
+	@Test
+	public void AsynchronousHttpClientRedirectTest() throws InterruptedException {
+		final CountDownLatch latch = new CountDownLatch(1);
+		//final String url = "http://localhost:" + (PORT) + "/moved_perm";
+		final String url = "http://localhost:" + PORT + "/moved_perm";
+		final AsynchronousHttpClient http = new AsynchronousHttpClient();
+		final AsyncResult<org.deftserver.web.http.client.Response> cb =
+			new AsyncResult<org.deftserver.web.http.client.Response>() {
+
+			public void onSuccess(org.deftserver.web.http.client.Response response) { 
+				if (response.getBody().equals(expectedPayload)) {
+					latch.countDown();
+				}
+			}
+			
+			public void onFailure(Throwable e) { }
+		
+		};
+		// make sure that the http.fetch(..) is invoked from the ioloop thread
+		IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());
+	}
 	
-	public String convertStreamToString(InputStream is) throws IOException {
+	private String convertStreamToString(InputStream is) throws IOException {
 		if (is != null) {
 			StringBuilder sb = new StringBuilder();
 			String line;
