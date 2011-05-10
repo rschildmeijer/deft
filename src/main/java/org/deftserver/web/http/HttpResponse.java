@@ -160,12 +160,23 @@ public class HttpResponse {
 		setHeader("Content-Length", String.valueOf(file.length()));
 		long bytesWritten = 0;
 		flush(); // write initial line + headers
+		RandomAccessFile raf = null;
 		try {
-			bytesWritten = new RandomAccessFile(file, "r").getChannel().transferTo(0, file.length(), (SocketChannel) key.channel());
+			raf = new RandomAccessFile(file, "r");
+			bytesWritten = raf.getChannel().transferTo(0, file.length(), (SocketChannel) key.channel());
 			logger.debug("sent file, bytes sent: {}", bytesWritten);
 		} catch (IOException e) {
 			logger.error("Error writing (static file) response: {}", e.getMessage());
+		} finally {
+			if (raf != null) {
+				try {
+					raf.close();
+				} catch (IOException e) {
+					logger.error("Error closing static file: ", e.getMessage());					
+				}
+			}
 		}
+
 		return bytesWritten;
 	}
 	
