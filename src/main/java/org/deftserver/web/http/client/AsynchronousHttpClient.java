@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 * <pre>
 * E.g the following is not supported.
 *  - POST and PUT
-*  - Transfer-Encoding: chunked
+*  
 * </pre>
 * This class has not been tested extensively in production and
 * should be considered experimental as of the release of
@@ -177,12 +177,20 @@ public class AsynchronousHttpClient {
 			String[] header = headers[i].split(": ");
 			response.setHeader(header[0], header[1]);
 		}
-		int readBytes = Integer.parseInt(response.getHeader("Content-Length"));
+		
+		String contentLength = response.getHeader("Content-Length");
 		startTimeout();
-		socket.readBytes(
-				readBytes, 
-				new NaiveAsyncResult() { public void onSuccess(String result) { onBody(result); } }
-		);
+		if (contentLength != null) {
+			socket.readBytes(
+					Integer.parseInt(contentLength), 
+					new NaiveAsyncResult() { public void onSuccess(String body) { onBody(body); } }
+			);
+		} else {  // Transfer-Encoding: chunked
+			socket.readUntil(
+					NEWLINE, 	/* chunk delimiter*/
+					new NaiveAsyncResult() { public void onSuccess(String octet) { onChunkOctet(octet); } }
+			);
+		}
 	}
 				
 	private void onBody(String body) {
@@ -201,6 +209,32 @@ public class AsynchronousHttpClient {
 			invokeResponseCallback();
 		}
 	} 
+	
+	private void onChunk(String chunk) {
+		logger.debug("chunk size: {}", chunk.length());
+		cancelTimeout();
+		response.addChunk(chunk.substring(0, chunk.length() - NEWLINE.length()));
+		startTimeout();
+		socket.readUntil(
+				NEWLINE, 	/* chunk delimiter*/
+				new NaiveAsyncResult() { public void onSuccess(String octet) { onChunkOctet(octet); } }
+		);
+	}
+	
+	private void onChunkOctet(String octet) {
+		int readBytes = Integer.parseInt(octet, 16);
+		logger.debug("chunk octet: {} (decimal: {})", octet, readBytes);
+		cancelTimeout();
+		startTimeout();
+		if (readBytes != 0) {
+			socket.readBytes(
+					readBytes + NEWLINE.length(),	// chunk delimiter is \r\n
+					new NaiveAsyncResult() { public void onSuccess(String chunk) { onChunk(chunk); } }
+			);
+		} else {
+			onBody(response.getBody());
+		}
+	}
 	
 	private void invokeResponseCallback() {
 		AsyncResult<Response> cb = responseCallback;

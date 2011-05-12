@@ -9,7 +9,7 @@ public class Response {
 	private final long requestTime;
 	private String statusLine;
 	private final Map<String, String> headers = Maps.newHashMap();
-	private String body;
+	private String body = "";
 	
 	public Response(long requestStarted) {
 		requestTime = System.currentTimeMillis() - requestStarted;
@@ -50,6 +50,10 @@ public class Response {
 	public String toString() {
 		return "HttpResponse [body=" + body + ", headers=" + headers
 				+ "\n, statusLine=" + statusLine + "]\n" + ", request time: " + requestTime +"ms";
+	}
+
+	void addChunk(String chunk) {
+		body += chunk;
 	}
 	
 }

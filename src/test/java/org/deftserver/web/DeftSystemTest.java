@@ -251,8 +251,35 @@ public class DeftSystemTest {
 	
 	private static class QueryParamsRequestHandler extends RequestHandler {
 		@Override
-		public void get(org.deftserver.web.http.HttpRequest request, org.deftserver.web.http.HttpResponse response) {
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
 			response.write(request.getParameter("key1") + " " + request.getParameter("key2"));
+		}
+	}
+	
+	private static class ChunkedRequestHandler extends RequestHandler {
+		@Override
+		public void get(HttpRequest request, org.deftserver.web.http.HttpResponse response) {
+			response.setHeader("Transfer-Encoding", "chunked");
+			sleep(300);
+			
+			response.write("1\r\n");
+			response.write("a\r\n").flush();
+			sleep(300);
+			
+			response.write("5\r\n");
+			response.write("roger\r\n").flush();
+			sleep(300);
+			
+			response.write("2\r\n");
+			response.write("ab\r\n").flush();
+			sleep(300);
+			
+			response.write("0\r\n");
+			response.write("\r\n");
+		}
+		
+		private static void sleep(long ms) {
+			try { Thread.sleep(ms); } catch (InterruptedException ignore) { /* nop */	}
 		}
 	}
 
@@ -279,6 +306,7 @@ public class DeftSystemTest {
 		reqHandlers.put("/echo", new EchoingPostBodyRequestHandler());
 		reqHandlers.put("/authenticated", new AuthenticatedRequestHandler());
 		reqHandlers.put("/query_params", new QueryParamsRequestHandler());
+		reqHandlers.put("/chunked", new ChunkedRequestHandler());
 
 		final Application application = new Application(reqHandlers);
 		application.setStaticContentDir("src/test/resources");
@@ -1171,6 +1199,31 @@ public class DeftSystemTest {
 		IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
 		latch.await(5, TimeUnit.SECONDS);
 		assertEquals(0, latch.getCount());
+	}
+	
+	@Test
+	public void asynchronousHttpClientTransferEncodingChunkedTest() throws InterruptedException {
+		final CountDownLatch latch = new CountDownLatch(1);
+		final String url = "http://localhost:" + PORT + "/chunked";
+		final AsynchronousHttpClient http = new AsynchronousHttpClient();
+		final AsyncResult<org.deftserver.web.http.client.Response> cb =
+			new AsyncResult<org.deftserver.web.http.client.Response>() {
+
+			public void onSuccess(org.deftserver.web.http.client.Response response) { 
+				if (response.getBody().equals("arogerab") && 
+					response.getHeader("Transfer-Encoding").equals("chunked")) 
+				{
+					latch.countDown();
+				}
+			}
+			
+			public void onFailure(Throwable e) { }
+		
+		};
+		// make sure that the http.fetch(..) is invoked from the ioloop thread
+		IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
+		latch.await(5, TimeUnit.SECONDS);
+		assertEquals(0, latch.getCount());		
 	}
 	
 	private String convertStreamToString(InputStream is) throws IOException {
