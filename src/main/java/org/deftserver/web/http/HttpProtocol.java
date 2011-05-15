@@ -169,6 +169,11 @@ public class HttpProtocol implements IOHandler {
 				partials.put(key.channel(), (PartialHttpRequest) request);
 			}
 		}
+		//set extra request info
+		request.setRemoteHost(clientChannel.socket().getInetAddress());
+		request.setRemotePort(clientChannel.socket().getPort());
+		request.setServerHost(clientChannel.socket().getLocalAddress());
+		request.setServerPort(clientChannel.socket().getLocalPort());
 		return request;
 	}
 	
