@@ -1,5 +1,6 @@
 package org.deftserver.web.http;
 
+import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +24,10 @@ public class HttpRequest {
 	private ImmutableMultimap<String, String> parameters;
 	private String body;
 	private boolean keepAlive;
+	private InetAddress remoteHost;
+	private InetAddress serverHost;
+	private int remotePort;
+	private int serverPort;
 
 	/** Regex to parse HttpRequest Request Line */
 	public static final Pattern REQUEST_LINE_PATTERN = Pattern.compile(" ") ;
@@ -156,8 +161,40 @@ public class HttpRequest {
 	
 	public String getBody() {
 		return body;
-	}
+	}	
 	
+	public InetAddress getRemoteHost() {
+		return remoteHost;
+	}
+
+	public InetAddress getServerHost() {
+		return serverHost;
+	}
+
+	public int getRemotePort() {
+		return remotePort;
+	}
+
+	public int getServerPort() {
+		return serverPort;
+	}
+
+	protected void setRemoteHost(InetAddress host) {
+		remoteHost = host;
+	}
+
+	protected void setServerHost(InetAddress host) {
+		serverHost = host;
+	}
+
+	protected void setRemotePort(int port) {
+		remotePort = port;
+	}
+
+	protected void setServerPort(int port) {
+		serverPort = port;
+	}
+
 	/**
 	 * Returns a collection of all values associated with the provided parameter.
 	 * If no values are found and empty collection is returned.
