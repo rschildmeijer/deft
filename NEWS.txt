@@ -5,6 +5,7 @@ Features
 --------
     - Asynchronous HTTP client has configurable redirect support (HTTP status code 301 & 302) (#118)
     - Asynchronous HTTP client supports 'Transfer-Encoding: chunked' (#116)
+    - Multi-threaded web server support (#139)
 
 Configuration
 ------------

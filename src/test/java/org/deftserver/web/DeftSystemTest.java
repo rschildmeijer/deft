@@ -1078,7 +1078,7 @@ public class DeftSystemTest {
 			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { server.listen(PORT+1); }});
 			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { server.stop(); latch.countDown(); }});
 		}
-		latch.await(5, TimeUnit.SECONDS);
+		latch.await(50, TimeUnit.SECONDS);
 		assertEquals(0, latch.getCount());
 	}
 	
@@ -1152,7 +1152,7 @@ public class DeftSystemTest {
 			};
 			// make sure that the http.fetch(..) is invoked from the ioloop thread
 			IOLoop.INSTANCE.addCallback(new AsyncCallback() { public void onCallback() { http.fetch(url, cb); }});
-			latch.await(5, TimeUnit.SECONDS);
+			latch.await(15, TimeUnit.SECONDS);
 			assertEquals(0, latch.getCount());
 			assertEquals("hello test", result[0]);
 			assertEquals("HTTP/1.1 200 OK", result[1]);

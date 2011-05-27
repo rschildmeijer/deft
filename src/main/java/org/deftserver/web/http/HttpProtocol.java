@@ -28,12 +28,19 @@ public class HttpProtocol implements IOHandler {
 	
 	private final static Logger logger = LoggerFactory.getLogger(HttpProtocol.class);
 
+	private final IOLoop ioLoop;
 	private final Application application;
 
+	
 	// a queue of half-baked (pending/unfinished) HTTP post request
 	private final Map<SelectableChannel, PartialHttpRequest> partials = Maps.newHashMap();
  	
 	public HttpProtocol(Application app) {
+		this(IOLoop.INSTANCE, app);
+	}
+	
+	public HttpProtocol(IOLoop ioLoop, Application app) {
+		this.ioLoop = ioLoop;
 		application = app;
 	}
 	
@@ -41,8 +48,11 @@ public class HttpProtocol implements IOHandler {
 	public void handleAccept(SelectionKey key) throws IOException {
 		logger.debug("handle accept...");
 		SocketChannel clientChannel = ((ServerSocketChannel) key.channel()).accept();
-		clientChannel.configureBlocking(false);
-		IOLoop.INSTANCE.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
+		if (clientChannel != null) {
+			// could be null in a multithreaded deft environment because another ioloop was "faster" to accept()
+			clientChannel.configureBlocking(false);
+			ioLoop.addHandler(clientChannel, this, SelectionKey.OP_READ, ByteBuffer.allocate(READ_BUFFER_SIZE));
+		}
 	}
 	
 	@Override
@@ -57,9 +67,9 @@ public class HttpProtocol implements IOHandler {
 		HttpRequest request = getHttpRequest(key, clientChannel);
 		
 		if (request.isKeepAlive()) {
-			IOLoop.INSTANCE.addKeepAliveTimeout(
+			ioLoop.addKeepAliveTimeout(
 					clientChannel, 
-					Timeout.newKeepAliveTimeout(clientChannel, KEEP_ALIVE_TIMEOUT)
+					Timeout.newKeepAliveTimeout(ioLoop, clientChannel, KEEP_ALIVE_TIMEOUT)
 			);
 		}
 		HttpResponse response = new HttpResponse(this, key, request.isKeepAlive());
@@ -82,7 +92,7 @@ public class HttpProtocol implements IOHandler {
 		try {
 			toSend.flip();	// prepare for write
 			long bytesWritten = channel.write(toSend);
-			if (IOLoop.INSTANCE.hasKeepAliveTimeout(channel)) {
+			if (ioLoop.hasKeepAliveTimeout(channel)) {
 				prolongKeepAliveTimeout(channel);
 			}
 			logger.debug("sent {} bytes to wire", bytesWritten);
@@ -94,32 +104,36 @@ public class HttpProtocol implements IOHandler {
 			}
 		} catch (IOException e) {
 			logger.error("Failed to send data to client: {}", e.getMessage());
-			Closeables.closeQuietly(channel);
+			Closeables.closeQuietly(ioLoop, channel);
 		}
 	}
 	
 	public void closeOrRegisterForRead(SelectionKey key) {
-		if (key.isValid() && IOLoop.INSTANCE.hasKeepAliveTimeout(key.channel())) {
+		if (key.isValid() && ioLoop.hasKeepAliveTimeout(key.channel())) {
 			try {
 				key.channel().register(key.selector(), SelectionKey.OP_READ, reuseAttachment(key));
 				prolongKeepAliveTimeout(key.channel());
 				logger.debug("keep-alive connection. registrating for read.");
 			} catch (ClosedChannelException e) {
 				logger.debug("ClosedChannelException while registrating key for read: {}", e.getMessage());
-				Closeables.closeQuietly(key.channel());
+				Closeables.closeQuietly(ioLoop, key.channel());
 			}		
 		} else {
 			// http request should be finished and no 'keep-alive' => close connection
 			logger.debug("Closing finished (non keep-alive) http connection"); 
-			Closeables.closeQuietly(key.channel());
+			Closeables.closeQuietly(ioLoop, key.channel());
 		}
 	}
 	
 	public void prolongKeepAliveTimeout(SelectableChannel channel) {
-		IOLoop.INSTANCE.addKeepAliveTimeout(
+		ioLoop.addKeepAliveTimeout(
 				channel, 
-				Timeout.newKeepAliveTimeout(channel, KEEP_ALIVE_TIMEOUT)
+				Timeout.newKeepAliveTimeout(ioLoop, channel, KEEP_ALIVE_TIMEOUT)
 		);
+	}
+	
+	public IOLoop getIOLoop() {
+		return ioLoop;
 	}
 	
 	/**
@@ -148,7 +162,7 @@ public class HttpProtocol implements IOHandler {
 			clientChannel.read(buffer);
 		} catch (IOException e) {
 			logger.warn("Could not read buffer: {}", e.getMessage());
-			Closeables.closeQuietly(clientChannel);
+			Closeables.closeQuietly(ioLoop, clientChannel);
 		}
 		buffer.flip();
 		

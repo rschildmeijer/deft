@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.deftserver.io.IOLoop;
 import org.deftserver.util.ArrayUtil;
 import org.deftserver.web.HttpVerb;
 
@@ -15,6 +16,8 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMultimap;
 
 public class HttpRequest {
+	
+	private IOLoop ioLoop;
 	
 	private final String requestLine;
 	private final HttpVerb method;
@@ -116,6 +119,14 @@ public class HttpRequest {
 		} else {
 			return new HttpRequest(unfinished.getRequestLine(), unfinished.getHeaders(), unfinished.getBody());
 		}
+	}
+	
+	protected void setIOLoop(IOLoop ioLoop) {
+		this.ioLoop = ioLoop;
+	}
+	
+	public IOLoop getIOLoop() {
+		return ioLoop;
 	}
 	
 	public String getRequestLine() {

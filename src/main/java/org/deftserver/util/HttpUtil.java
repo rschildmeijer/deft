@@ -14,14 +14,9 @@ public class HttpUtil {
 
 	private static final Logger logger = LoggerFactory.getLogger(HttpUtil.class);
 
-	private static final MessageDigest md;
-	static {
-		try {	/* Creating a MessageDigest instance is expensive. Do it only once.*/
-			md = MessageDigest.getInstance("MD5");
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException("MD5 cryptographic algorithm is not available.", e);
-		}
-	}
+	/* MessageDigest are not thread-safe and are expensive to create. 
+	 * Do it lazily for each thread that need access to one.*/
+	private static final ThreadLocal<MessageDigest> md = new ThreadLocal<MessageDigest>();
 	
 	private static final String _200_OK 		 			= "HTTP/1.1 200 OK\r\n"; 
 	private static final String _201_CREATED 		 		= "HTTP/1.1 201 Created\r\n"; 
@@ -158,7 +153,15 @@ public class HttpUtil {
 
 
 	public static String getEtag(byte[] bytes) {
-		byte[] digest = md.digest(bytes);
+		if (md.get() == null) {
+			try {
+				System.out.println("create instance");
+				md.set(MessageDigest.getInstance("MD5"));
+			} catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException("MD5 cryptographic algorithm is not available.", e);
+			}
+		}
+		byte[] digest = md.get().digest(bytes);
 		BigInteger number = new BigInteger(1, digest);
 		return '0' + number.toString(16);	// prepend a '0' to get a proper MD5 hash 
 	}

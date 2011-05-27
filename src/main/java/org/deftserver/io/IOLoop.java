@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.deftserver.io.callback.CallbackManager;
 import org.deftserver.io.callback.JMXDebuggableCallbackManager;
@@ -27,9 +28,11 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public enum IOLoop implements IOLoopMXBean {
+public class IOLoop implements IOLoopMXBean {
 	
-	INSTANCE;
+	/* IOLoop singleton to use for convenience (otherwise you would have to pass around the 
+	 * IOLoop instance explicitly, now you can simply use IOLoop.INSTANCE) */
+	public static final IOLoop INSTANCE = new IOLoop();
 	
 	private boolean running = false;
 	
@@ -42,7 +45,9 @@ public enum IOLoop implements IOLoopMXBean {
 	private final TimeoutManager tm = new JMXDebuggableTimeoutManager();
 	private final CallbackManager cm = new JMXDebuggableCallbackManager();
 	
-	private IOLoop() {
+	private static final AtomicInteger sequence = new AtomicInteger();
+	
+	public IOLoop() {
 		try {
 			selector = Selector.open();
 		} catch (IOException e) {
@@ -55,7 +60,7 @@ public enum IOLoop implements IOLoopMXBean {
 	 * and will be the io loop thread.
 	 */
 	public void start() {
-		Thread.currentThread().setName("I/O-LOOP");
+		Thread.currentThread().setName("I/O-LOOP" + sequence.incrementAndGet());
 		running = true;
 		
 		long selectorTimeout = 250; // 250 ms

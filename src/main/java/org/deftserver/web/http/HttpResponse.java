@@ -11,7 +11,6 @@ import java.nio.channels.SocketChannel;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.deftserver.io.IOLoop;
 import org.deftserver.io.buffer.DynamicByteBuffer;
 import org.deftserver.util.Closeables;
 import org.deftserver.util.DateUtil;
@@ -79,10 +78,10 @@ public class HttpResponse {
 			channel.write(responseData.getByteBuffer());
 		} catch (IOException e) {
 			logger.error("ClosedChannelException during channel.write(): {}", e.getMessage());
-			Closeables.closeQuietly(key.channel());
+			Closeables.closeQuietly(protocol.getIOLoop(), key.channel());
 		}
 		long bytesFlushed = responseData.position();
-		if (IOLoop.INSTANCE.hasKeepAliveTimeout(channel)) {
+		if (protocol.getIOLoop().hasKeepAliveTimeout(channel)) {
 			protocol.prolongKeepAliveTimeout(channel);
 		}
 		if (responseData.hasRemaining()) { 
@@ -91,7 +90,7 @@ public class HttpResponse {
 				key.channel().register(key.selector(), SelectionKey.OP_WRITE);
 			} catch (ClosedChannelException e) {
 				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
-				Closeables.closeQuietly(key.channel());
+				Closeables.closeQuietly(protocol.getIOLoop(), key.channel());
 			}
 			key.attach(responseData);
 		} else {

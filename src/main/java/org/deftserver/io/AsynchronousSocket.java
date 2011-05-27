@@ -23,6 +23,8 @@ public class AsynchronousSocket implements IOHandler {
 	
 	private static final Logger logger = LoggerFactory.getLogger(AsynchronousSocket.class);
 	
+	private final IOLoop ioLoop;
+	
 	private final int DEFAULT_BYTEBUFFER_SIZE = 1024;
 	
 	private final AsyncResult<String> nopAsyncStringResult = NopAsyncResult.of(String.class).nopAsyncResult;
@@ -48,19 +50,24 @@ public class AsynchronousSocket implements IOHandler {
 	 * Create a new {@code AsynchronousSocket} that will delegate its io operations the given {@code SelectableChannel}.
 	 */
 	public AsynchronousSocket(SelectableChannel channel) {
+		this(IOLoop.INSTANCE, channel);
+	}
+	
+	public AsynchronousSocket(IOLoop ioLoop, SelectableChannel channel) {
+		this.ioLoop = ioLoop;
 		this.channel = channel;
 		interestOps = SelectionKey.OP_CONNECT;
 		if (channel instanceof SocketChannel && (((SocketChannel) channel).isConnected())) {
 			interestOps |= SelectionKey.OP_READ;
 		}
-		IOLoop.INSTANCE.addHandler(channel, this, interestOps, null);
+		ioLoop.addHandler(channel, this, interestOps, null);
 	}
 	
 	/**
 	 * Connects to the given host port tuple and invokes the given callback when a successful connection is established.
 	 */
 	public void connect(String host, int port, AsyncResult<Boolean> ccb) {
-		IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_CONNECT);
+		ioLoop.updateHandler(channel, interestOps |= SelectionKey.OP_CONNECT);
 		connectCallback = ccb;
 		if (channel instanceof SocketChannel) {
 			try {
@@ -79,7 +86,7 @@ public class AsynchronousSocket implements IOHandler {
 	 * Close the socket.
 	 */
 	public void close() {
-		Closeables.closeQuietly(channel);
+		Closeables.closeQuietly(ioLoop, channel);
 		invokeCloseCallback();
 	}
 	
@@ -110,7 +117,7 @@ public class AsynchronousSocket implements IOHandler {
 				sc.finishConnect();
 				invokeConnectSuccessfulCallback();
 				interestOps &= ~SelectionKey.OP_CONNECT;
-				IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
+				ioLoop.updateHandler(channel, interestOps |= SelectionKey.OP_READ);
 			} catch (ConnectException e) {
 				logger.warn("Connect failed: {}", e.getMessage());
 				invokeConnectFailureCallback(e);
@@ -128,7 +135,7 @@ public class AsynchronousSocket implements IOHandler {
 		int read = ((SocketChannel) key.channel()).read(buffer);
 		if (read == -1) {	// EOF
 			reachedEOF = true;
-			IOLoop.INSTANCE.updateHandler(channel, interestOps &= ~SelectionKey.OP_READ);
+			ioLoop.updateHandler(channel, interestOps &= ~SelectionKey.OP_READ);
 			return;
 		}
 		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.ISO_8859_1));
@@ -253,15 +260,15 @@ public class AsynchronousSocket implements IOHandler {
 		} catch (IOException e) {
 			logger.error("IOException during write: {}", e.getMessage());
 			invokeCloseCallback();
-			Closeables.closeQuietly(channel);
+			Closeables.closeQuietly(ioLoop, channel);
 		}
 		writeBuffer.delete(0, written);
 		logger.debug("wrote: {} bytes", written);
 		logger.debug("writeBuffer size: {}", writeBuffer.length());
 		if (writeBuffer.length() > 0) {
-			IOLoop.INSTANCE.updateHandler(channel, interestOps |= SelectionKey.OP_WRITE);
+			ioLoop.updateHandler(channel, interestOps |= SelectionKey.OP_WRITE);
 		} else {
-			IOLoop.INSTANCE.updateHandler(channel, interestOps &= ~SelectionKey.OP_WRITE);
+			ioLoop.updateHandler(channel, interestOps &= ~SelectionKey.OP_WRITE);
 			invokeWriteCallback();
 		}
 	}

@@ -48,11 +48,19 @@ public class AsynchronousHttpClient {
 	
 	private Timeout timeout;
 	
+	private final IOLoop ioLoop;
+	
 	private static final String HTTP_VERSION = "HTTP/1.1\r\n";
 	private static final String USER_AGENT_HEADER = "User-Agent: Deft AsynchronousHttpClient/0.2-SNAPSHOT\r\n";
 	private static final String NEWLINE = "\r\n";
 	
-	public AsynchronousHttpClient() { }
+	public AsynchronousHttpClient() { 
+		this(IOLoop.INSTANCE);
+	}
+	
+	public AsynchronousHttpClient(IOLoop ioLoop) {
+		this.ioLoop = ioLoop;
+	}
 
 	/**
 	 * Makes an asynchronous HTTP GET request against the specified url and invokes the given 
@@ -106,7 +114,7 @@ public class AsynchronousHttpClient {
 				System.currentTimeMillis() + TIMEOUT, 
 				new AsyncCallback() { public void onCallback() { onTimeout(); } }
 		);
-		IOLoop.INSTANCE.addTimeout(timeout);		
+		ioLoop.addTimeout(timeout);		
 	}
 	
 	private void cancelTimeout() {

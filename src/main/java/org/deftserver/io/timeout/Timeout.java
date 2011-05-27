@@ -2,6 +2,7 @@ package org.deftserver.io.timeout;
 
 import java.nio.channels.SelectableChannel;
 
+import org.deftserver.io.IOLoop;
 import org.deftserver.util.Closeables;
 import org.deftserver.web.AsyncCallback;
 
@@ -33,10 +34,10 @@ public class Timeout {
 		return cancelled ? AsyncCallback.nopCb : cb;
 	}
 	
-	public static Timeout newKeepAliveTimeout(final SelectableChannel clientChannel, long keepAliveTimeout) {
+	public static Timeout newKeepAliveTimeout(final IOLoop ioLoop, final SelectableChannel clientChannel, long keepAliveTimeout) {
 		return new Timeout(
 				System.currentTimeMillis() + keepAliveTimeout,
-				new AsyncCallback() { public void onCallback() { Closeables.closeQuietly(clientChannel); } }
+				new AsyncCallback() { public void onCallback() { Closeables.closeQuietly(ioLoop, clientChannel); } }
 		);
 	}
 

@@ -1,6 +1,8 @@
 0.4.0
  * Renaming org.deftserver.web.http.client.{HttpRequest.java -> Request.java} and
    org.deftserver.web.http.client.{HttpResponse.java -> Response.java}.
+ * o.d.io.timeout.Timeout.newKeepAliveTimeout now requires that you specifies an ioloop explicitly (previously the 
+   global singleton was used implicitly.)
 
 0.1.1
  * #56 (Support for all response status codes)

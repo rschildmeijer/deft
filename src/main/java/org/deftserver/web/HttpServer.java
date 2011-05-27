@@ -4,13 +4,15 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.ServerSocketChannel;
+import java.util.List;
 
-import org.deftserver.io.IOHandler;
 import org.deftserver.io.IOLoop;
 import org.deftserver.util.Closeables;
 import org.deftserver.web.http.HttpProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 public class HttpServer {
 	
@@ -20,17 +22,28 @@ public class HttpServer {
 	private static final int MAX_PORT_NUMBER = 65535;
 	
 	private ServerSocketChannel serverChannel;
+	private final List<IOLoop> ioLoops = Lists.newLinkedList();
 	
-	private final IOHandler protocol;
-
+	private final Application application;
+	
 	public HttpServer(Application application) {
-		protocol = new HttpProtocol(application);
+		this.application = application;
 	}
 
 	/**
+	 * If you want to run Deft on multiple threads first invoke {@link #bind(int)} then {@link #start(int)} 
+	 * instead of {@link #listen(int)} (listen starts Deft http server on a single thread with the default IOLoop 
+	 * instance: {@code IOLoop.INSTANCE}).
+	 * 
 	 * @return this for chaining purposes
 	 */
 	public void listen(int port) {
+		bind(port);
+		ioLoops.add(IOLoop.INSTANCE);
+		registerHandler(IOLoop.INSTANCE, new HttpProtocol(application));
+	}
+	
+	public void bind(int port) {
 		if (port <= MIN_PORT_NUMBER || port > MAX_PORT_NUMBER) {
 			throw new IllegalArgumentException("Invalid port number. Valid range: [" + 
 					MIN_PORT_NUMBER + ", " + MAX_PORT_NUMBER + ")");
@@ -48,8 +61,22 @@ public class HttpServer {
 			serverChannel.socket().bind(endpoint);
 		} catch (IOException e) {
 			logger.error("Could not bind socket: {}", e);
+		}	
+	}
+	
+	public void start(int numThreads) {
+		for (int i = 0; i < numThreads; i++) {
+			final IOLoop ioLoop = new IOLoop();
+			ioLoops.add(ioLoop);
+			final HttpProtocol protocol = new HttpProtocol(ioLoop, application);
+			new Thread(new Runnable() {
+				
+				@Override public void run() {
+					registerHandler(ioLoop, protocol);
+					ioLoop.start();
+				}
+			}).start();
 		}
-		registerHandler();
 	}
 	
 	/**
@@ -57,11 +84,13 @@ public class HttpServer {
 	 */
 	public void stop() {
 		logger.debug("Stopping HTTP server");
-		Closeables.closeQuietly(serverChannel);
+		for (IOLoop ioLoop : ioLoops) {
+			Closeables.closeQuietly(ioLoop, serverChannel);
+		}
 	}
 	
-	private void registerHandler() {
-		IOLoop.INSTANCE.addHandler(
+	private void registerHandler(IOLoop ioLoop, HttpProtocol protocol) {
+		ioLoop.addHandler(
 				serverChannel,
 				protocol, 
 				SelectionKey.OP_ACCEPT,

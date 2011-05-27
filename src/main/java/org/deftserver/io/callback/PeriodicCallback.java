@@ -6,6 +6,7 @@ import org.deftserver.web.AsyncCallback;
 
 public class PeriodicCallback {
 	
+	private final IOLoop ioLoop;
 	private final AsyncCallback cb;
 	private final long period;
 	private boolean active = true;
@@ -16,6 +17,11 @@ public class PeriodicCallback {
 	 * @param period The period in ms
 	 */
 	public PeriodicCallback(AsyncCallback cb, long period) {
+		this(IOLoop.INSTANCE, cb, period);
+	}
+	
+	public PeriodicCallback(IOLoop ioLoop, AsyncCallback cb, long period) {
+		this.ioLoop = ioLoop;
 		this.cb = cb;
 		this.period = period;
 	}
@@ -24,7 +30,7 @@ public class PeriodicCallback {
 	 * Start the {@code PeriodicCallback}
 	 */
 	public void start() {
-		IOLoop.INSTANCE.addTimeout(
+		ioLoop.addTimeout(
 				new Timeout(
 						System.currentTimeMillis() + period, 
 						new AsyncCallback() { @Override public void onCallback() { run(); }}
