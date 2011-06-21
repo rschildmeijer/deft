@@ -5,6 +5,7 @@ import static org.deftserver.web.http.HttpServerDescriptor.READ_BUFFER_SIZE;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
@@ -81,33 +82,59 @@ public class HttpProtocol implements IOHandler {
 			response.finish();
 		}
 	}
-	
+
 	@Override
 	public void handleWrite(SelectionKey key) {
 		logger.debug("handle write...");
-		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
-		logger.debug("pending data about to be written");
-		ByteBuffer toSend = dbb.getByteBuffer();
 		SocketChannel channel = ((SocketChannel) key.channel());
-		try {
-			toSend.flip();	// prepare for write
-			long bytesWritten = channel.write(toSend);
-			if (ioLoop.hasKeepAliveTimeout(channel)) {
-				prolongKeepAliveTimeout(channel);
+
+		if (key.attachment() instanceof MappedByteBuffer) {
+			writeMappedByteBuffer(key, channel);
+		} else if (key.attachment() instanceof DynamicByteBuffer) {
+			writeDynamicByteBuffer(key, channel);
+		}
+		if (ioLoop.hasKeepAliveTimeout(channel)) {
+			prolongKeepAliveTimeout(channel);
+		}
+
+	}
+
+	private void writeMappedByteBuffer(SelectionKey key, SocketChannel channel) {
+		MappedByteBuffer mbb = (MappedByteBuffer) key.attachment();
+		if (mbb.hasRemaining()) {
+			try {
+				channel.write(mbb);
+			} catch (IOException e) {
+				logger.error("Failed to send data to client: {}", e.getMessage());
+				Closeables.closeQuietly(channel);
 			}
-			logger.debug("sent {} bytes to wire", bytesWritten);
-			if (!toSend.hasRemaining()) {
-				logger.debug("sent all data in toSend buffer");
-				closeOrRegisterForRead(key);	// should probably only be done if the HttpResponse is finished
-			} else {
-				toSend.compact();	// make room for more data be "read" in
-			}
-		} catch (IOException e) {
-			logger.error("Failed to send data to client: {}", e.getMessage());
-			Closeables.closeQuietly(ioLoop, channel);
+		}
+		if (!mbb.hasRemaining()) {
+			closeOrRegisterForRead(key);
 		}
 	}
 	
+	private void writeDynamicByteBuffer(SelectionKey key, SocketChannel channel) {
+		DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
+		logger.debug("pending data about to be written");
+		ByteBuffer toSend = dbb.getByteBuffer();
+		toSend.flip(); // prepare for write
+		long bytesWritten = 0;
+		try {
+			bytesWritten = channel.write(toSend);
+		} catch (IOException e) {
+			logger.error("Failed to send data to client: {}", e.getMessage());
+			Closeables.closeQuietly(channel);
+		}
+		logger.debug("sent {} bytes to wire", bytesWritten);
+		if (!toSend.hasRemaining()) {
+			logger.debug("sent all data in toSend buffer");
+			closeOrRegisterForRead(key); // should probably only be done if the HttpResponse is finished
+		} else {
+			toSend.compact(); // make room for more data be "read" in
+		}
+	}
+
 	public void closeOrRegisterForRead(SelectionKey key) {
 		if (key.isValid() && ioLoop.hasKeepAliveTimeout(key.channel())) {
 			try {
@@ -143,18 +170,20 @@ public class HttpProtocol implements IOHandler {
 	private ByteBuffer reuseAttachment(SelectionKey key) {
 		Object o = key.attachment();
 		ByteBuffer attachment = null;
-		if (o instanceof DynamicByteBuffer) {
-			attachment = ((DynamicByteBuffer)o).getByteBuffer();
+		if (o instanceof MappedByteBuffer) {
+			attachment = ByteBuffer.allocate(READ_BUFFER_SIZE);
+		} else if (o instanceof DynamicByteBuffer) {
+			attachment = ((DynamicByteBuffer) o).getByteBuffer();
 		} else {
 			attachment = (ByteBuffer) o;
 		}
+
 		if (attachment.capacity() < READ_BUFFER_SIZE) {
 			attachment = ByteBuffer.allocate(READ_BUFFER_SIZE);
 		}
-		attachment.clear();	// prepare for reuse
+		attachment.clear(); // prepare for reuse
 		return attachment;
 	}
-
 
 	private HttpRequest getHttpRequest(SelectionKey key, SocketChannel clientChannel) {
 		ByteBuffer buffer = (ByteBuffer) key.attachment();

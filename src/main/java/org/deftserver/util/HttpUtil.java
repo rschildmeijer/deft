@@ -155,7 +155,6 @@ public class HttpUtil {
 	public static String getEtag(byte[] bytes) {
 		if (md.get() == null) {
 			try {
-				System.out.println("create instance");
 				md.set(MessageDigest.getInstance("MD5"));
 			} catch (NoSuchAlgorithmException e) {
 				throw new RuntimeException("MD5 cryptographic algorithm is not available.", e);

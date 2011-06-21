@@ -85,6 +85,8 @@ public class HttpServer {
 	public void stop() {
 		logger.debug("Stopping HTTP server");
 		for (IOLoop ioLoop : ioLoops) {
+			// TODO RS 110527 Should probably do this in each IOLoop through an AsyncCallback 
+			// (hint: ioloop.addCallback(..))
 			Closeables.closeQuietly(ioLoop, serverChannel);
 		}
 	}
