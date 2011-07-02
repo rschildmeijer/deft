@@ -5,9 +5,12 @@ import static org.deftserver.web.http.HttpServerDescriptor.WRITE_BUFFER_SIZE;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.ClosedChannelException;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,7 +90,7 @@ public class HttpResponse {
 		if (responseData.hasRemaining()) { 
 			responseData.compact();	// make room for more data be "read" in
 			try {
-				key.channel().register(key.selector(), SelectionKey.OP_WRITE);
+				key.channel().register(key.selector(), SelectionKey.OP_WRITE);	//TODO RS 110621, use IOLoop.updateHandler
 			} catch (ClosedChannelException e) {
 				logger.error("ClosedChannelException during flush(): {}", e.getMessage());
 				Closeables.closeQuietly(protocol.getIOLoop(), key.channel());
@@ -109,27 +112,42 @@ public class HttpResponse {
 	public long finish() {
 		long bytesWritten = 0;
 		SocketChannel clientChannel = (SocketChannel) key.channel();
-		if (clientChannel.isOpen()) {
-			if (!headersCreated) {
-				setEtagAndContentLength();
+
+		if (key.attachment() instanceof MappedByteBuffer) {
+			MappedByteBuffer mbb = (MappedByteBuffer) key.attachment();
+			if (mbb.hasRemaining() && clientChannel.isOpen()) {
+				try {
+					bytesWritten = clientChannel.write(mbb);
+				} catch (IOException e) {
+					logger.warn("Could not write to channel: ", e.getMessage());					
+					Closeables.closeQuietly(key.channel());
+				}
 			}
-			bytesWritten = flush();
-		}
-		
-		// close (or register for read) iff 
-		// (a) DBB is attached but all data is sent to wire (hasRemaining == false)
-		// (b) no DBB is attached (never had to register for write)
-		if (key.attachment() instanceof DynamicByteBuffer) {
-			DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
-			if (!(dbb).hasRemaining()) {
+			if (!mbb.hasRemaining()) {
 				protocol.closeOrRegisterForRead(key);
-			} 
+			}
 		} else {
-			protocol.closeOrRegisterForRead(key);
+			if (clientChannel.isOpen()) {
+				if (!headersCreated) {
+					setEtagAndContentLength();
+				}
+				bytesWritten = flush();
+			}
+			// close (or register for read) if
+			// (a) DBB is attached but all data is sent to wire (hasRemaining ==
+			// false)
+			// (b) no DBB is attached (never had to register for write)
+			if (key.attachment() instanceof DynamicByteBuffer) {
+				DynamicByteBuffer dbb = (DynamicByteBuffer) key.attachment();
+				if (!(dbb).hasRemaining()) {
+					protocol.closeOrRegisterForRead(key);
+				}
+			} else {
+				protocol.closeOrRegisterForRead(key);
+			}
 		}
 		return bytesWritten;
-	}
-	
+	}	
 	private void setEtagAndContentLength() {
 		if (responseData.position() > 0) {
 			setHeader("Etag", HttpUtil.getEtag(responseData.array()));
@@ -159,11 +177,26 @@ public class HttpResponse {
 		setHeader("Content-Length", String.valueOf(file.length()));
 		long bytesWritten = 0;
 		flush(); // write initial line + headers
+		
 		RandomAccessFile raf = null;
 		try {
 			raf = new RandomAccessFile(file, "r");
-			bytesWritten = raf.getChannel().transferTo(0, file.length(), (SocketChannel) key.channel());
-			logger.debug("sent file, bytes sent: {}", bytesWritten);
+			FileChannel fc = raf.getChannel();
+			MappedByteBuffer mbb = raf.getChannel().map(MapMode.READ_ONLY, 0L, fc.size());
+
+			if (mbb.hasRemaining()) {
+				bytesWritten = ((SocketChannel) key.channel()).write(mbb);
+				logger.debug("sent file, bytes sent: {}", bytesWritten);
+			}
+			if (mbb.hasRemaining()) {
+				try {
+					key.channel().register(key.selector(), SelectionKey.OP_WRITE); //TODO RS 110621, use IOLoop.updateHandler
+				} catch (ClosedChannelException e) {
+					logger.error("ClosedChannelException during write(File): {}", e.getMessage());
+					Closeables.closeQuietly(key.channel());
+				}
+				key.attach(mbb);
+			}
 		} catch (IOException e) {
 			logger.error("Error writing (static file) response: {}", e.getMessage());
 		} finally {

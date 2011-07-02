@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
 
@@ -47,7 +48,37 @@ public class AsynchronousSocket implements IOHandler {
 	private boolean reachedEOF = false;
 	
 	/**
-	 * Create a new {@code AsynchronousSocket} that will delegate its io operations the given {@code SelectableChannel}.
+	 * Creates a new {@code AsynchronousSocket} that will delegate its io operations to the given 
+	 * {@link SelectableChannel}. 
+	 * <p>
+	 * Support for three non-blocking asynchronous methods that take callbacks:
+	 * <p> 
+	 * {@link #readUntil(String, AsyncResult)}
+	 * <p>  
+	 * {@link #readBytes(int, AsyncResult)} and
+	 * <p>
+	 * {@link #write(String, AsyncCallback)} 
+	 * <p>
+	 * The {@link SelectableChannel} should be the result of either {@link SocketChannel#open()} (client operations, 
+	 * connected or  unconnected) or {@link ServerSocketChannel#accept()} (server operations).
+	 * <p> 
+	 * The given {@code SelectableChannel} will be configured to be in non-blocking mode, even if it is non-blocking
+	 * already. 
+	 * 
+	 * <p>Below is an example of how a simple server could be implemented.
+	 * <pre>
+     *   final ServerSocketChannel server = ServerSocketChannel.open();
+     *   server.socket().bind(new InetSocketAddress(9090));
+     * 	
+     *   AcceptUtil.accept(server, new AsyncCallback() { public void onCallback() { onAccept(server);} });
+     *   IOLoop.INSTANCE.start();
+	 * 
+     *   private static void onAccept(ServerSocketChannel channel) {
+     *       SocketChannel client = channel.accept();
+     *       AsynchronousSocket socket = new AsynchronousSocket(client);
+     *       // use socket
+     *   }
+	 * </pre>
 	 */
 	public AsynchronousSocket(SelectableChannel channel) {
 		this(IOLoop.INSTANCE, channel);
@@ -56,7 +87,12 @@ public class AsynchronousSocket implements IOHandler {
 	public AsynchronousSocket(IOLoop ioLoop, SelectableChannel channel) {
 		this.ioLoop = ioLoop;
 		this.channel = channel;
-		interestOps = SelectionKey.OP_CONNECT;
+		interestOps = SelectionKey.OP_CONNECT;	// TODO RS110628 should probably be moved to connect(..)
+		try {
+			channel.configureBlocking(false);
+		} catch (IOException e) {
+			logger.error("Could not configure SocketChannel to be non-blocking");
+		}
 		if (channel instanceof SocketChannel && (((SocketChannel) channel).isConnected())) {
 			interestOps |= SelectionKey.OP_READ;
 		}
@@ -65,6 +101,9 @@ public class AsynchronousSocket implements IOHandler {
 	
 	/**
 	 * Connects to the given host port tuple and invokes the given callback when a successful connection is established.
+	 * <p>
+	 * You can both read and write on the {@code AsynchronousSocket} before it is connected
+	 * (in which case the data will be written/read as soon as the connection is ready).
 	 */
 	public void connect(String host, int port, AsyncResult<Boolean> ccb) {
 		ioLoop.updateHandler(channel, interestOps |= SelectionKey.OP_CONNECT);
