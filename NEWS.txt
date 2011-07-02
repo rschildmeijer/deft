@@ -7,7 +7,9 @@ Features
     - Asynchronous HTTP client supports 'Transfer-Encoding: chunked' (#116)
     - Multi-threaded web server support (#139)
     - Experimental support for large static files. (Nb. will memory map the entire file) (#75)
-
+    - Improved documentation for the AsynchronousSocket (#152)
+    - Using the AsynchronousSocket for server operations is officially supported (#150)
+    
 Configuration
 ------------
      - See org.deftserver.example.DeftServerExample (or www.deftserver.org) for
