@@ -1,3 +1,6 @@
+Deft has been accepted to the ASF incubator (http://markmail.org/message/qkbl7djiqwg7eofo)
+Migration work (jira, wiki, vcs, mailing lists, accounts, cla) has started...
+
 # Deft
 Deft is a single threaded, asynchronous, event driven high performance web server running on the JVM.
 
