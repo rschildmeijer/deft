@@ -68,6 +68,16 @@ public class HttpResponse {
 	}
 
 	/**
+	 * The given data data will be sent as the HTTP response upon next flush or when the response is finished.
+	 *
+	 * @return this for chaining purposes.
+	 */
+	public HttpResponse write(byte[] data) {
+		responseData.put(data);
+		return this;
+	}
+
+	/**
 	 * Explicit flush. 
 	 * 
 	 * @return the number of bytes that were actually written as the result of this flush.
