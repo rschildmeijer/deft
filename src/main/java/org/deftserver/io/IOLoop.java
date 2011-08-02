@@ -110,7 +110,10 @@ public class IOLoop implements IOLoopMXBean {
 	 */
 	public void stop() {
 		running = false;
-		logger.debug("Stopping IOLoop...");
+    if (logger.isDebugEnabled())
+    {
+  		logger.debug("Stopping IOLoop...");
+    }
 	}
 	
 	/**

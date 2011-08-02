@@ -27,6 +27,4 @@ public class AsynchronousHttpClientExample {
 		);
 		IOLoop.INSTANCE.start();
 	}
-
-
 }
