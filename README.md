@@ -1,11 +1,13 @@
 Deft has been accepted into the Apache Software Foundation Incubator (http://markmail.org/message/qkbl7djiqwg7eofo)
+
 Apache Deft page: [http://incubator.apache.org/deft/] 
+
 Apache JIRA issue tracker: [https://issues.apache.org/jira/browse/DEFT] 
 
 # Deft
 Deft is a single threaded, asynchronous, event driven high performance web server running on the JVM.
 
-The Deft web server is an open source projected (licensed under [Apache version 2]). Deft was intitially inspired by [facebook/tornado]
+The Deft web server is an open source projected (licensed under [Apache version 2]). Deft was initially inspired by [facebook/tornado]
  
 Documentation: [http://www.deftserver.org]
 
