@@ -52,6 +52,10 @@ public class HttpResponse {
 		headers.put(header, value);
 	}
 
+	public boolean hasHeader(String header) {
+		return headers.containsKey(header);
+	}
+	
 	/**
 	 * The given data data will be sent as the HTTP response upon next flush or when the response is finished.
 	 *
@@ -60,6 +64,16 @@ public class HttpResponse {
 	public HttpResponse write(String data) {
 		byte[] bytes = data.getBytes(Charsets.UTF_8);
 		responseData.put(bytes);
+		return this;
+	}
+
+	/**
+	 * The given data data will be sent as the HTTP response upon next flush or when the response is finished.
+	 *
+	 * @return this for chaining purposes.
+	 */
+	public HttpResponse write(byte[] data) {
+		responseData.put(data);
 		return this;
 	}
 
@@ -149,7 +163,7 @@ public class HttpResponse {
 		return bytesWritten;
 	}	
 	private void setEtagAndContentLength() {
-		if (responseData.position() > 0) {
+		if (responseData.position() > 0 && !hasHeader("Etag")) {
 			setHeader("Etag", HttpUtil.getEtag(responseData.array()));
 		}
 		setHeader("Content-Length", String.valueOf(responseData.position()));
