@@ -141,7 +141,10 @@ public class AsynchronousSocket implements IOHandler {
 	 */
 	@Override
 	public void handleAccept(SelectionKey key) throws IOException {
-		logger.debug("handle accept...");
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("handle accept...");
+    }
 	}
 
 	/**
@@ -149,7 +152,10 @@ public class AsynchronousSocket implements IOHandler {
 	 */
 	@Override
 	public void handleConnect(SelectionKey key) throws IOException {
-		logger.debug("handle connect...");
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("handle connect...");
+    }
 		SocketChannel sc = (SocketChannel) channel;
 		if (sc.isConnectionPending()) {
 			try {
@@ -169,7 +175,10 @@ public class AsynchronousSocket implements IOHandler {
 	 */
 	@Override
 	public void handleRead(SelectionKey key) throws IOException {
-		logger.debug("handle read...");
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("handle read...");
+    }
 		ByteBuffer buffer = ByteBuffer.allocate(DEFAULT_BYTEBUFFER_SIZE);
 		int read = ((SocketChannel) key.channel()).read(buffer);
 		if (read == -1) {	// EOF
@@ -178,7 +187,10 @@ public class AsynchronousSocket implements IOHandler {
 			return;
 		}
 		readBuffer.append(new String(buffer.array(), 0, buffer.position(), Charsets.ISO_8859_1));
-		logger.debug("readBuffer size: {}", readBuffer.length());
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("readBuffer size: {}", readBuffer.length());
+    }
 		checkReadState();
 	}
 
@@ -187,7 +199,10 @@ public class AsynchronousSocket implements IOHandler {
 	 */
 	@Override
 	public void handleWrite(SelectionKey key) {
-		logger.debug("handle write...");
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("handle write...");
+    }
 		doWrite();
 	}
 
@@ -196,7 +211,10 @@ public class AsynchronousSocket implements IOHandler {
 	 * AsyncResult will be invoked.
 	 */
 	public void readUntil(String delimiter, AsyncResult<String> rcb) {
-		logger.debug("readUntil delimiter: {}", delimiter);
+    if (logger.isDebugEnabled())
+    {
+  		logger.debug("readUntil delimiter: {}", delimiter);
+    }
 		readDelimiter = delimiter;
 		readCallback = rcb;
 		checkReadState();
@@ -207,7 +225,10 @@ public class AsynchronousSocket implements IOHandler {
 	 * AsyncResult will be invoked.
 	 */
 	public void readBytes(int n, AsyncResult<String> rcb) {
-		logger.debug("readBytes #bytes: {}", n);
+    if (logger.isDebugEnabled())
+    {
+  		logger.debug("readBytes #bytes: {}", n);
+    }
 		readBytes = n;
 		readCallback = rcb;
 		checkReadState();
@@ -227,13 +248,19 @@ public class AsynchronousSocket implements IOHandler {
 		if (index != -1 && !readDelimiter.isEmpty()) {
 			String result = readBuffer.substring(0, index /*+ readDelimiter.length()*/);
 			readBuffer.delete(0, index + readDelimiter.length());
-			logger.debug("readBuffer size: {}", readBuffer.length());
+      if (logger.isDebugEnabled())
+      {
+			  logger.debug("readBuffer size: {}", readBuffer.length());
+      }
 			readDelimiter = "";
 			invokeReadSuccessfulCallback(result);
 		} else if (readBuffer.length() >= readBytes) {
 			String result = readBuffer.substring(0, readBytes);
 			readBuffer.delete(0, readBytes);
-			logger.debug("readBuffer size: {}", readBuffer.length());
+      if (logger.isDebugEnabled())
+      {
+  			logger.debug("readBuffer size: {}", readBuffer.length());
+      }
 			readBytes = Integer.MAX_VALUE;
 			invokeReadSuccessfulCallback(result);
 		}
@@ -280,9 +307,15 @@ public class AsynchronousSocket implements IOHandler {
 	 * AsyncCallback will be invoked 
 	 */
 	public void write(String data, AsyncCallback wcb) {
-		logger.debug("write data: {}", data);
+    if (logger.isDebugEnabled())
+    {
+  		logger.debug("write data: {}", data);
+    }
 		writeBuffer.append(data);
-		logger.debug("writeBuffer size: {}", writeBuffer.length());
+    if (logger.isDebugEnabled())
+    {
+		  logger.debug("writeBuffer size: {}", writeBuffer.length());
+    }
 		writeCallback = wcb;
 		doWrite();
 	}
@@ -302,8 +335,11 @@ public class AsynchronousSocket implements IOHandler {
 			Closeables.closeQuietly(ioLoop, channel);
 		}
 		writeBuffer.delete(0, written);
-		logger.debug("wrote: {} bytes", written);
-		logger.debug("writeBuffer size: {}", writeBuffer.length());
+    if (logger.isDebugEnabled())
+    {
+      logger.debug("wrote: {} bytes", written);
+      logger.debug("writeBuffer size: {}", writeBuffer.length());
+    }
 		if (writeBuffer.length() > 0) {
 			ioLoop.updateHandler(channel, interestOps |= SelectionKey.OP_WRITE);
 		} else {
